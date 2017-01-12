@@ -51,6 +51,7 @@ const MOVEMENT = 0.25;
 
 class Player {
 	constructor() {
+		// knows about the world
 		this.positionAt(0,0);
 	}
 
@@ -64,24 +65,73 @@ class Player {
 		this.y += dy;
 	}
 
-    moveUp() {
-        if (this.y <= 0) return;
-        this.moveBy(0, -MOVEMENT);
-    }
+	// TODO convert moving into block into opposite direction
+	// for better UX
 
-    moveDown() {
-        if (this.y >= map.rows - 1) return;
-        this.moveBy(0, MOVEMENT);
-    }
+	coverXs() {
+		const basex = Math.floor(this.x);
+		if (this.x > basex) {
+			return [basex, basex + 1];
+		}
+
+		return [this.x];
+	}
+
+	coverYs() {
+		const basey = Math.floor(this.y);
+		if (this.y > basey) {
+			return [basey, basey + 1];
+		}
+
+		return [this.y];
+	}
+
+	moveUp() {
+		if (this.y <= 0) return;
+		const fail = this.coverXs().some((x) => {
+			if (map.get(x, this.y-1)) {
+				return true;
+			}
+		})
+		if (fail) return;
+
+		this.moveBy(0, -MOVEMENT);
+	}
+
+	moveDown() {
+		if (this.y >= map.rows - 1) return;
+		const fail = this.coverXs().some((x) => {
+			console.log('ccc ', x)
+			if (map.get(x, this.y+1)) {
+				return true;
+			}
+		})
+		if (fail) return;
+
+		this.moveBy(0, MOVEMENT);
+	}
 			
-    moveLeft() {
-        if (this.x <= 0) return;
-        this.moveBy(-MOVEMENT, 0);
-    }
+	moveLeft() {
+		if (this.x <= 0) return;
+		const fail = this.coverYs().some((y) => {
+			if (map.get(this.x - 1, y)) {
+				return true;
+			}
+		})
+		if (fail) return;
+		this.moveBy(-MOVEMENT, 0);
+	}
 
-    moveRight() {
-        if (this.x >= map.columns - 1) return;
-        this.moveBy(MOVEMENT, 0);
-    }
+	moveRight() {
+		if (this.x >= map.columns - 1) return;
+		const fail = this.coverYs().some((y) => {
+			if (map.get(this.x + 1, y)) {
+				return true;
+			}
+		})
+		if (fail) return;
+
+		this.moveBy(MOVEMENT, 0);
+	}
 			
 }
