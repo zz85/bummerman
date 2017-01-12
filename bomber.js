@@ -18,6 +18,46 @@
 const columns = 11;
 const rows = 11;
 
+class Walls {
+	constructor(columns, rows) {
+		this.columns = columns;
+		this.rows = rows;
+		this.cells = new Array(columns * rows);
+	}
+
+	get(x, y) {
+		return this.cells[this.index(x, y)];
+	}
+
+	index(x, y) {
+		return x + this.columns * y;
+	}
+
+	coords(i) {
+		const x = i % this.columns;
+		const y = i / this.columns | 0;
+		return [x, y];
+	}
+
+	defaultWalls() {
+		for (let i=1; i < this.rows; i+=2) {
+			for (let j=1; j < this.columns; j+=2) {
+				this.cells[this.index(j, i)] = 1;
+			}
+		}
+	}
+
+	debugWalls() {
+		let s = '';
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.columns; col++) {
+				s += this.get(col, row) ? '#' : '.';
+			}
+			s += '\n'
+		}
+		console.log(s);
+	}
+}
 // Cell Coordinates
 // Pixels Coordinates
 
@@ -33,59 +73,22 @@ const rows = 11;
 // MMORPG
 
 
-var cellWidth = 100;
-var cellHeight = 100;
+var map = new Walls(11, 11);
+map.defaultWalls();
+map.debugWalls();
+console.log(map);
 
-var TYPES = {
-	NONE: 0,
-	WALL: 1
-};
+const canvas = document.createElement('canvas');
+canvas.width = 400;
+canvas.height = 400;
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
 
-var WorldMap = function( columns, rows ) {
 
-	this.columns = columns;				
-	this.rows = rows;
 
-	var cells = [];
-	
-	var i = 0, il = columns, j, jl = rows;
-	
-	for (;i<il; i++) {
-		
-		cells[i] = [];
-		for (j=0;j<jl;j++) {
-			cells[i][j] = TYPES.NONE;
-		}
-		
-	}
-	
-	this.cells = cells;
-	this.width = cellWidth * columns;
-	this.height = cellHeight * rows;
-};
 
-WorldMap.prototype.createWalls = function() {
-	var i=0, il= this.columns, j, jl = this.rows;
-	var cells = this.cells;
-	
-	for (i=1;i<il; i+=2) {
-		for (j=1;j<jl;j+=2) {
-			cells[i][j] = TYPES.WALL;
-		}
-	}
-	
-};
 
-WorldMap.prototype.eachTile = function( emit ) {
-	var i=0, il= this.columns, j, jl = this.rows;
-	var cells = this.cells;
 
-	for (i=0;i<il; i++) {
-		for (j=0;j<jl;j++) {
-			emit(i,j, cells[i][j]);
-		}
-	}
-};
 
 
 var Player = function() {
@@ -104,32 +107,6 @@ Player.prototype.moveBy = function( x, z ) {
 function positionAt(vector, column, row) {
 	vector.x = column * cellWidth - map.width/2 + cellWidth/2;
 	vector.z = row * cellHeight - map.height/2 + cellHeight/2;
-}
-
-var map = new WorldMap(11, 11);
-map.createWalls();
-console.log(map);
-
-const canvas = document.createElement('canvas');
-canvas.width = 400;
-canvas.height = 400;
-document.body.appendChild(canvas);
-const ctx = canvas.getContext('2d');
-
-
-// var s = '';
-// map.eachTile((x, y, v) => {
-// 	s += v;
-// })
-// console.log(s);
-
-for (let row = 0; row < map.rows; row++) {
-	let s = '';
-
-	for (let col = 0; col < map.columns; col++) {
-		s += map.cells[col][row];
-	}
-	console.log(s);
 }
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
