@@ -1,3 +1,12 @@
+// Game Data
+
+// Map (rows x columns)
+// Items at each coordinates
+
+// Players
+
+// Approach 1. Split map into cells. put items into cells.
+// Approach 2. Maintain a list of items. Project them onto maps. 
 
 // Dimension
 var cellWidth = 100;
