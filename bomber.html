@@ -64,25 +64,17 @@
 			WorldMap.prototype.eachTile = function( emit ) {
 				var i=0, il= this.columns, j, jl = this.rows;
 				var cells = this.cells;
-				
+
 				for (i=0;i<il; i++) {
 					for (j=0;j<jl;j++) {
 						emit(i,j, cells[i][j]);
 					}
 				}
-				
 			};
-			
-			
+
+		
 			var Player = function() {
-				
-				var geometry = new THREE.SphereGeometry( 40, 12, 12 );
-				var material = new THREE.MeshLambertMaterial( { color: 0x0080f0, opacity: 1, shading: THREE.SmoothShading } );
-				var mesh = new THREE.Mesh( geometry,  [ material ] );
-				mesh.position.y = 50;
-				this.mesh = mesh;
 				this.positionAt(0,0)
-				
 			};
 			
 			Player.prototype.positionAt = function(column, row ) {
@@ -99,11 +91,31 @@
 				vector.z = row * cellHeight - map.height/2 + cellHeight/2;
 			}
 			
-			
-			
 			var map = new WorldMap(11, 11);
 			map.createWalls();
 			console.log(map);
+
+			const canvas = document.createElement('canvas');
+			canvas.width = 400;
+			canvas.height = 400;
+			document.body.appendChild(canvas);
+			const ctx = canvas.getContext('2d');
+
+
+			// var s = '';
+			// map.eachTile((x, y, v) => {
+			// 	s += v;
+			// })
+			// console.log(s);
+
+			for (let row = 0; row < map.rows; row++) {
+				let s = '';
+
+				for (let col = 0; col < map.columns; col++) {
+					s += map.cells[col][row];
+				}
+				console.log(s);
+			}
 		
 			document.addEventListener( 'keydown', onDocumentKeyDown, false );
 			document.addEventListener( 'keyup', onDocumentKeyUp, false );
