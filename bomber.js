@@ -10,13 +10,14 @@
 // + Easy to render
 // - Tedious to move items from one cell to another
 
-// Approach 2. 
+// Approach 2.
 // Maintain a list of items.
 // Items have x, y coordinates.
 // Project them onto maps. 
 
-const columns = 11;
-const rows = 11;
+const COLUMNS = 11;
+const ROWS = 11;
+const CELL_PIXELS = 40;
 
 class Walls {
 	constructor(columns, rows) {
@@ -47,6 +48,14 @@ class Walls {
 		}
 	}
 
+	forEach(cb) {
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.columns; col++) {
+				cb(col, row, this.get(col, row));
+			}
+		}
+	}
+
 	debugWalls() {
 		let s = '';
 		for (let row = 0; row < this.rows; row++) {
@@ -55,7 +64,7 @@ class Walls {
 			}
 			s += '\n'
 		}
-		console.log(s);
+		return s;
 	}
 }
 // Cell Coordinates
@@ -73,22 +82,30 @@ class Walls {
 // MMORPG
 
 
-var map = new Walls(11, 11);
-map.defaultWalls();
-map.debugWalls();
-console.log(map);
+const pre = document.createElement('pre');
+pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
+
+document.body.appendChild(pre);
 
 const canvas = document.createElement('canvas');
-canvas.width = 400;
-canvas.height = 400;
+canvas.width = CELL_PIXELS * COLUMNS * 1.2;
+canvas.height = CELL_PIXELS * COLUMNS * 1.2;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
+var map = new Walls(COLUMNS, ROWS);
+map.defaultWalls();
 
+const s = map.debugWalls();
+pre.innerHTML = s;
+console.log(s);
+console.log(map);
 
-
-
-
+map.forEach((x, y, v) => {
+	ctx.fillStyle = v ? '#333' : '#eee';
+	ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+	ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+})
 
 
 var Player = function() {
