@@ -33,6 +33,16 @@ const CELL_PIXELS = 40;
 // VR
 // MMORPG
 
+// Game World Starts
+
+const map = new Walls(COLUMNS, ROWS);
+map.defaultWalls();
+
+const player1 = new Player();
+
+
+
+
 
 const pre = document.createElement('pre');
 pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
@@ -45,20 +55,35 @@ canvas.height = CELL_PIXELS * COLUMNS * 1.2;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
-var map = new Walls(COLUMNS, ROWS);
-map.defaultWalls();
-
-
 const s = map.debugWalls();
 pre.innerHTML = s;
 console.log(s);
 console.log(map);
 
-map.forEach((x, y, v) => {
-	ctx.fillStyle = v ? '#333' : '#eee';
-	ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-	ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-})
+
+function animate() {
+	requestAnimationFrame(animate);
+	render()
+}
+
+animate();
+
+function render() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	// walls
+	map.forEach((x, y, v) => {
+		ctx.fillStyle = v ? '#333' : '#eee';
+		ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+		ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+	});
+
+	// player
+	ctx.fillStyle = '#0d0';
+	ctx.fillRect(player1.x * CELL_PIXELS, player1.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+		
+
+}
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
 document.addEventListener( 'keyup', onDocumentKeyUp, false );
@@ -67,17 +92,30 @@ function onDocumentKeyDown( event ) {
 	console.log(event.keyCode);
 	switch( event.keyCode ) {
 		case 87:
-			// up
-			player1.moveBy(-20, 0); break;
+			// up W
+			player1.moveBy(-0.5, 0); break;
 		case 83:
-			// down
-			player1.moveBy(20, 0); break;
+			// down D
+			player1.moveBy(0.5, 0); break;
 		case 65:
-			// left
-			player1.moveBy(0, 20); break;
+			// left A
+			player1.moveBy(0, -0.5); break;
 		case 68:
-			// right
-			player1.moveBy(0, -20); break;
+			// right D
+			player1.moveBy(0, 0.5); break;
+
+		case 38:
+			// up
+			player1.moveBy(0, -0.5); break;
+		case 40:
+			// down D
+			player1.moveBy(0, 0.5); break;
+		case 37:
+			// left A
+			player1.moveBy(-0.5, 0); break;
+		case 39:
+			// right D
+			player1.moveBy(0.5, 0); break;
 		
 		case 16: isShiftDown = true; break;
 		case 17: isCtrlDown = true; break;
