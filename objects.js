@@ -65,18 +65,22 @@ class Player {
 	}
 
     moveUp() {
+        if (this.y <= 0) return;
         this.moveBy(0, -MOVEMENT);
     }
 
     moveDown() {
+        if (this.y >= map.rows - 1) return;
         this.moveBy(0, MOVEMENT);
     }
 			
     moveLeft() {
+        if (this.x <= 0) return;
         this.moveBy(-MOVEMENT, 0);
     }
 
     moveRight() {
+        if (this.x >= map.columns - 1) return;
         this.moveBy(MOVEMENT, 0);
     }
 			

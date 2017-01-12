@@ -82,7 +82,8 @@ function render() {
 	ctx.fillStyle = '#0d0';
 	ctx.fillRect(player1.x * CELL_PIXELS, player1.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 		
-
+	ctx.fillStyle = '#999';
+	ctx.fillText(`${player1.x}, ${player1.y}`, 50, 50);
 }
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
