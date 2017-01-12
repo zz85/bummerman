@@ -6,9 +6,33 @@
 // Players
 
 // Approach 1. Split map into cells. put items into cells.
-// Approach 2. Maintain a list of items. Project them onto maps. 
+// + Easy to lookup
+// + Easy to render
+// - Tedious to move items from one cell to another
 
-// Dimension
+// Approach 2. 
+// Maintain a list of items.
+// Items have x, y coordinates.
+// Project them onto maps. 
+
+const columns = 11;
+const rows = 11;
+
+// Cell Coordinates
+// Pixels Coordinates
+
+// Types.
+// 1. Walls / Grass
+// 2. Players
+// 3. Items
+
+
+// 2D
+// 2.5D / 3D
+// VR
+// MMORPG
+
+
 var cellWidth = 100;
 var cellHeight = 100;
 
