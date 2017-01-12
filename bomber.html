@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>three.js canvas - interactive - voxel painter</title>
+		<title>joosh bomberman WIP</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -15,12 +15,6 @@
 		</style>
 	</head>
 	<body>
-
-		<script src="../build/Three.js"></script>
-
-		<script src="js/RequestAnimationFrame.js"></script>
-		<script src="js/Stats.js"></script>
-
 		<script>
 		
 			// Dimension
@@ -110,143 +104,9 @@
 			var map = new WorldMap(11, 11);
 			map.createWalls();
 			console.log(map);
-			
-			
-
-			var container, stats;
-			var camera, scene, renderer;
-
-			var mouse2D, isShiftDown = false,
-			theta = 45, isCtrlDown = false,
-			target = new THREE.Vector3( 0, 200, 0 );
-			
-			var player1;
-
-			init();
-			animate();
-
-			function init() {
-
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-
-				var info = document.createElement( 'div' );
-				info.style.position = 'absolute';
-				info.style.top = '10px';
-				info.style.width = '100%';
-				info.style.textAlign = 'center';
-				info.innerHTML = 'Beta Bomberman Clone';
-				container.appendChild( info );
-
-				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.y = 800;
-
-				scene = new THREE.Scene();
-				
-				scene.add(camera);
-
-				mouse2D = new THREE.Vector3( 0, 10000, 0.5 );
-				
-				// Grid
-
-				var geometry = new THREE.Geometry();
-				geometry.vertices.push( new THREE.Vertex( new THREE.Vector3( - map.width/2, 0, 0 ) ) );
-				geometry.vertices.push( new THREE.Vertex( new THREE.Vector3( map.width/2, 0, 0 ) ) );
-
-				var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.5 } );
-				
-				for ( var i = 0; i <= map.columns; i ++ ) {
-					
-						var line = new THREE.Line( geometry, material );
-						line.position.z = ( i * cellWidth ) - map.width/2 ;
-						//line.rotation.x = 90 * Math.PI / 180;
-						scene.add( line );
-					
-						var line = new THREE.Line( geometry, material );
-						line.position.x = ( i * cellWidth ) - map.width/2;
-						line.rotation.y = 90 * Math.PI / 180;
-						scene.add( line );
-					
-					}
-
-
-				plane = new THREE.Mesh( new THREE.PlaneGeometry( map.width, map.height, map.columns, map.rows ), new THREE.MeshBasicMaterial( { color: 0xeeeeee, wireframe: false } ) );
-				//0xeeeeee 0x333333
-				plane.rotation.x = - 90 * Math.PI / 180;
-				scene.add( plane );
-				
-				
-				// Create bricks
-				map.eachTile(function(column, row, cell) {
-					if (cell==TYPES.WALL) {
-						var voxel = new THREE.Mesh( new THREE.CubeGeometry( cellWidth, cellHeight , cellHeight ), [ new THREE.MeshLambertMaterial( { color: 0x00ff80, opacity: 1, shading: THREE.FlatShading } )] ); //, new THREE.MeshFaceMaterial() ]
-						
-						positionAt (voxel.position, column, row);
-						
-						// voxel.position.x =  ( column  * cellWidth ) - map.width/2 + cellWidth/2;
-						// 						voxel.position.y = 0;
-						// 						voxel.position.z =  ( row * cellWidth ) - map.width/2 + cellWidth/2; //Math.floor( position.z / 50 ) * 50 + 25;
-						// 						
-						scene.add(voxel);
-						
-					}
-				});
-				
-				
-				player1 = new Player();
-				
-				scene.add(player1.mesh);
-
-				// Lights
-
-				var ambientLight = new THREE.AmbientLight( 0x606060 );
-				scene.add( ambientLight );
-
-				var directionalLight = new THREE.DirectionalLight( 0xffffff );
-				directionalLight.position.x = Math.random() - 0.5;
-				directionalLight.position.y = Math.random() - 0.5;
-				directionalLight.position.z = Math.random() - 0.5;
-				directionalLight.position.normalize();
-				scene.add( directionalLight );
-
-				var directionalLight = new THREE.DirectionalLight( 0x808080 );
-				directionalLight.position.x = Math.random() - 0.5;
-				directionalLight.position.y = Math.random() - 0.5;
-				directionalLight.position.z = Math.random() - 0.5;
-				directionalLight.position.normalize();
-				scene.add( directionalLight );
-
-				renderer = new THREE.WebGLRenderer( { antialias: true, preserveDrawingBuffer : true } );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-				container.appendChild(renderer.domElement);
-
-				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
-
-				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-				document.addEventListener( 'keydown', onDocumentKeyDown, false );
-				document.addEventListener( 'keyup', onDocumentKeyUp, false );
-
-			}
-
-			function onDocumentMouseMove( event ) {
-
-				event.preventDefault();
-
-				mouse2D.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-				mouse2D.y = - ( event.clientY / window.innerHeight	 ) * 2 + 1;
-
-			}
-
-			function onDocumentMouseDown( event ) {
-
-				event.preventDefault();
-
-			}
+		
+			document.addEventListener( 'keydown', onDocumentKeyDown, false );
+			document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
 			function onDocumentKeyDown( event ) {
 				console.log(event.keyCode);
@@ -283,32 +143,7 @@
 
 		
 
-			//
-
-			function animate() {
-
-				requestAnimationFrame( animate );
-
-				render();
-				stats.update();
-
-			}
-
-			function render() {
-
-				if ( isShiftDown ) {
-
-					theta += mouse2D.x * 3;
-
-				}
-
-				camera.position.x = 1400 * Math.sin( theta * Math.PI / 360 );
-				camera.position.z = 1400 * Math.cos( theta * Math.PI / 360 );
-				camera.lookAt( target );
-
-				renderer.render( scene, camera );
-
-			}
+			
 
 		</script>
 
