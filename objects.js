@@ -47,6 +47,8 @@ class Walls {
 	}
 }
 
+const MOVEMENT = 0.5;
+
 class Player {
 	constructor() {
 		this.positionAt(0,0);
@@ -60,5 +62,22 @@ class Player {
 	moveBy( dx, dy ) {
 		this.x += dx;
 		this.y += dy;
-	};
+	}
+
+    moveUp() {
+        this.moveBy(0, -MOVEMENT);
+    }
+
+    moveDown() {
+        this.moveBy(0, MOVEMENT);
+    }
+			
+    moveLeft() {
+        this.moveBy(-MOVEMENT, 0);
+    }
+
+    moveRight() {
+        this.moveBy(MOVEMENT, 0);
+    }
+			
 }

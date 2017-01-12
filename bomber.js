@@ -106,16 +106,20 @@ function onDocumentKeyDown( event ) {
 
 		case 38:
 			// up
-			player1.moveBy(0, -0.5); break;
+			player1.moveUp(); break;
 		case 40:
 			// down D
-			player1.moveBy(0, 0.5); break;
+			player1.moveDown(); break;
 		case 37:
 			// left A
-			player1.moveBy(-0.5, 0); break;
+			player1.moveLeft(); break;
 		case 39:
 			// right D
-			player1.moveBy(0.5, 0); break;
+			player1.moveRight(); break;
+
+		case 13: 
+			// Return
+		
 		
 		case 16: isShiftDown = true; break;
 		case 17: isCtrlDown = true; break;
