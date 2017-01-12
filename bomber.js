@@ -93,16 +93,16 @@ function onDocumentKeyDown( event ) {
 	switch( event.keyCode ) {
 		case 87:
 			// up W
-			player1.moveBy(-0.5, 0); break;
+			player1.moveUp(); break;
 		case 83:
 			// down D
-			player1.moveBy(0.5, 0); break;
+			player1.moveDown(); break;
 		case 65:
 			// left A
-			player1.moveBy(0, -0.5); break;
+			player1.moveLeft(); break;
 		case 68:
 			// right D
-			player1.moveBy(0, 0.5); break;
+			player1.moveRight(); break;
 
 		case 38:
 			// up

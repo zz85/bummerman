@@ -47,7 +47,7 @@ class Walls {
 	}
 }
 
-const MOVEMENT = 0.5;
+const MOVEMENT = 0.25;
 
 class Player {
 	constructor() {
