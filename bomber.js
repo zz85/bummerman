@@ -13,7 +13,10 @@
 // Approach 2.
 // Maintain a list of items.
 // Items have x, y coordinates.
-// Project them onto maps. 
+// Project them onto maps.
+
+// TODO powerups
+// Bomb
 
 const COLUMNS = 11;
 const ROWS = 11;
@@ -35,13 +38,17 @@ const CELL_PIXELS = 40;
 
 // Game World Starts
 
+const world = new World();
 const map = new Walls(COLUMNS, ROWS);
 map.defaultWalls();
 
 const player1 = new Player();
 
+const bomb = new Bomb(2, 2);
 
-
+world.add(map);
+world.add(player1);
+world.add(bomb);
 
 
 const pre = document.createElement('pre');
@@ -55,10 +62,10 @@ canvas.height = CELL_PIXELS * COLUMNS * 1.2;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
-const s = map.debugWalls();
-pre.innerHTML = s;
-console.log(s);
-console.log(map);
+// const s = map.debugWalls();
+// pre.innerHTML = s;
+// console.log(s);
+// console.log(map);
 
 
 function animate() {
@@ -77,6 +84,13 @@ function render() {
 		ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 		ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 	});
+
+	for (let item of world.items) {
+		if (item instanceof Bomb) {
+			ctx.fillStyle = 'red';
+			ctx.fillRect(item.x * CELL_PIXELS, item.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+		}
+	}
 
 	// player
 	ctx.fillStyle = '#0d0';
@@ -120,6 +134,8 @@ function onDocumentKeyDown( event ) {
 
 		case 13: 
 			// Return
+			player1.dropBomb();
+			break;
 		
 		
 		case 16: isShiftDown = true; break;

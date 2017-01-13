@@ -1,3 +1,49 @@
+class World {
+	constructor() {
+		this.items = new Set();
+	}
+
+	add(item) {
+		this.items.add(item);
+	}
+
+	remove(item) {
+		this.items.remove(item);
+	}
+}
+
+/*
+Object {
+	collides() {
+
+	}
+}
+*/
+
+class Bomb {
+	constructor(x, y, strength = 1) {
+		this.x = x;
+		this.y = y;
+		this.strength = strength;
+		this.state = 0;
+		// Not exploded
+		// Exploding
+		// Exploded (Can be removed)
+	}
+
+	snapX() {
+		return this.x + 0.5 | 0;
+	}
+
+	snapY() {
+		return this.y + 0.5 | 0;
+	}
+
+	plant() {
+		this.planted = Date.now();
+	}
+}
+
 class Walls {
 	constructor(columns, rows) {
 		this.columns = columns;
@@ -53,6 +99,8 @@ class Player {
 	constructor() {
 		// knows about the world
 		this.positionAt(0,0);
+		this.bombLimit = 1;
+		this.bombs = [];
 	}
 
 	positionAt(x, y) {
@@ -101,7 +149,6 @@ class Player {
 	moveDown() {
 		if (this.y >= map.rows - 1) return;
 		const fail = this.coverXs().some((x) => {
-			console.log('ccc ', x)
 			if (map.get(x, this.y+1)) {
 				return true;
 			}
@@ -132,6 +179,12 @@ class Player {
 		if (fail) return;
 
 		this.moveBy(MOVEMENT, 0);
+	}
+
+	dropBomb() {
+		const bomb = new Bomb(this.x, this.y)
+		this.bombs.push(bomb);
+		world.add(bomb);
 	}
 			
 }
