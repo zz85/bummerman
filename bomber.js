@@ -44,12 +44,8 @@ map.defaultWalls();
 
 const player1 = new Player();
 
-const bomb = new Bomb(2, 2);
-
 world.add(map);
 world.add(player1);
-world.add(bomb);
-
 
 const pre = document.createElement('pre');
 pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
@@ -88,7 +84,7 @@ function render() {
 	for (let item of world.items) {
 		if (item instanceof Bomb) {
 			ctx.fillStyle = 'red';
-			ctx.fillRect(item.x * CELL_PIXELS, item.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+			ctx.fillRect(item.snapX() * CELL_PIXELS, item.snapY() * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 		}
 	}
 

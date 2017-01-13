@@ -8,7 +8,7 @@ class World {
 	}
 
 	remove(item) {
-		this.items.remove(item);
+		this.items.delete(item);
 	}
 }
 
@@ -41,6 +41,11 @@ class Bomb {
 
 	plant() {
 		this.planted = Date.now();
+		setTimeout(() => this.explode(), 2000);
+	}
+
+	explode() {
+		world.remove(this);
 	}
 }
 
@@ -101,6 +106,8 @@ class Player {
 		this.positionAt(0,0);
 		this.bombLimit = 1;
 		this.bombs = [];
+
+		// TODO add direction
 	}
 
 	positionAt(x, y) {
@@ -185,6 +192,7 @@ class Player {
 		const bomb = new Bomb(this.x, this.y)
 		this.bombs.push(bomb);
 		world.add(bomb);
+		bomb.plant();
 	}
 			
 }
