@@ -53,7 +53,7 @@ class Walls {
 	constructor(columns, rows) {
 		this.columns = columns;
 		this.rows = rows;
-		this.cells = new Array(columns * rows);
+		this.cells = new Array(columns * rows).fill(0);
 	}
 
 	get(x, y) {
@@ -76,6 +76,40 @@ class Walls {
 				this.cells[this.index(j, i)] = 1;
 			}
 		}
+
+		this.buildMaze();
+	}
+
+	buildMaze() {
+		const exceptions = new Set([
+			this.index(0, 0),
+			this.index(0, 1),
+			this.index(1, 0),
+
+			this.index(this.columns - 1, 0),
+			this.index(this.columns - 2, 0),
+			this.index(this.columns - 1, 1),
+
+			this.index(0, this.rows - 1),
+			this.index(0, this.rows - 2),
+			this.index(1, this.rows - 1),
+
+			this.index(this.columns - 1, this.rows - 1),
+			this.index(this.columns - 2, this.rows - 1),
+			this.index(this.columns - 1, this.rows - 2),
+		]);
+
+		console.log(exceptions);
+
+		this.cells
+			.map((c, i) => c === 0 && i)
+			.filter(v => v && !exceptions.has(v))
+			.forEach((a) => {
+				console.log(a)
+				if (Math.random() < 0.7) {
+					this.cells[a] = 2;
+				}
+			});
 	}
 
 	forEach(cb) {
@@ -164,7 +198,7 @@ class Player {
 
 		this.moveBy(0, MOVEMENT);
 	}
-			
+
 	moveLeft() {
 		if (this.x <= 0) return;
 		const fail = this.coverYs().some((y) => {
@@ -194,5 +228,5 @@ class Player {
 		world.add(bomb);
 		bomb.plant();
 	}
-			
+
 }

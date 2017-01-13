@@ -15,8 +15,10 @@
 // Items have x, y coordinates.
 // Project them onto maps.
 
-// TODO powerups
+// TODO
 // Bomb
+// Powerups
+// Player AI
 
 const COLUMNS = 11;
 const ROWS = 11;
@@ -76,7 +78,13 @@ function render() {
 
 	// walls
 	map.forEach((x, y, v) => {
-		ctx.fillStyle = v ? '#333' : '#eee';
+
+		switch (v) {
+			case 1: ctx.fillStyle = '#333'; break;
+			case 2: ctx.fillStyle = '#888'; break;
+			default: ctx.fillStyle = '#eee';
+		}
+
 		ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 		ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 	});
@@ -91,7 +99,7 @@ function render() {
 	// player
 	ctx.fillStyle = '#0d0';
 	ctx.fillRect(player1.x * CELL_PIXELS, player1.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-		
+
 	ctx.fillStyle = '#999';
 	ctx.fillText(`${player1.x}, ${player1.y}`, 50, 50);
 }
@@ -128,12 +136,12 @@ function onDocumentKeyDown( event ) {
 			// right D
 			player1.moveRight(); break;
 
-		case 13: 
+		case 13:
 			// Return
 			player1.dropBomb();
 			break;
-		
-		
+
+
 		case 16: isShiftDown = true; break;
 		case 17: isCtrlDown = true; break;
 
