@@ -22,7 +22,7 @@
 
 const COLUMNS = 15;
 const ROWS = 15;
-const CELL_PIXELS = 40;
+const CELL_PIXELS = 45;
 
 // Cell Coordinates
 // Pixels Coordinates
@@ -84,8 +84,9 @@ function render() {
 			default: ctx.fillStyle = '#eee';
 		}
 
+		ctx.strokeStyle = '#333';
 		ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-		ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+		if (v) ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 	});
 
 	for (let item of world.items) {
