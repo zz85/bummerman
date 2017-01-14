@@ -1,38 +1,15 @@
-// Game Data
-
-// Map (rows x columns)
-// Items at each coordinates
-
-// Players
-
-// Approach 1. Split map into cells. put items into cells.
-// + Easy to lookup
-// + Easy to render
-// - Tedious to move items from one cell to another
-
-// Approach 2.
-// Maintain a list of items.
-// Items have x, y coordinates.
-// Project them onto maps.
-
 // TODO
 // Bomb
 // Powerups
 // Player AI
+// Audio effects
 
 const COLUMNS = 15;
 const ROWS = 15;
 const CELL_PIXELS = 45;
 
-// Cell Coordinates
-// Pixels Coordinates
-
-// Types.
-// 1. Walls / Grass
-// 2. Players
-// 3. Items
-
-
+// Game styles
+// AsCII
 // 2D
 // 2.5D / 3D
 // VR
@@ -49,40 +26,36 @@ const player1 = new Player(1, 1);
 world.add(map);
 world.add(player1);
 
+const canvas = document.createElement('canvas');
+canvas.width = CELL_PIXELS * COLUMNS + 50;
+canvas.height = CELL_PIXELS * COLUMNS + 50;
+document.body.appendChild(canvas);
+
 const pre = document.createElement('pre');
 pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
 
 document.body.appendChild(pre);
 
-const canvas = document.createElement('canvas');
-canvas.width = CELL_PIXELS * COLUMNS * 1.2;
-canvas.height = CELL_PIXELS * COLUMNS * 1.2;
-document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
-// const s = map.debugWalls();
-// pre.innerHTML = s;
-// console.log(s);
-// console.log(map);
-
-function animate() {
-	requestAnimationFrame(animate);
-	render()
+function globalLoop() {
+	requestAnimationFrame(globalLoop);
+	loop();
+	render();
 }
 
-animate();
+globalLoop();
 
-function render() {
+function loop() {
 	// Here is the game loop
 	// TODO remove global timeouts?
 	for (let flumes of world.flumes) {
 		flumes.blow();
 	}
+}
 
+function render() {
 	// Here is the render Loop
-
-
-
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// walls
@@ -172,7 +145,3 @@ function onDocumentKeyUp( event ) {
 
 	}
 }
-
-
-
-

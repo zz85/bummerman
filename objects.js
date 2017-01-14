@@ -2,10 +2,16 @@ const EMPTY = 0, HARD_WALL = 1, SOFT_WALL = 2;
 
 class World {
 	constructor() {
+		// All items
 		this.items = new Set();
 
 		this.bombs = new Set();
 		this.flumes = new Set();
+
+		// TODO
+		// - Walls / Maps
+		// - Power ups
+		// - Players
 	}
 
 	add(item) {
@@ -68,6 +74,19 @@ Object {
 	}
 }
 */
+class Powerups {
+	// TYPE
+	// + Speed
+	// + Bombs
+	// + Increased fire / flames
+	// + Kick / Push bomb
+	// + Throw bomb
+	// + Remote control
+	// + Tanks
+	// - Poisons
+	// - Misdirection
+	// - Slow
+}
 
 class Flumes {
 	constructor(x, y, ttl) {
@@ -132,7 +151,6 @@ class Bomb {
 			}
 		};
 
-		// Right
 		const count = [...new Array(this.strength + 1).keys()].slice(1);
 		check([0, 0]);
 		count.map(s => [s, 0]).some(check);
