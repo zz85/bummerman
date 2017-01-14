@@ -45,6 +45,18 @@ class Bomb {
 	}
 
 	explode() {
+		// TODO add animation flames
+		const x = this.snapX();
+		const y = this.snapY();
+
+		for (let tx = -1; tx <= 1; tx++) {
+			map.blow(x + tx, y);
+		}
+
+		for (let ty = -1; ty <= 1; ty++) {
+			map.blow(x, y + ty);
+		}
+
 		world.remove(this);
 	}
 }
@@ -80,6 +92,13 @@ class Walls {
 		this.buildMaze();
 	}
 
+	blow(x, y) {
+		if (x < 0 || y < 0 || x > this.columns - 1 || y > this.rows - 1) return;
+		if (this.cells[this.index(x, y)] === 2) {
+			this.cells[this.index(x, y)] = 0;
+		}
+	}
+
 	buildMaze() {
 		const exceptions = new Set([
 			this.index(0, 0),
@@ -105,10 +124,10 @@ class Walls {
 			.map((c, i) => c === 0 && i)
 			.filter(v => v && !exceptions.has(v))
 			.forEach((a) => {
-				console.log(a)
-				if (Math.random() < 0.7) {
-					this.cells[a] = 2;
-				}
+				this.cells[a] = 2;
+				// if (Math.random() < 0.7) {
+				// 	this.cells[a] = 2;
+				// }
 			});
 	}
 
