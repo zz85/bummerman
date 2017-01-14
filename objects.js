@@ -3,23 +3,23 @@ const EMPTY = 0, HARD_WALL = 1, SOFT_WALL = 2;
 class World {
 	constructor() {
 		// All items
-		this.items = new Set();
+		this.objects = new Set();
 
 		this.bombs = new Set();
 		this.flumes = new Set();
+		this.items = new Set();
 
 		// TODO
 		// - Walls / Maps
-		// - Power ups
 		// - Players
 	}
 
 	add(item) {
-		this.items.add(item);
+		this.objects.add(item);
 	}
 
 	remove(item) {
-		this.items.delete(item);
+		this.objects.delete(item);
 	}
 
 	addFlumes(flumes) {
@@ -42,6 +42,16 @@ class World {
 		this.remove(bomb);
 	}
 
+	addItem(item) {
+		this.items.add(item);
+		this.add(item);
+	}
+
+	removeItem(item) {
+		this.items.delete(item);
+		this.remove(item);
+	}
+
 	blow(x, y) {
 		// check for Players
 		if (player1.coverXs().find(v => v === x)
@@ -49,9 +59,10 @@ class World {
 			pre.innerHTML = 'You died!';
 			// TODO make this an event
 		}
+
 		// check for Items
 
-		
+
 		// check for Bombs
 		for (let bomb of this.bombs) {
 			if (bomb.snapX() === x && bomb.snapY() === y) {
@@ -60,7 +71,12 @@ class World {
 		}
 
 		// check for Walls
-		map.blow(x, y);
+		if (map.blow(x, y)) {
+			this.addItem(new Item(x, y));
+			// if (Math.random() < 0.5) {
+			// 	this.addItem(new Item(x, y));
+			// }
+		}
 
 		// or should bomb going off be an event
 		// and all items listen for exploding event?
@@ -74,8 +90,14 @@ Object {
 	}
 }
 */
-class Powerups {
-	// TYPE
+class Item {
+	constructor(x, y, type) {
+		this.x = x;
+		this.y = y;
+
+		this.type = this.SPEED_UP;
+	}
+	// Powerup TYPE
 	// + Speed
 	// + Bombs
 	// + Increased fire / flames
@@ -201,6 +223,7 @@ class Walls {
 		if (x < 0 || y < 0 || x > this.columns - 1 || y > this.rows - 1) return;
 		if (this.cells[this.index(x, y)] === SOFT_WALL) {
 			this.cells[this.index(x, y)] = EMPTY;
+			return true;
 		}
 	}
 

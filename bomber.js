@@ -72,7 +72,7 @@ function render() {
 		if (v) ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 	});
 
-	for (let item of world.items) {
+	for (let item of world.objects) {
 		if (item instanceof Bomb) {
 			ctx.fillStyle = 'red';
 			ctx.fillRect(item.snapX() * CELL_PIXELS, item.snapY() * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
@@ -80,6 +80,12 @@ function render() {
 		else if (item instanceof Flumes) {
 			ctx.fillStyle = 'orange';
 			ctx.fillRect(item.x * CELL_PIXELS, item.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+		}
+		else if (item instanceof Item) {
+			ctx.fillStyle = 'orange';
+			ctx.beginPath();
+			ctx.arc((item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS, CELL_PIXELS / 2, 0, Math.PI * 2);
+			ctx.fill();
 		}
 	}
 
