@@ -20,8 +20,8 @@
 // Powerups
 // Player AI
 
-const COLUMNS = 11;
-const ROWS = 11;
+const COLUMNS = 15;
+const ROWS = 15;
 const CELL_PIXELS = 40;
 
 // Cell Coordinates
@@ -44,7 +44,7 @@ const world = new World();
 const map = new Walls(COLUMNS, ROWS);
 map.defaultWalls();
 
-const player1 = new Player();
+const player1 = new Player(1, 1);
 
 world.add(map);
 world.add(player1);
@@ -64,7 +64,6 @@ const ctx = canvas.getContext('2d');
 // pre.innerHTML = s;
 // console.log(s);
 // console.log(map);
-
 
 function animate() {
 	requestAnimationFrame(animate);

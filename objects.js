@@ -10,6 +10,16 @@ class World {
 	remove(item) {
 		this.items.delete(item);
 	}
+
+	blow(x, y) {
+		// check for Players
+		// check for Walls
+		// check for Items
+		// check for Bombs
+
+		// or should bomb going off be an event
+		// and all items listen for exploding event?
+	}
 }
 
 /*
@@ -27,6 +37,7 @@ class Bomb {
 		this.strength = strength;
 		this.state = 0;
 		// Not exploded
+		// About to explode (shaking)
 		// Exploding
 		// Exploded (Can be removed)
 	}
@@ -83,11 +94,20 @@ class Walls {
 	}
 
 	defaultWalls() {
-		for (let i=1; i < this.rows; i+=2) {
-			for (let j=1; j < this.columns; j+=2) {
-				this.cells[this.index(j, i)] = 1;
-			}
-		}
+		this.forEach((x, y) => {
+			if (x === 0
+				|| x === this.columns - 1
+				|| y === 0
+				|| y === this.rows - 1
+				|| (x % 2 === 0 && y % 2 === 0)) {
+					this.cells[this.index(x, y)] = 1;
+				} 
+		})
+		// for (let i=2; i < this.rows; i+=2) {
+		// 	for (let j=2; j < this.columns; j+=2) {
+		// 		this.cells[this.index(j, i)] = 1;
+		// 	}
+		// }
 
 		this.buildMaze();
 	}
@@ -100,22 +120,28 @@ class Walls {
 	}
 
 	buildMaze() {
+		const minX = 1;
+		const maxX = this.columns - 2;
+		const minY = 1;
+		const maxY = this.rows - 2;
+
+		// TODO can be futher generatize around player's spawning point
 		const exceptions = new Set([
-			this.index(0, 0),
-			this.index(0, 1),
-			this.index(1, 0),
+			this.index(minX, minY),
+			this.index(minX, minY + 1),
+			this.index(minX + 1, minY),
 
-			this.index(this.columns - 1, 0),
-			this.index(this.columns - 2, 0),
-			this.index(this.columns - 1, 1),
+			this.index(maxX, minY),
+			this.index(maxX - 1, minY),
+			this.index(maxX, minY + 1),
 
-			this.index(0, this.rows - 1),
-			this.index(0, this.rows - 2),
-			this.index(1, this.rows - 1),
+			this.index(minX, maxY),
+			this.index(minX, maxY - 1),
+			this.index(minX, maxY),
 
-			this.index(this.columns - 1, this.rows - 1),
-			this.index(this.columns - 2, this.rows - 1),
-			this.index(this.columns - 1, this.rows - 2),
+			this.index(maxX, maxY),
+			this.index(maxX - 1, maxY - 1),
+			this.index(maxX, maxY - 1),
 		]);
 
 		console.log(exceptions);
@@ -124,10 +150,10 @@ class Walls {
 			.map((c, i) => c === 0 && i)
 			.filter(v => v && !exceptions.has(v))
 			.forEach((a) => {
-				this.cells[a] = 2;
-				// if (Math.random() < 0.7) {
-				// 	this.cells[a] = 2;
-				// }
+				// this.cells[a] = 2;
+				if (Math.random() < 0.8) {
+					this.cells[a] = 2;
+				}
 			});
 	}
 
@@ -154,9 +180,9 @@ class Walls {
 const MOVEMENT = 0.25;
 
 class Player {
-	constructor() {
+	constructor(x, y) {
 		// knows about the world
-		this.positionAt(0,0);
+		this.positionAt(x || 0, y || 0);
 		this.bombLimit = 1;
 		this.bombs = [];
 
