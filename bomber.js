@@ -49,9 +49,9 @@ globalLoop();
 function loop() {
 	// Here is the game loop
 	// TODO remove global timeouts?
-	for (let flumes of world.flumes) {
-		flumes.blow();
-	}
+	// for (let flumes of world.flumes) {
+	// 	flumes.blow();
+	// }
 }
 
 function render() {
@@ -86,6 +86,9 @@ function render() {
 			ctx.beginPath();
 			ctx.arc((item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS, CELL_PIXELS / 2, 0, Math.PI * 2);
 			ctx.fill();
+
+			ctx.fillStyle = 'red';
+			ctx.fillText(item.type, (item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS);
 		}
 	}
 

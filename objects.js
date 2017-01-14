@@ -61,7 +61,11 @@ class World {
 		}
 
 		// check for Items
-
+		for (let item of this.items) {
+			if (item.x === x && item.y === y) {
+				this.removeItem(item);
+			}
+		}
 
 		// check for Bombs
 		for (let bomb of this.bombs) {
@@ -95,8 +99,14 @@ class Item {
 		this.x = x;
 		this.y = y;
 
+		Object.assign(this, {
+			SPEED_UP: 1,
+			BOMBS_UP: 2
+		});
+
 		this.type = this.SPEED_UP;
 	}
+
 	// Powerup TYPE
 	// + Speed
 	// + Bombs
@@ -114,6 +124,8 @@ class Flumes {
 	constructor(x, y, ttl) {
 		this.x = x;
 		this.y = y;
+
+		this.blow();
 
 		setTimeout(() => {
 			world.removeFlumes(this);
@@ -285,14 +297,13 @@ class Walls {
 	}
 }
 
-const MOVEMENT = 0.25;
-
 class Player {
 	constructor(x, y) {
 		// knows about the world
 		this.positionAt(x || 0, y || 0);
 		this.bombLimit = 1;
 		this.bombs = [];
+		this.SPEED = 0.25;
 
 		// TODO add direction
 	}
@@ -305,6 +316,17 @@ class Player {
 	moveBy( dx, dy ) {
 		this.x += dx;
 		this.y += dy;
+
+		const snapX = this.x + 0.5 | 0;
+		const snapY = this.y + 0.5 | 0;
+		for (let item of world.items) {
+			if (item.x === snapX && item.y === snapY) {
+				// item.type == item.SPEED
+				// this.SPEED += 0.05;
+				world.removeItem(item);
+			}
+		}
+
 	}
 
 	// TODO convert moving into block into opposite direction
@@ -337,7 +359,7 @@ class Player {
 		})
 		if (fail) return;
 
-		this.moveBy(0, -MOVEMENT);
+		this.moveBy(0, -this.SPEED);
 	}
 
 	moveDown() {
@@ -349,7 +371,7 @@ class Player {
 		})
 		if (fail) return;
 
-		this.moveBy(0, MOVEMENT);
+		this.moveBy(0, this.SPEED);
 	}
 
 	moveLeft() {
@@ -360,7 +382,7 @@ class Player {
 			}
 		})
 		if (fail) return;
-		this.moveBy(-MOVEMENT, 0);
+		this.moveBy(-this.SPEED, 0);
 	}
 
 	moveRight() {
@@ -372,7 +394,7 @@ class Player {
 		})
 		if (fail) return;
 
-		this.moveBy(MOVEMENT, 0);
+		this.moveBy(this.SPEED, 0);
 	}
 
 	dropBomb() {
