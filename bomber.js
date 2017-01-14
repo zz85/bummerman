@@ -73,6 +73,16 @@ function animate() {
 animate();
 
 function render() {
+	// Here is the game loop
+	// TODO remove global timeouts?
+	for (let flumes of world.flumes) {
+		flumes.blow();
+	}
+
+	// Here is the render Loop
+
+
+
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// walls

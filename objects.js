@@ -1,9 +1,10 @@
-const HARD_WALL = 1, SOFT_WALL = 2;
+const EMPTY = 0, HARD_WALL = 1, SOFT_WALL = 2;
 
 class World {
 	constructor() {
 		this.items = new Set();
 
+		this.bombs = new Set();
 		this.flumes = new Set();
 	}
 
@@ -25,17 +26,35 @@ class World {
 		this.remove(flumes);
 	}
 
+	addBomb(bomb) {
+		this.bombs.add(bomb);
+		this.add(bomb);
+	}
+
+	removeBomb(bomb) {
+		this.bombs.delete(bomb);
+		this.remove(bomb);
+	}
+
 	blow(x, y) {
 		// check for Players
 		if (player1.coverXs().find(v => v === x)
 			&& player1.coverYs().find(v => v === y)) {
-			alert('You died!');
+			pre.innerHTML = 'You died!';
+			// TODO make this an event
 		}
+		// check for Items
+
+		
+		// check for Bombs
+		for (let bomb of this.bombs) {
+			if (bomb.snapX() === x && bomb.snapY() === y) {
+				bomb.explode();
+			}
+		}
+
 		// check for Walls
 		map.blow(x, y);
-
-		// check for Items
-		// check for Bombs
 
 		// or should bomb going off be an event
 		// and all items listen for exploding event?
@@ -55,10 +74,13 @@ class Flumes {
 		this.x = x;
 		this.y = y;
 
-		world.blow(x, y);
 		setTimeout(() => {
 			world.removeFlumes(this);
-		}, 500);
+		}, 300);
+	}
+
+	blow() {
+		world.blow(this.x, this.y);
 	}
 }
 
@@ -67,11 +89,13 @@ class Bomb {
 		this.x = x;
 		this.y = y;
 		this.strength = strength;
-		this.state = 0;
-		// Not exploded
-		// About to explode (shaking)
-		// Exploding
-		// Exploded (Can be removed)
+
+		this.CREATED = 0; // Not exploded
+		this.PLANTED = 1; // About to explode (shaking)
+		this.EXPLODING = 2; // Exploding
+		this.EXPLODED = 3; // Exploded (Can be removed)
+
+		this.state = this.CREATED;
 	}
 
 	snapX() {
@@ -84,11 +108,14 @@ class Bomb {
 
 	plant() {
 		this.planted = Date.now();
+		this.state = this.EXPLODING
 		setTimeout(() => this.explode(), 2000);
 	}
 
 	explode() {
-		// TODO add animation flames
+		if (this.state > this.EXPLODING) return;
+		this.state = this.EXPLODED;
+
 		const x = this.snapX();
 		const y = this.snapY();
 
@@ -113,7 +140,7 @@ class Bomb {
 		count.map(s => [0, -s]).some(check);
 		count.map(s => [0, s]).some(check);
 
-		world.remove(this);
+		world.removeBomb(this);
 	}
 }
 
@@ -154,8 +181,8 @@ class Walls {
 
 	blow(x, y) {
 		if (x < 0 || y < 0 || x > this.columns - 1 || y > this.rows - 1) return;
-		if (this.cells[this.index(x, y)] === 2) {
-			this.cells[this.index(x, y)] = 0;
+		if (this.cells[this.index(x, y)] === SOFT_WALL) {
+			this.cells[this.index(x, y)] = EMPTY;
 		}
 	}
 
@@ -191,7 +218,7 @@ class Walls {
 			.filter(v => v && !exceptions.has(v))
 			.forEach((a) => {
 				// this.cells[a] = SOFT_WALL;
-				if (Math.random() < 0.8) {
+				if (Math.random() < 0.9) {
 					this.cells[a] = SOFT_WALL;
 				}
 			});
@@ -309,8 +336,8 @@ class Player {
 
 	dropBomb() {
 		const bomb = new Bomb(this.x, this.y)
-		this.bombs.push(bomb);
-		world.add(bomb);
+		// this.bombs.push(bomb);
+		world.addBomb(bomb);
 		bomb.plant();
 	}
 
