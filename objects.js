@@ -1,6 +1,10 @@
+const HARD_WALL = 1, SOFT_WALL = 2;
+
 class World {
 	constructor() {
 		this.items = new Set();
+
+		this.flumes = new Set();
 	}
 
 	add(item) {
@@ -9,6 +13,16 @@ class World {
 
 	remove(item) {
 		this.items.delete(item);
+	}
+
+	addFlumes(flumes) {
+		this.flumes.add(flumes);
+		this.add(flumes);
+	}
+
+	removeFlumes(flumes) {
+		this.flumes.delete(flumes);
+		this.remove(flumes);
 	}
 
 	blow(x, y) {
@@ -30,8 +44,15 @@ Object {
 }
 */
 
+class Flumes {
+	constructor(x, y, ttl) {
+		this.x = x;
+		this.y = y;
+	}
+}
+
 class Bomb {
-	constructor(x, y, strength = 1) {
+	constructor(x, y, strength = 2) {
 		this.x = x;
 		this.y = y;
 		this.strength = strength;
@@ -60,13 +81,22 @@ class Bomb {
 		const x = this.snapX();
 		const y = this.snapY();
 
-		for (let tx = -1; tx <= 1; tx++) {
-			map.blow(x + tx, y);
+		const check = ([tx, ty]) => {
+			if (map.get(x + tx, y + ty) === HARD_WALL) {
+				return true;
+			}
+			map.blow(x + tx, y + ty);
+			if (map.get(x + tx, y + ty) === SOFT_WALL) {
+				return true;
+			}
 		}
+		// Right
+		const count = [...new Array(this.strength).keys()];
 
-		for (let ty = -1; ty <= 1; ty++) {
-			map.blow(x, y + ty);
-		}
+		count.map(s => [s, 0]).some(check);
+		count.map(s => [-s, 0]).some(check);
+		count.map(s => [0, -s]).some(check);
+		count.map(s => [0, s]).some(check);
 
 		world.remove(this);
 	}
@@ -100,14 +130,9 @@ class Walls {
 				|| y === 0
 				|| y === this.rows - 1
 				|| (x % 2 === 0 && y % 2 === 0)) {
-					this.cells[this.index(x, y)] = 1;
+					this.cells[this.index(x, y)] = HARD_WALL;
 				} 
 		})
-		// for (let i=2; i < this.rows; i+=2) {
-		// 	for (let j=2; j < this.columns; j+=2) {
-		// 		this.cells[this.index(j, i)] = 1;
-		// 	}
-		// }
 
 		this.buildMaze();
 	}
@@ -150,9 +175,9 @@ class Walls {
 			.map((c, i) => c === 0 && i)
 			.filter(v => v && !exceptions.has(v))
 			.forEach((a) => {
-				// this.cells[a] = 2;
+				// this.cells[a] = SOFT_WALL;
 				if (Math.random() < 0.8) {
-					this.cells[a] = 2;
+					this.cells[a] = SOFT_WALL;
 				}
 			});
 	}
