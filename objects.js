@@ -54,6 +54,11 @@ class Flumes {
 	constructor(x, y, ttl) {
 		this.x = x;
 		this.y = y;
+
+		world.blow(x, y);
+		setTimeout(() => {
+			world.removeFlumes(this);
+		}, 500);
 	}
 }
 
@@ -90,11 +95,12 @@ class Bomb {
 		const check = ([dx, dy]) => {
 			const tx = dx + x;
 			const ty = dy + y;
-			if (map.get(tx, ty) === HARD_WALL) {
+			const m = map.get(tx, ty);
+			if (m === HARD_WALL) {
 				return true;
 			}
-			world.blow(tx, ty);
-			if (map.get(tx, ty) === SOFT_WALL) {
+			world.addFlumes(new Flumes(tx, ty));
+			if (m === SOFT_WALL) {
 				return true;
 			}
 		};

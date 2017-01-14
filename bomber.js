@@ -94,6 +94,10 @@ function render() {
 			ctx.fillStyle = 'red';
 			ctx.fillRect(item.snapX() * CELL_PIXELS, item.snapY() * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 		}
+		else if (item instanceof Flumes) {
+			ctx.fillStyle = 'orange';
+			ctx.fillRect(item.x * CELL_PIXELS, item.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+		}
 	}
 
 	// player
