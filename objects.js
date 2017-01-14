@@ -27,7 +27,13 @@ class World {
 
 	blow(x, y) {
 		// check for Players
+		if (player1.coverXs().find(v => v === x)
+			&& player1.coverYs().find(v => v === y)) {
+			alert('You died!');
+		}
 		// check for Walls
+		map.blow(x, y);
+
 		// check for Items
 		// check for Bombs
 
@@ -81,18 +87,21 @@ class Bomb {
 		const x = this.snapX();
 		const y = this.snapY();
 
-		const check = ([tx, ty]) => {
-			if (map.get(x + tx, y + ty) === HARD_WALL) {
+		const check = ([dx, dy]) => {
+			const tx = dx + x;
+			const ty = dy + y;
+			if (map.get(tx, ty) === HARD_WALL) {
 				return true;
 			}
-			map.blow(x + tx, y + ty);
-			if (map.get(x + tx, y + ty) === SOFT_WALL) {
+			world.blow(tx, ty);
+			if (map.get(tx, ty) === SOFT_WALL) {
 				return true;
 			}
-		}
-		// Right
-		const count = [...new Array(this.strength).keys()];
+		};
 
+		// Right
+		const count = [...new Array(this.strength + 1).keys()].slice(1);
+		check([0, 0]);
 		count.map(s => [s, 0]).some(check);
 		count.map(s => [-s, 0]).some(check);
 		count.map(s => [0, -s]).some(check);
@@ -131,7 +140,7 @@ class Walls {
 				|| y === this.rows - 1
 				|| (x % 2 === 0 && y % 2 === 0)) {
 					this.cells[this.index(x, y)] = HARD_WALL;
-				} 
+				}
 		})
 
 		this.buildMaze();
