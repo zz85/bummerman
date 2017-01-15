@@ -41,25 +41,20 @@ class Player {
         if (dy > 0) {
             // down
             const dec = tx % 1;
-            let blocked = 0;
 
-            if (map.get(tx | 0, ty + 1 | 0)) {
-                // left bottom blocked
-                blocked += 1 - dec;
-            }
-            
-            if (map.get(tx + 1 | 0, ty + 1 | 0)) {
-                // right bottom blocked
-                blocked += dec;
-            }
+            const left_bottom_blocked = !!map.get(tx | 0, ty + 1 | 0);
+            const right_bottom_blocked = !!map.get(tx + 1 | 0, ty + 1 | 0);
 
-            if (blocked > 0.2) {
+            const blocked = (1 - dec) * left_bottom_blocked + dec * right_bottom_blocked;
+
+            if (blocked > 0.4) {
                 ty = ty | 0;
             }
-            else {
-                // move left
+            else if (blocked > 0) {
+                // side movements
+                tx = tx + 0.5 | 0;
             }
-            console.log('bottom blocked', blocked, 'ratio', dec, 'target y', ty);
+            // console.log('bottom blocked', blocked, 'ratio', dec, 'target y', ty);
         }
         if (dy < 0) {
             if (map.get(tx | 0, ty | 0)) {
