@@ -15,26 +15,44 @@ class Player {
 	}
 
 	moveBy( dx, dy ) {
-		// const tx = dx + this.x;
-		// const ty = dy + this.y;
+		let tx = dx + this.x;
+		let ty = dy + this.y;
 
-		// // check if tx is out of bounds, limit it to bounds.
-		// const dir = x => x > 0 ? 1 : -1;
-		// if (dx > 0) {
-		// 	// get right bounds
-		// 	const x2 = this.x + 1 | 0;
-		// 	map.get(x2, )
-		// }
+        // edge cases
+        // x = 0.1
+        // dx = 1
+        // tx = 1.1
+        // tx = 1
 
-		// const fail = this.coverXs().some((x) => {
-		// 	if (map.get(x, this.y-1)) {
-		// 		return true;
-		// 	}
-		// })
-		// if (fail) return;
+        // check if tx is out of bounds, limit it to bounds.
 
-		this.x += dx;
-		this.y += dy;
+        if (dx > 0) {
+            // console.log(tx % 1 !== 0);
+            // tx % 1 !== 0 && 
+            if (map.get(tx + 1 | 0, ty | 0)) {
+                tx = tx | 0;
+            }
+        }
+        if (dx < 0) {
+            // tx % 1 !== 0 && 
+            if (map.get(tx | 0, ty | 0)) {
+                tx = tx + 1 | 0;
+            }
+        }
+        if (dy > 0) {
+            if (map.get(tx | 0, ty + 1 | 0)) {
+                ty = ty | 0;
+            }
+        }
+        if (dy < 0) {
+            if (map.get(tx | 0, ty | 0)) {
+                console.log('up');
+                ty = ty + 1 | 0;
+            }
+        }
+
+		this.x = tx;
+		this.y = ty;
 
 		const snapX = this.x + 0.5 | 0;
 		const snapY = this.y + 0.5 | 0;
@@ -42,7 +60,7 @@ class Player {
 			if (item.x === snapX && item.y === snapY) {
 				switch (item.type) {
 					case item.SPEED_UP:
-						this.SPEED += 0.25;
+						this.SPEED += 1;
 						break;
 					case item.BOMBS_UP:
 						this.bombsLimit++;
@@ -89,9 +107,9 @@ class Player {
 	moveUp(t) {
 		if (this.y <= 0) return;
 		const fail = this.coverXs().some((x) => {
-			if (map.get(x, this.snapY() -1)) {
-				return true;
-			}
+			// if (map.get(x, this.snapY() -1)) {
+			// 	return true;
+			// }
 		})
 		if (fail) return;
 
@@ -99,37 +117,42 @@ class Player {
 	}
 
 	moveDown(t) {
-		if (this.y >= map.rows - 1) return;
-		const fail = this.coverXs().some((x) => {
-			if (map.get(x, this.snapY() +1)) {
-				return true;
-			}
-		})
-		if (fail) return;
+		// if (this.y >= map.rows - 1) return;
+		// const fail = this.coverXs().some((x) => {
+		// 	if (map.get(x, this.snapY() +1)) {
+		// 		return true;
+		// 	}
+		// })
+		// if (fail) return;
 
 		this.moveBy(0, this.SPEED * t);
 	}
 
 	moveLeft(t) {
-		if (this.x <= 0) return;
-		const fail = this.coverYs().some((y) => {
-			if (map.get(this.snapX() - 1, y)) {
-				return true;
-			}
-		})
-		if (fail) return;
+		// if (this.x <= 0) return;
+		// const fail = this.coverYs().some((y) => {
+		// 	// if (map.get(this.snapX() - 1, y)) {
+		// 	// 	return true;
+		// 	// }
+		// })
+		// if (fail) {
+        //     console.log('cant move left');
+        //     return;
+        // }
 		this.moveBy(-this.SPEED * t, 0);
 	}
 
 	moveRight(t) {
-		if (this.x >= map.columns - 1) return;
-		const fail = this.coverYs().some((y) => {
-			if (map.get(this.snapX() + 1, y)) {
-				return true;
-			}
-		})
-		if (fail) return;
-
+		// if (this.x >= map.columns - 1) return;
+		// const fail = this.coverYs().some((y) => {
+		// 	// if (map.get(this.snapX() + 1, y)) {
+		// 	// 	return true;
+		// 	// }
+		// })
+		// if (fail) {
+        //     console.log('cant move right');
+        //     return;
+        // }
 		this.moveBy(this.SPEED * t, 0);
 	}
 
