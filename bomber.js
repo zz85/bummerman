@@ -1,5 +1,5 @@
 // TODO
-// Bomb
+// Better collision detections
 // Powerups
 // Player AI
 // Audio effects

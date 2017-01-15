@@ -76,7 +76,7 @@ class World {
 
 		// check for Walls
 		if (map.blow(x, y)) {
-			this.addItem(new Item(x, y));
+			this.addItem(new Item(x, y, Math.random() * 3 | 0));
 			// if (Math.random() < 0.5) {
 			// 	this.addItem(new Item(x, y));
 			// }
@@ -100,11 +100,14 @@ class Item {
 		this.y = y;
 
 		Object.assign(this, {
-			SPEED_UP: 1,
-			BOMBS_UP: 2
+			SPEED_UP: 0,
+			BOMBS_UP: 1,
+			FIRE_UP: 2,
+			
 		});
 
-		this.type = this.SPEED_UP;
+		this.type = type;
+		//  || this.SPEED_UP;
 	}
 
 	// Powerup TYPE
@@ -138,7 +141,7 @@ class Flumes {
 }
 
 class Bomb {
-	constructor(x, y, strength = 2) {
+	constructor(x, y, strength = 1, owner) {
 		this.x = x;
 		this.y = y;
 		this.strength = strength;
@@ -149,6 +152,7 @@ class Bomb {
 		this.EXPLODED = 3; // Exploded (Can be removed)
 
 		this.state = this.CREATED;
+		this.owner = owner;
 	}
 
 	snapX() {
@@ -193,6 +197,8 @@ class Bomb {
 		count.map(s => [0, s]).some(check);
 
 		world.removeBomb(this);
+
+		this.owner.bombsUsed--;
 	}
 }
 
@@ -301,10 +307,10 @@ class Player {
 	constructor(x, y) {
 		// knows about the world
 		this.positionAt(x || 0, y || 0);
-		this.bombLimit = 1;
-		this.bombs = [];
+		this.bombsLimit = 1;
+		this.bombStrength = 1;
+		this.bombsUsed = 0;
 		this.SPEED = 0.25;
-
 		// TODO add direction
 	}
 
@@ -314,6 +320,21 @@ class Player {
 	}
 
 	moveBy( dx, dy ) {
+		const tx = dx + this.x;
+		const ty = dy + this.y;
+
+		// check if tx is out of bounds, limit it to bounds.
+		const dir = x => x > 0 ? 1 : -1;
+		
+		// if (dx > 0)
+
+		// const fail = this.coverXs().some((x) => {
+		// 	if (map.get(x, this.y-1)) {
+		// 		return true;
+		// 	}
+		// })
+		// if (fail) return;
+
 		this.x += dx;
 		this.y += dy;
 
@@ -321,6 +342,17 @@ class Player {
 		const snapY = this.y + 0.5 | 0;
 		for (let item of world.items) {
 			if (item.x === snapX && item.y === snapY) {
+				switch (item.type) {
+					case item.SPEED_UP:
+						this.SPEED += 0.05;
+						break;
+					case item.BOMBS_UP:
+						this.bombsLimit++;
+						break;
+					case item.FIRE_UP:
+						this.bombStrength++;
+						break;
+				}
 				// item.type == item.SPEED
 				// this.SPEED += 0.05;
 				world.removeItem(item);
@@ -398,8 +430,11 @@ class Player {
 	}
 
 	dropBomb() {
-		const bomb = new Bomb(this.x, this.y)
-		// this.bombs.push(bomb);
+		if (this.bombsUsed >= this.bombsLimit) {
+			return;
+		}
+		const bomb = new Bomb(this.x, this.y, this.bombStrength, this);
+		this.bombsUsed++;
 		world.addBomb(bomb);
 		bomb.plant();
 	}
