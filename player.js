@@ -18,13 +18,16 @@ class Player {
 		let tx = dx + this.x;
 		let ty = dy + this.y;
 
+        const right_top_blocked = !!map.get(tx + 1 | 0, ty | 0);
+        const right_bottom_blocked = !!map.get(tx + 1 | 0, ty + 1 | 0);
+
+        const left_top_blocked = !!map.get(tx | 0, ty | 0);
+        const left_bottom_blocked = !!map.get(tx | 0, ty + 1 | 0);
+
         // check if tx is out of bounds, limit it to bounds.
         if (dx > 0) {
             // right
             const dec = ty % 1; // Are we y aligned?
-            const right_top_blocked = map.get(tx + 1 | 0, ty | 0);
-            const right_bottom_blocked = map.get(tx + 1 | 0, ty + 1 | 0);
-
             const blocked = (1 - dec) * right_top_blocked + dec * right_bottom_blocked;
 
             if (blocked > 0.4) {
@@ -36,10 +39,8 @@ class Player {
             }
         }
         if (dx < 0) {
+            // left
             const dec = ty % 1; // Are we y aligned?
-            const left_top_blocked = map.get(tx | 0, ty | 0);
-            const left_bottom_blocked = map.get(tx | 0, ty + 1 | 0);
-
             const blocked = (1 - dec) * left_top_blocked + dec * left_bottom_blocked;
 
             if (blocked > 0.4) {
@@ -53,10 +54,6 @@ class Player {
         if (dy > 0) {
             // down
             const dec = tx % 1; // check x alignment
-
-            const left_bottom_blocked = !!map.get(tx | 0, ty + 1 | 0);
-            const right_bottom_blocked = !!map.get(tx + 1 | 0, ty + 1 | 0);
-
             const blocked = (1 - dec) * left_bottom_blocked + dec * right_bottom_blocked;
 
             if (blocked > 0.4) {
@@ -71,10 +68,6 @@ class Player {
         if (dy < 0) {
             // up
             const dec = tx % 1; // check x alignment
-
-            const left_top_blocked = !!map.get(tx | 0, ty | 0);
-            const right_top_blocked = !!map.get(tx + 1 | 0, ty | 0);
-
             const blocked = (1 - dec) * left_top_blocked + dec * right_top_blocked;
 
             if (blocked > 0.4) {
@@ -91,6 +84,7 @@ class Player {
 
 		const snapX = this.x + 0.5 | 0;
 		const snapY = this.y + 0.5 | 0;
+
 		for (let item of world.items) {
 			if (item.x === snapX && item.y === snapY) {
 				switch (item.type) {
@@ -108,17 +102,6 @@ class Player {
 			}
 		}
 
-	}
-
-	// TODO convert moving into block into opposite direction
-	// for better UX
-
-	snapX() {
-		return this.x | 0;
-	}
-
-	snapY() {
-		return this.y | 0;
 	}
 
 	coverXs() {
