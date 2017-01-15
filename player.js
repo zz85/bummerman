@@ -34,15 +34,32 @@ class Player {
             }
         }
         if (dx < 0) {
-            // tx % 1 !== 0 && 
             if (map.get(tx | 0, ty | 0)) {
                 tx = tx + 1 | 0;
             }
         }
         if (dy > 0) {
+            // down
+            const dec = tx % 1;
+            let blocked = 0;
+
             if (map.get(tx | 0, ty + 1 | 0)) {
+                // left bottom blocked
+                blocked += 1 - dec;
+            }
+            
+            if (map.get(tx + 1 | 0, ty + 1 | 0)) {
+                // right bottom blocked
+                blocked += dec;
+            }
+
+            if (blocked > 0.2) {
                 ty = ty | 0;
             }
+            else {
+                // move left
+            }
+            console.log('bottom blocked', blocked, 'ratio', dec, 'target y', ty);
         }
         if (dy < 0) {
             if (map.get(tx | 0, ty | 0)) {
@@ -105,54 +122,18 @@ class Player {
 	}
 
 	moveUp(t) {
-		if (this.y <= 0) return;
-		const fail = this.coverXs().some((x) => {
-			// if (map.get(x, this.snapY() -1)) {
-			// 	return true;
-			// }
-		})
-		if (fail) return;
-
 		this.moveBy(0, -this.SPEED * t);
 	}
 
 	moveDown(t) {
-		// if (this.y >= map.rows - 1) return;
-		// const fail = this.coverXs().some((x) => {
-		// 	if (map.get(x, this.snapY() +1)) {
-		// 		return true;
-		// 	}
-		// })
-		// if (fail) return;
-
 		this.moveBy(0, this.SPEED * t);
 	}
 
 	moveLeft(t) {
-		// if (this.x <= 0) return;
-		// const fail = this.coverYs().some((y) => {
-		// 	// if (map.get(this.snapX() - 1, y)) {
-		// 	// 	return true;
-		// 	// }
-		// })
-		// if (fail) {
-        //     console.log('cant move left');
-        //     return;
-        // }
 		this.moveBy(-this.SPEED * t, 0);
 	}
 
 	moveRight(t) {
-		// if (this.x >= map.columns - 1) return;
-		// const fail = this.coverYs().some((y) => {
-		// 	// if (map.get(this.snapX() + 1, y)) {
-		// 	// 	return true;
-		// 	// }
-		// })
-		// if (fail) {
-        //     console.log('cant move right');
-        //     return;
-        // }
 		this.moveBy(this.SPEED * t, 0);
 	}
 
