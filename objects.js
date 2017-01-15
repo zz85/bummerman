@@ -103,7 +103,7 @@ class Item {
 			SPEED_UP: 0,
 			BOMBS_UP: 1,
 			FIRE_UP: 2,
-			
+
 		});
 
 		this.type = type;
@@ -263,10 +263,10 @@ class Walls {
 
 			this.index(minX, maxY),
 			this.index(minX, maxY - 1),
-			this.index(minX, maxY),
+			this.index(minX + 1, maxY),
 
 			this.index(maxX, maxY),
-			this.index(maxX - 1, maxY - 1),
+			this.index(maxX - 1, maxY),
 			this.index(maxX, maxY - 1),
 		]);
 
@@ -310,7 +310,7 @@ class Player {
 		this.bombsLimit = 1;
 		this.bombStrength = 1;
 		this.bombsUsed = 0;
-		this.SPEED = 0.25;
+		this.SPEED = 2;
 		// TODO add direction
 	}
 
@@ -320,13 +320,16 @@ class Player {
 	}
 
 	moveBy( dx, dy ) {
-		const tx = dx + this.x;
-		const ty = dy + this.y;
+		// const tx = dx + this.x;
+		// const ty = dy + this.y;
 
-		// check if tx is out of bounds, limit it to bounds.
-		const dir = x => x > 0 ? 1 : -1;
-		
-		// if (dx > 0)
+		// // check if tx is out of bounds, limit it to bounds.
+		// const dir = x => x > 0 ? 1 : -1;
+		// if (dx > 0) {
+		// 	// get right bounds
+		// 	const x2 = this.x + 1 | 0;
+		// 	map.get(x2, )
+		// }
 
 		// const fail = this.coverXs().some((x) => {
 		// 	if (map.get(x, this.y-1)) {
@@ -344,7 +347,7 @@ class Player {
 			if (item.x === snapX && item.y === snapY) {
 				switch (item.type) {
 					case item.SPEED_UP:
-						this.SPEED += 0.05;
+						this.SPEED += 0.25;
 						break;
 					case item.BOMBS_UP:
 						this.bombsLimit++;
@@ -353,8 +356,6 @@ class Player {
 						this.bombStrength++;
 						break;
 				}
-				// item.type == item.SPEED
-				// this.SPEED += 0.05;
 				world.removeItem(item);
 			}
 		}
@@ -363,6 +364,14 @@ class Player {
 
 	// TODO convert moving into block into opposite direction
 	// for better UX
+
+	snapX() {
+		return this.x | 0;
+	}
+
+	snapY() {
+		return this.y | 0;
+	}
 
 	coverXs() {
 		const basex = Math.floor(this.x);
@@ -382,51 +391,51 @@ class Player {
 		return [this.y];
 	}
 
-	moveUp() {
+	moveUp(t) {
 		if (this.y <= 0) return;
 		const fail = this.coverXs().some((x) => {
-			if (map.get(x, this.y-1)) {
+			if (map.get(x, this.snapY() -1)) {
 				return true;
 			}
 		})
 		if (fail) return;
 
-		this.moveBy(0, -this.SPEED);
+		this.moveBy(0, -this.SPEED * t);
 	}
 
-	moveDown() {
+	moveDown(t) {
 		if (this.y >= map.rows - 1) return;
 		const fail = this.coverXs().some((x) => {
-			if (map.get(x, this.y+1)) {
+			if (map.get(x, this.snapY() +1)) {
 				return true;
 			}
 		})
 		if (fail) return;
 
-		this.moveBy(0, this.SPEED);
+		this.moveBy(0, this.SPEED * t);
 	}
 
-	moveLeft() {
+	moveLeft(t) {
 		if (this.x <= 0) return;
 		const fail = this.coverYs().some((y) => {
-			if (map.get(this.x - 1, y)) {
+			if (map.get(this.snapX() - 1, y)) {
 				return true;
 			}
 		})
 		if (fail) return;
-		this.moveBy(-this.SPEED, 0);
+		this.moveBy(-this.SPEED * t, 0);
 	}
 
-	moveRight() {
+	moveRight(t) {
 		if (this.x >= map.columns - 1) return;
 		const fail = this.coverYs().some((y) => {
-			if (map.get(this.x + 1, y)) {
+			if (map.get(this.snapX() + 1, y)) {
 				return true;
 			}
 		})
 		if (fail) return;
 
-		this.moveBy(this.SPEED, 0);
+		this.moveBy(this.SPEED * t, 0);
 	}
 
 	dropBomb() {

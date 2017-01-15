@@ -37,16 +37,30 @@ pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
 document.body.appendChild(pre);
 
 const ctx = canvas.getContext('2d');
+let last = performance.now();
+
+const keydowns = {};
 
 function globalLoop() {
 	requestAnimationFrame(globalLoop);
-	loop();
+	const now = performance.now();
+	const dt = now - last;
+	last = now;
+	if (dt > 1000) return;
+	loop(dt);
 	render();
 }
 
 globalLoop();
 
-function loop() {
+function loop(dt) {
+	const t = dt / 1000;
+
+	if (keydowns[38]) player1.moveUp(t);
+	if (keydowns[40]) player1.moveDown(t);
+	if (keydowns[37]) player1.moveLeft(t);
+	if (keydowns[39]) player1.moveRight(t);
+
 	// Here is the game loop
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
@@ -58,6 +72,7 @@ function render() {
 	// Here is the render Loop
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+	let now = Date.now();
 	// walls
 	map.forEach((x, y, v) => {
 
@@ -74,8 +89,11 @@ function render() {
 
 	for (let item of world.objects) {
 		if (item instanceof Bomb) {
+			let size = 1 - Math.sin((now - item.planted)/ 1000 * 8) * 0.2;
 			ctx.fillStyle = 'red';
-			ctx.fillRect(item.snapX() * CELL_PIXELS, item.snapY() * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+			ctx.beginPath();
+			ctx.arc((item.snapX() + 0.5) * CELL_PIXELS, (item.snapY() + 0.5) * CELL_PIXELS, CELL_PIXELS / 3 * size, 0, Math.PI * 2);
+			ctx.fill();
 		}
 		else if (item instanceof Flumes) {
 			ctx.fillStyle = 'orange';
@@ -83,9 +101,7 @@ function render() {
 		}
 		else if (item instanceof Item) {
 			ctx.fillStyle = 'orange';
-			ctx.beginPath();
-			ctx.arc((item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS, CELL_PIXELS / 2, 0, Math.PI * 2);
-			ctx.fill();
+			ctx.fillRect((item.x + 0.1) * CELL_PIXELS, (item.y + 0.1) * CELL_PIXELS, CELL_PIXELS * 0.8, CELL_PIXELS * 0.8);
 
 			ctx.fillStyle = 'red';
 			ctx.fillText(item.type, (item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS);
@@ -104,33 +120,34 @@ document.addEventListener( 'keydown', onDocumentKeyDown, false );
 document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
 function onDocumentKeyDown( event ) {
+	keydowns[event.keyCode] = 1;
 	console.log(event.keyCode);
 	switch( event.keyCode ) {
-		case 87:
-			// up W
-			player1.moveUp(); break;
-		case 83:
-			// down D
-			player1.moveDown(); break;
-		case 65:
-			// left A
-			player1.moveLeft(); break;
-		case 68:
-			// right D
-			player1.moveRight(); break;
+		// case 87:
+		// 	// up W
+		// 	player1.moveUp(); break;
+		// case 83:
+		// 	// down D
+		// 	player1.moveDown(); break;
+		// case 65:
+		// 	// left A
+		// 	player1.moveLeft(); break;
+		// case 68:
+		// 	// right D
+		// 	player1.moveRight(); break;
 
-		case 38:
-			// up
-			player1.moveUp(); break;
-		case 40:
-			// down D
-			player1.moveDown(); break;
-		case 37:
-			// left A
-			player1.moveLeft(); break;
-		case 39:
-			// right D
-			player1.moveRight(); break;
+		// case 38:
+		// 	// up
+		// 	player1.moveUp(); break;
+		// case 40:
+		// 	// down D
+		// 	player1.moveDown(); break;
+		// case 37:
+		// 	// left A
+		// 	player1.moveLeft(); break;
+		// case 39:
+		// 	// right D
+		// 	player1.moveRight(); break;
 
 		case 13:
 			// Return
@@ -146,7 +163,7 @@ function onDocumentKeyDown( event ) {
 }
 
 function onDocumentKeyUp( event ) {
-
+	keydowns[event.keyCode] = 0;
 	switch( event.keyCode ) {
 
 		case 16: isShiftDown = false; break;
