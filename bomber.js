@@ -56,6 +56,19 @@ globalLoop();
 function loop(dt) {
 	const t = dt / 1000;
 
+	// case 87:
+	// 	// up W
+	// 	player1.moveUp(); break;
+	// case 83:
+	// 	// down D
+	// 	player1.moveDown(); break;
+	// case 65:
+	// 	// left A
+	// 	player1.moveLeft(); break;
+	// case 68:
+	// 	// right D
+	// 	player1.moveRight(); break;
+
 	if (keydowns[38]) player1.moveUp(t);
 	if (keydowns[40]) player1.moveDown(t);
 	if (keydowns[37]) player1.moveLeft(t);
@@ -87,9 +100,12 @@ function render() {
 		if (v) ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
 	});
 
+	const f = (t) => t < 0.5 ? t * 2 : 2 - t * 2;
+	// Math.sin((now - item.planted)/ 1000 * 8)
+
 	for (let item of world.objects) {
 		if (item instanceof Bomb) {
-			let size = 1 - Math.sin((now - item.planted)/ 1000 * 8) * 0.2;
+			let size = 1 - f(((now - item.planted) / 800) % 1) * 0.2;
 			ctx.fillStyle = 'red';
 			ctx.beginPath();
 			ctx.arc((item.snapX() + 0.5) * CELL_PIXELS, (item.snapY() + 0.5) * CELL_PIXELS, CELL_PIXELS / 3 * size, 0, Math.PI * 2);
@@ -123,32 +139,6 @@ function onDocumentKeyDown( event ) {
 	keydowns[event.keyCode] = 1;
 	console.log(event.keyCode);
 	switch( event.keyCode ) {
-		// case 87:
-		// 	// up W
-		// 	player1.moveUp(); break;
-		// case 83:
-		// 	// down D
-		// 	player1.moveDown(); break;
-		// case 65:
-		// 	// left A
-		// 	player1.moveLeft(); break;
-		// case 68:
-		// 	// right D
-		// 	player1.moveRight(); break;
-
-		// case 38:
-		// 	// up
-		// 	player1.moveUp(); break;
-		// case 40:
-		// 	// down D
-		// 	player1.moveDown(); break;
-		// case 37:
-		// 	// left A
-		// 	player1.moveLeft(); break;
-		// case 39:
-		// 	// right D
-		// 	player1.moveRight(); break;
-
 		case 13:
 			// Return
 			player1.dropBomb();
