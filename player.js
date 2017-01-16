@@ -18,6 +18,18 @@ class Player {
 		let tx = dx + this.x;
 		let ty = dy + this.y;
 
+        /* iffy
+        let stepping_onto_bomb = false;
+        if (tx | 0 !== this.x | 0 &&
+            ty | 0 !== this.y | 0 ) {
+            // coordinates changed
+            if (world.hasBomb(tx | 0, ty | 0)) {
+                stepping_onto_bomb = true;
+                // console.log('stepping_onto_bomb');
+            }
+        }
+        */
+
         const right_top_blocked = world.isBlocked(tx + 1 | 0, ty | 0);
         const right_bottom_blocked = world.isBlocked(tx + 1 | 0, ty + 1 | 0);
 

@@ -53,7 +53,10 @@ class World {
 	isBlocked(x, y) {
 		// expect snapped integers
 		if (map.get(x, y)) return true;
-		// causes jump away from bomb bug :(
+		return false;
+	}
+
+	hasBomb(x, y) {
 		for (let bomb of this.bombs) {
 			if (bomb.snapX() === x && bomb.snapY() === y) {
 				return true;
