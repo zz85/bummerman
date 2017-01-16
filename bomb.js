@@ -1,3 +1,5 @@
+const BOMB_FUSE_TIME = 3000;
+
 class Bomb {
 	constructor(x, y, strength = 1, owner) {
 		this.x = x;
@@ -24,7 +26,7 @@ class Bomb {
 	plant() {
 		this.planted = Date.now();
 		this.state = this.EXPLODING
-		setTimeout(() => this.explode(), 2000);
+		setTimeout(() => this.explode(), BOMB_FUSE_TIME);
 	}
 
 	explode() {

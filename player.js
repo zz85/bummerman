@@ -1,5 +1,5 @@
 class Player {
-	constructor(x, y) {
+	constructor(x, y, world) {
 		// knows about the world
 		this.positionAt(x || 0, y || 0);
 		this.bombsLimit = 1;
@@ -18,11 +18,13 @@ class Player {
 		let tx = dx + this.x;
 		let ty = dy + this.y;
 
-        const right_top_blocked = !!map.get(tx + 1 | 0, ty | 0);
-        const right_bottom_blocked = !!map.get(tx + 1 | 0, ty + 1 | 0);
+        const right_top_blocked = world.isBlocked(tx + 1 | 0, ty | 0);
+        const right_bottom_blocked = world.isBlocked(tx + 1 | 0, ty + 1 | 0);
 
-        const left_top_blocked = !!map.get(tx | 0, ty | 0);
-        const left_bottom_blocked = !!map.get(tx | 0, ty + 1 | 0);
+        const left_top_blocked = world.isBlocked(tx | 0, ty | 0);
+        const left_bottom_blocked = world.isBlocked(tx | 0, ty + 1 | 0);
+
+        const ALLOWANCE = 0.4;
 
         // check if tx is out of bounds, limit it to bounds.
         if (dx > 0) {
@@ -30,7 +32,7 @@ class Player {
             const dec = ty % 1; // Are we y aligned?
             const blocked = (1 - dec) * right_top_blocked + dec * right_bottom_blocked;
 
-            if (blocked > 0.4) {
+            if (blocked > ALLOWANCE) {
                 tx = tx | 0;
             }
             else if (blocked > 0) {
@@ -43,7 +45,7 @@ class Player {
             const dec = ty % 1; // Are we y aligned?
             const blocked = (1 - dec) * left_top_blocked + dec * left_bottom_blocked;
 
-            if (blocked > 0.4) {
+            if (blocked > ALLOWANCE) {
                 tx = tx + 1 | 0;
             }
             else if (blocked > 0) {
@@ -56,7 +58,7 @@ class Player {
             const dec = tx % 1; // check x alignment
             const blocked = (1 - dec) * left_bottom_blocked + dec * right_bottom_blocked;
 
-            if (blocked > 0.4) {
+            if (blocked > ALLOWANCE) {
                 ty = ty | 0;
             }
             else if (blocked > 0) {
@@ -70,7 +72,7 @@ class Player {
             const dec = tx % 1; // check x alignment
             const blocked = (1 - dec) * left_top_blocked + dec * right_top_blocked;
 
-            if (blocked > 0.4) {
+            if (blocked > ALLOWANCE) {
                 ty = ty + 1 | 0;
             }
             else if (blocked > 0) {
@@ -89,7 +91,11 @@ class Player {
 			if (item.x === snapX && item.y === snapY) {
 				switch (item.type) {
 					case item.SPEED_UP:
-						this.SPEED += 1;
+                        if (this.SPEED < 5) {
+						    this.SPEED += 0.5;
+                        } else {
+                            this.SPEED += 0.2;
+                        }
 						break;
 					case item.BOMBS_UP:
 						this.bombsLimit++;

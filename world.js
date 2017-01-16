@@ -50,6 +50,18 @@ class World {
 		this.remove(item);
 	}
 
+	isBlocked(x, y) {
+		// expect snapped integers
+		if (map.get(x, y)) return true;
+		// causes jump away from bomb bug :(
+		for (let bomb of this.bombs) {
+			if (bomb.snapX() === x && bomb.snapY() === y) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	blow(x, y) {
 		// check for Players
 		if (player1.coverXs().find(v => v === x)
@@ -74,10 +86,10 @@ class World {
 
 		// check for Walls
 		if (map.blow(x, y)) {
-			this.addItem(new Item(x, y, Math.random() * 3 | 0));
-			// if (Math.random() < 0.5) {
-			// 	this.addItem(new Item(x, y));
-			// }
+			
+			if (Math.random() < 0.5) {
+				this.addItem(new Item(x, y, Math.random() * 3 | 0));
+			}
 		}
 
 		// or should bomb going off be an event
