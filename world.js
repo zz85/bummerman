@@ -70,6 +70,7 @@ class World {
 		if (player1.coverXs().find(v => v === x)
 			&& player1.coverYs().find(v => v === y)) {
 			pre.innerHTML = 'You died!';
+			playSound('die');
 			// TODO make this an event
 		}
 

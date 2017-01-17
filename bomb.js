@@ -33,6 +33,8 @@ class Bomb {
 		if (this.state > this.EXPLODING) return;
 		this.state = this.EXPLODED;
 
+		playSound('explosion');
+
 		const x = this.snapX();
 		const y = this.snapY();
 
