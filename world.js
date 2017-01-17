@@ -6,10 +6,10 @@ class World {
 		this.bombs = new Set();
 		this.flumes = new Set();
 		this.items = new Set();
+		this.players = new Set();
 
 		// TODO
 		// - Walls / Maps
-		// - Players
 	}
 
 	add(item) {
@@ -50,6 +50,17 @@ class World {
 		this.remove(item);
 	}
 
+	addPlayer(player) {
+		player.world = this;
+		this.players.add(player);
+		this.add(player);
+	}
+
+	removePlayer(player) {
+		this.players.delete(player);
+		this.remove(player);
+	}
+
 	isBlocked(x, y) {
 		// expect snapped integers
 		if (map.get(x, y)) return true;
@@ -67,11 +78,14 @@ class World {
 
 	blow(x, y) {
 		// check for Players
-		if (player1.coverXs().find(v => v === x)
-			&& player1.coverYs().find(v => v === y)) {
-			pre.innerHTML = 'You died!';
-			playSound('die');
-			// TODO make this an event
+		for (let player of this.players) {
+			if (player.coverXs().find(v => v === x)
+				&& player.coverYs().find(v => v === y)) {
+				pre.innerHTML = `${player.name} died!`;
+				// TODO - credit killed by.
+				playSound('die');
+				// TODO make this an event
+			}
 		}
 
 		// check for Items

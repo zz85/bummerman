@@ -24,10 +24,12 @@ const world = new World();
 const map = new Walls(COLUMNS, ROWS);
 map.defaultWalls();
 
-const player1 = new Player(1, 1);
+const player1 = new Player(1, 1, 'Player 1');
+const player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
 
 world.add(map);
-world.add(player1);
+world.addPlayer(player1);
+world.addPlayer(player2);
 
 const canvas = document.createElement('canvas');
 canvas.width = CELL_PIXELS * COLUMNS + 50;
@@ -57,27 +59,22 @@ function globalLoop() {
 globalLoop();
 
 function loop(dt) {
+	// Here is the game loop
+
 	const t = dt / 1000;
 
-	// case 87:
-	// 	// up W
-	// 	player1.moveUp(); break;
-	// case 83:
-	// 	// down D
-	// 	player1.moveDown(); break;
-	// case 65:
-	// 	// left A
-	// 	player1.moveLeft(); break;
-	// case 68:
-	// 	// right D
-	// 	player1.moveRight(); break;
+	if (keydowns[87]) player2.moveUp(t); // W
+	if (keydowns[83]) player2.moveDown(t); // S
+	if (keydowns[65]) player2.moveLeft(t); // A
+	if (keydowns[68]) player2.moveRight(t); // D
+
 
 	if (keydowns[38]) player1.moveUp(t);
 	if (keydowns[40]) player1.moveDown(t);
 	if (keydowns[37]) player1.moveLeft(t);
 	if (keydowns[39]) player1.moveRight(t);
 
-	// Here is the game loop
+
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
 	// 	flumes.blow();
@@ -127,12 +124,17 @@ function render() {
 		}
 	}
 
-	// player
-	ctx.fillStyle = '#0d0';
-	ctx.fillRect(player1.x * CELL_PIXELS, player1.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
+	for (let player of world.players) {
+		const x = player.x * CELL_PIXELS;
+		const y = player.y * CELL_PIXELS;
+		// player
+		ctx.fillStyle = '#0d0';
+		ctx.fillRect(x, y, CELL_PIXELS, CELL_PIXELS);
 
-	ctx.fillStyle = '#999';
-	ctx.fillText(`${player1.x}, ${player1.y}`, 50, 50);
+		ctx.fillStyle = '#999';
+		ctx.fillText(`${player.name} (${player.x}, ${player.y})`, x + 10, y + 10);
+	}
+
 }
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
@@ -147,9 +149,11 @@ function onDocumentKeyDown( event ) {
 			player1.dropBomb();
 			break;
 
-
-		case 16: isShiftDown = true; break;
-		case 17: isCtrlDown = true; break;
+		case 17:
+			player2.dropBomb();
+			break;
+		// case 16: isShiftDown = true; break;
+		// case 17: isCtrlDown = true; break;
 
 	}
 

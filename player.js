@@ -1,11 +1,11 @@
 class Player {
-	constructor(x, y, world) {
-		// knows about the world
+	constructor(x, y, name) {
 		this.positionAt(x || 0, y || 0);
 		this.bombsLimit = 1;
 		this.bombStrength = 1;
 		this.bombsUsed = 0;
 		this.SPEED = 2;
+		this.name = name;
 		// TODO add direction
 	}
 
