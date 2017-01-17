@@ -99,7 +99,6 @@ class Player {
                     ty = ty + 1 | 0;
             }
 
-
             const dec = tx % 1; // check x alignment
             const blocked = (1 - dec) * left_top_blocked + dec * right_top_blocked;
 

@@ -1,15 +1,18 @@
 // TODO
 // Better collision detections
+// 2 Players
 // Powerups
 // Player AI
 // Audio effects
+// Network
+// 3D
 
 const COLUMNS = 15;
 const ROWS = 15;
 const CELL_PIXELS = 45;
 
 // Game styles
-// AsCII
+// ASCII
 // 2D
 // 2.5D / 3D
 // VR
