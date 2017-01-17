@@ -1,11 +1,20 @@
-// TODO
-// Better collision detections
-// 2 Players
-// Powerups
+// # TODO-list
+// - Music
+// - Better / fairer item distribution
+// - Nicer Graphics
 // Player AI
-// Audio effects
 // Network
-// 3D
+// 2.5D view
+
+// # Bug-list
+
+// # Done-ish
+// - Powerups
+// - Better collision detections
+// - 2 Players
+// - Audio effects
+
+
 
 const COLUMNS = 15;
 const ROWS = 15;

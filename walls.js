@@ -1,3 +1,5 @@
+const EMPTY = 0, HARD_WALL = 1, SOFT_WALL = 2;
+
 class Walls {
 	constructor(columns, rows) {
 		this.columns = columns;
