@@ -1,10 +1,14 @@
 // # TODO-list
 // - Music
-// - Better / fairer item distribution
-// - Nicer Graphics
 // Player AI
 // Network
 // 2.5D view
+// Time elements
+
+// # Improvement List
+// - Better / fairer item distribution
+// - Nicer Graphics
+// - More Powerups
 
 // # Bug-list
 
@@ -13,7 +17,6 @@
 // - Better collision detections
 // - 2 Players
 // - Audio effects
-
 
 
 const COLUMNS = 15;

@@ -19,7 +19,7 @@ class Item {
 	// + Bombs
 	// + Increased fire / flames
 	// + Kick / Push bomb
-	// + Throw bomb
+	// + Throw / Push bomb
 	// + Remote control
 	// + Tanks
 	// - Poisons

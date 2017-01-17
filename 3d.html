@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>3D Scene Tests</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="https://threejs.org/build/three.js"></script>
+		<script>
+		var scene = new THREE.Scene();
+		var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+		var cube = new THREE.Mesh( geometry, material );
+		var boxHelper = new THREE.BoxHelper( cube )
+
+		const UNITS = 10;
+
+		var pointLight = new THREE.PointLight( 0xffffff );
+
+		const platform = new THREE.Object3D();
+
+		scene.add(platform);
+
+		boxHelper.position.y = UNITS / 2;
+		platform.add(boxHelper);
+
+		// var dlight = new THREE.DirectionalLight();
+
+		scene.add(pointLight);
+
+
+
+
+
+		wallGeometry = new THREE.BoxGeometry( 8, 8, 8 );
+		wallMaterial = new THREE.MeshToonMaterial( {
+			color: new THREE.Color().setRGB(0.98, 0.45, 1),
+			specular: new THREE.Color().setRGB(1, 1, 1),
+			shininess: 0.5,
+			reflectivity: 0.5,
+			shading: THREE.SmoothShading,
+		} );
+		wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
+		wallMesh.position.y = UNITS / 2;
+		platform.add(wallMesh);
+
+		floorGeometry = new THREE.PlaneGeometry(UNITS * 2, UNITS * 2, 1, 1);
+
+		floorMesh = new THREE.Mesh(floorGeometry, wallMaterial);
+		floorMesh.rotation.x = -Math.PI / 2;
+		platform.add(floorMesh);
+
+
+		camera.position.x = 10;
+		camera.position.y = UNITS * 2;
+		camera.position.z = 15;
+		pointLight.position.set(15, 5, 15);
+
+		var renderer = new THREE.WebGLRenderer();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+
+		animate();
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			render();
+		}
+
+		function render() {
+			platform.rotation.y += 0.01;
+
+			camera.lookAt(scene.position);
+			renderer.render(scene, camera);
+		}
+
+		</script>
+	</body>
+</html>
