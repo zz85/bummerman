@@ -7,28 +7,27 @@ const DIE = [0,0.0216,0.1137,0.38,0.6082,0.5813,,0.2126,-0.042,,0.749,-0.9034,0.
 // [0,,0.0996,0.5809,0.3535,0.4349,,,,,,0.5985,0.6633,,,,,,1,,,,,0.54];
 // helicopter 1,0.7494,0.8458,0.5557,0.5793,0.0422,,,0.7166,-0.458,0.5089,-0.1099,-0.6036,-0.2389,0.7689,0.6317,0.0231,-0.0273,0.9848,0.3597,0.3336,0.013,,0.54
 
-
 function createAudio(params) {
-    var soundURL = jsfxr(params);
-    var player = new Audio();
-    player.src = soundURL;
-    return player;
+	const soundURL = jsfxr(params);
+	const player = new Audio();
+	player.src = soundURL;
+	return player;
 }
 
 const cache = {
-    explosion: createAudio(EXPLOSION),
-    sample: createAudio(SAMPLE),
-    pickup: createAudio(PICKUP),
-    die: createAudio(DIE),
+	explosion: createAudio(EXPLOSION),
+	sample: createAudio(SAMPLE),
+	pickup: createAudio(PICKUP),
+	die: createAudio(DIE),
 };
 
 function playSound(name) {
-    const sound = cache[name]
-    if (sound) {
-        sound.play();
-    } else {
-        console.log('Sound', name, 'not found');
-    }    
+	const sound = cache[name]
+	if (sound) {
+		sound.play();
+	} else {
+		console.log('Sound', name, 'not found');
+	}
 } 
 
 

@@ -68,12 +68,10 @@ function loop(dt) {
 	if (keydowns[65]) player2.moveLeft(t); // A
 	if (keydowns[68]) player2.moveRight(t); // D
 
-
 	if (keydowns[38]) player1.moveUp(t);
 	if (keydowns[40]) player1.moveDown(t);
 	if (keydowns[37]) player1.moveLeft(t);
 	if (keydowns[39]) player1.moveRight(t);
-
 
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
@@ -125,6 +123,7 @@ function render() {
 	}
 
 	for (let player of world.players) {
+		// TODO disolve player after dying...
 		const x = player.x * CELL_PIXELS;
 		const y = player.y * CELL_PIXELS;
 		// player

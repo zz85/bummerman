@@ -15,14 +15,15 @@ class Player {
 	}
 
 	moveBy( dx, dy ) {
+		if (this.died) return;
 		let tx = dx + this.x;
 		let ty = dy + this.y;
 
-		const right_top_blocked = world.isBlocked(tx + 1 | 0, ty | 0);
-		const right_bottom_blocked = world.isBlocked(tx + 1 | 0, ty + 1 | 0);
+		const right_top_blocked = this.world.isBlocked(tx + 1 | 0, ty | 0);
+		const right_bottom_blocked = this.world.isBlocked(tx + 1 | 0, ty + 1 | 0);
 
-		const left_top_blocked = world.isBlocked(tx | 0, ty | 0);
-		const left_bottom_blocked = world.isBlocked(tx | 0, ty + 1 | 0);
+		const left_top_blocked = this.world.isBlocked(tx | 0, ty | 0);
+		const left_bottom_blocked = this.world.isBlocked(tx | 0, ty + 1 | 0);
 
 		const ALLOWANCE = 0.4;
 
@@ -31,7 +32,7 @@ class Player {
 			const nbounds = tx + 0.99 | 0;
 			const bounds = this.x + 0.99 | 0;
 			if (nbounds !== bounds
-				&& world.hasBomb(nbounds, ty | 0)) {
+				&& this.world.hasBomb(nbounds, ty | 0)) {
 				tx = tx | 0;
 			}
 
@@ -51,8 +52,8 @@ class Player {
 			const nbounds = tx | 0;
 			const bounds = this.x | 0;
 			if (nbounds !== bounds
-				&& world.hasBomb(nbounds, ty | 0)) {
-					tx = tx + 1 | 0;
+				&& this.world.hasBomb(nbounds, ty | 0)) {
+				tx = tx + 1 | 0;
 			}
 
 			// left
@@ -73,8 +74,8 @@ class Player {
 			const nbounds = ty + 0.99 | 0;
 			const bounds = this.y + 0.99 | 0;
 			if (nbounds !== bounds
-				&& world.hasBomb(tx | 0, nbounds)) {
-					ty = ty | 0;
+				&& this.world.hasBomb(tx | 0, nbounds)) {
+				ty = ty | 0;
 			}
 
 			const dec = tx % 1; // check x alignment
@@ -95,8 +96,8 @@ class Player {
 			const nbounds = ty | 0;
 			const bounds = this.y | 0;
 			if (nbounds !== bounds
-				&& world.hasBomb(tx | 0, nbounds)) {
-					ty = ty + 1 | 0;
+				&& this.world.hasBomb(tx | 0, nbounds)) {
+				ty = ty + 1 | 0;
 			}
 
 			const dec = tx % 1; // check x alignment
@@ -117,7 +118,7 @@ class Player {
 		const snapX = this.x + 0.5 | 0;
 		const snapY = this.y + 0.5 | 0;
 
-		for (let item of world.items) {
+		for (let item of this.world.items) {
 			if (item.x === snapX && item.y === snapY) {
 				playSound('pickup');
 				switch (item.type) {
@@ -135,7 +136,7 @@ class Player {
 						this.bombStrength++;
 						break;
 				}
-				world.removeItem(item);
+				this.world.removeItem(item);
 			}
 		}
 
@@ -176,13 +177,18 @@ class Player {
 	}
 
 	dropBomb() {
-		if (this.bombsUsed >= this.bombsLimit) {
+		if (this.bombsUsed >= this.bombsLimit || this.died) {
 			return;
 		}
 		const bomb = new Bomb(this.x, this.y, this.bombStrength, this);
 		this.bombsUsed++;
-		world.addBomb(bomb);
+		this.world.addBomb(bomb);
 		bomb.plant();
+	}
+
+	die() {
+		this.died = Date.now();
+		playSound('die');
 	}
 
 }

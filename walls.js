@@ -26,8 +26,8 @@ class Walls {
 				|| y === 0
 				|| y === this.rows - 1
 				|| (x % 2 === 0 && y % 2 === 0)) {
-					this.cells[this.index(x, y)] = HARD_WALL;
-				}
+			        this.cells[this.index(x, y)] = HARD_WALL;
+				};
 		})
 
 		this.buildMaze();

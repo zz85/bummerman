@@ -83,8 +83,8 @@ class World {
 				&& player.coverYs().find(v => v === y)) {
 				pre.innerHTML = `${player.name} died!`;
 				// TODO - credit killed by.
-				playSound('die');
-				// TODO make this an event
+				if (!player.died) player.die();
+				// TODO make this an event ?
 			}
 		}
 
