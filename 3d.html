@@ -1,20 +1,28 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset=utf-8>
-		<title>3D Scene Tests</title>
-		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
-		</style>
-	</head>
-	<body>
-		<script src="https://threejs.org/build/three.js"></script>
-		<script>
+
+<head>
+	<meta charset=utf-8>
+	<title>3D Scene Tests</title>
+	<style>
+		body {
+			margin: 0;
+		}
+		
+		canvas {
+			width: 100%;
+			height: 100%
+		}
+	</style>
+</head>
+
+<body>
+	<script src="https://threejs.org/build/three.js"></script>
+	<script>
 		var scene = new THREE.Scene();
 		var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var geometry = new THREE.BoxBufferGeometry( 10, 10, 10 );
 		var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
 		var cube = new THREE.Mesh( geometry, material );
 		var boxHelper = new THREE.BoxHelper( cube )
@@ -35,10 +43,8 @@
 		scene.add(pointLight);
 
 
-
-
-
-		wallGeometry = new THREE.BoxGeometry( 8, 8, 8 );
+		// Soft Wall
+		wallGeometry = new THREE.BoxBufferGeometry( 8, 8, 8 );
 		wallMaterial = new THREE.MeshToonMaterial( {
 			color: new THREE.Color().setRGB(0.98, 0.45, 1),
 			specular: new THREE.Color().setRGB(1, 1, 1),
@@ -46,16 +52,74 @@
 			reflectivity: 0.5,
 			shading: THREE.SmoothShading,
 		} );
+
 		wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
 		wallMesh.position.y = UNITS / 2;
-		platform.add(wallMesh);
+		// platform.add(wallMesh);
 
-		floorGeometry = new THREE.PlaneGeometry(UNITS * 2, UNITS * 2, 1, 1);
+		// Floor
+
+		floorGeometry = new THREE.PlaneBufferGeometry(UNITS * 2, UNITS * 2, 1, 1);
 
 		floorMesh = new THREE.Mesh(floorGeometry, wallMaterial);
 		floorMesh.rotation.x = -Math.PI / 2;
 		platform.add(floorMesh);
 
+		// Hard Wall
+		wallGeometry = new THREE.BoxBufferGeometry( 8, 8, 8 );
+		hardwallMaterial = new THREE.MeshToonMaterial( {
+			color: new THREE.Color().setRGB(0.15, 0.15, .15),
+			specular: new THREE.Color().setRGB(1, 1, 1),
+			shininess: 0.0,
+			reflectivity: 0.0
+		} );
+
+		hardWall = new THREE.Mesh(wallGeometry, hardwallMaterial);
+		hardWall.position.y = UNITS / 2;
+		// platform.add(hardWall);
+
+		bombMaterial = new THREE.MeshToonMaterial( {
+			color: new THREE.Color().setRGB(0.15, 0.15, .15),
+			specular: new THREE.Color().setRGB(1, 1, 1),
+			shininess: 0.0,
+			reflectivity: 0.0,
+			// wireframe: true
+		} );
+
+		sphereGeometry = new THREE.SphereBufferGeometry(5.2, 12, 12);
+		ball = new THREE.Mesh(sphereGeometry, bombMaterial);
+		ball.position.y = UNITS / 2;
+		platform.add(ball);
+
+		capGeometry = new THREE.CylinderBufferGeometry( 2.5, 2.5, 1, 12 );
+		cap = new THREE.Mesh(capGeometry, bombMaterial);
+		cap.position.y = UNITS / 2 + 5;
+		platform.add(cap);
+
+
+		var Path = THREE.Curve.create(
+			function () { //custom curve constructor
+				
+			},
+
+			function ( t ) { //getPoint: t is between 0-1
+
+				var tx = t; // Math.cos( t ) * 2 * 
+				var ty = t * 3.5;
+				var tz = Math.sin( t ) * 2 * t;
+
+				return new THREE.Vector3( tx, ty, tz );
+			}
+
+		);
+
+		var path = new Path();
+
+		fuseGeometry = new THREE.TubeBufferGeometry( path, 20, 0.4, 8, false );
+		fuse = new THREE.Mesh(fuseGeometry, bombMaterial);
+		fuse.position.y = UNITS / 2 + 5;
+		platform.add(fuse);
+		
 
 		camera.position.x = 10;
 		camera.position.y = UNITS * 2;
@@ -82,5 +146,6 @@
 		}
 
 		</script>
-	</body>
+</body>
+
 </html>
