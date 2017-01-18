@@ -105,13 +105,22 @@ function createBomb() {
 function createHero() {
 	const man = new THREE.Object3D();
 
-	headMaterial = new THREE.MeshToonMaterial( {
+	const headMaterial = new THREE.MeshToonMaterial({
 		color: new THREE.Color().setRGB(0.35, 0.15, .95),
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		// wireframe: true
-	} );
+		wireframe: false
+	});
+
+	// const
+	bodyMaterial = new THREE.MeshToonMaterial({
+		color: new THREE.Color().setRGB(0.94, 0.43, .2),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.0,
+		reflectivity: 0.0,
+		wireframe: false
+	});
 
 	var roundedRectShape = new THREE.Shape();
 	( function roundedRect( ctx, x, y, width, height, radius ){
@@ -148,7 +157,7 @@ function createHero() {
 	face.rotation.y = Math.PI;
 	// head.add(face);
 	man.add(head);
-	man.position.y = UNITS / 2;
+	man.position.y = 3;
 
 	// Egg formula from http://www.mathematische-basteleien.de/eggcurves.htm
 	// x^2 + (1.4 ^ x * 1.6 * y)^2 = 1;
@@ -165,11 +174,11 @@ function createHero() {
 		spline.push(new THREE.Vector2(eggFormula(t), t));
 	}
 
-	bodyGeometry = new THREE.LatheBufferGeometry( spline );
-	var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-	var body = new THREE.Mesh( bodyGeometry, headMaterial );
+	const bodyGeometry = new THREE.LatheBufferGeometry( spline );
+	const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+	const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
 
-	var armGeometry = new THREE.CylinderBufferGeometry( .1, .14, 1.5, 8 );
+	const armGeometry = new THREE.CylinderBufferGeometry( .1, .14, 1.5, 8 );
 	arm = new THREE.Mesh(armGeometry, headMaterial);
 	arm.position.y = 0.5;
 	// arm.position.x = 1;
