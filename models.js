@@ -102,6 +102,32 @@ function createBomb() {
 	return wrap(bomb);
 }
 
+function createFlumes() {
+	const ballGeometry = new THREE.SphereBufferGeometry(5, 8, 8);
+	b = ballGeometry;
+	p = ballGeometry.attributes.position.array;
+	for (let i = 0; i < p.length; i++) {
+		p[i] += (Math.random() - 0.5) * 1;
+	}
+
+	ballGeometry.attributes.position.needsUpdate = true;
+
+	// const
+	flumesShader = new THREE.MeshToonMaterial({
+		color: new THREE.Color().setRGB(0.95, 0.44, .15),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.0,
+		reflectivity: 0.0,
+		wireframe: false,
+		transparent: true,
+		opacity: 0.9
+	});
+
+	ball = new THREE.Mesh(ballGeometry, flumesShader);
+	ball.position.y = 5;
+	return wrap(ball);;
+}
+
 function createHero() {
 	const man = new THREE.Object3D();
 
