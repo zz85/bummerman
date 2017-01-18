@@ -18,17 +18,9 @@
 // - 2 Players
 // - Audio effects
 
-
 const COLUMNS = 15;
 const ROWS = 15;
 const CELL_PIXELS = 45;
-
-// Game styles
-// ASCII
-// 2D
-// 2.5D / 3D
-// VR
-// MMORPG
 
 // Game World Starts
 
