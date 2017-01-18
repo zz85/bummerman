@@ -94,6 +94,10 @@
 			n = Date.now() / 1000 * 4;
 			head.rotation.y = Math.sin(n) * 0.4;
 
+			n = Date.now() / 1000 * 1;
+			head.rotation.x = Math.sin(n) * 0.2;
+
+
 			camera.lookAt(scene.position);
 			renderer.render(scene, camera);
 		}

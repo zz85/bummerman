@@ -119,7 +119,7 @@ function createBomb() {
 	bomb.add(fuse);
 
 	bomb.position.y = UNITS / 2;
-	bomb.scale.multiplyScalar(0.5);
+	bomb.scale.multiplyScalar(0.85);
 
 	return wrap(bomb);
 }
@@ -142,11 +142,12 @@ function createFlumes() {
 		reflectivity: 0.0,
 		wireframe: false,
 		transparent: true,
-		opacity: 0.9
+		opacity: 0.85
 	});
 
 	ball = new THREE.Mesh(ballGeometry, flumesShader);
 	ball.position.y = 5;
+	ball.scale.multiplyScalar(1.2);
 	return wrap(ball);;
 }
 
@@ -235,7 +236,7 @@ function createHero() {
 	man.add(arm);
 
 	man.add(body);
-	man.scale.multiplyScalar(2);
+	man.scale.multiplyScalar(4);
 
 	return wrap(man);
 }

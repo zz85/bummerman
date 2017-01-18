@@ -6,7 +6,7 @@ class Player {
 		this.bombsUsed = 0;
 		this.SPEED = 2;
 		this.name = name;
-		// TODO add direction
+		this.direction = [0, 0];
 	}
 
 	positionAt(x, y) {
@@ -16,6 +16,9 @@ class Player {
 
 	moveBy( dx, dy ) {
 		if (this.died) return;
+		const sign = x => x > 0 ? 1 : (x < 0 ? -1 : 0);
+		this.direction = [sign(dx), sign(dy)];
+
 		let tx = dx + this.x;
 		let ty = dy + this.y;
 

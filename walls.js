@@ -27,7 +27,8 @@ class Walls {
 				|| x === this.columns - 1
 				|| y === 0
 				|| y === this.rows - 1
-				|| (x % 2 === 0 && y % 2 === 0)) {
+				|| (x % 2 === 0 && y % 2 === 0)
+				) {
 			        this.cells[this.index(x, y)] = HARD_WALL;
 				};
 		})

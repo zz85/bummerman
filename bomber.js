@@ -38,10 +38,12 @@ map.defaultWalls();
 
 const player1 = new Player(1, 1, 'Player 1');
 const player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
+const player3 = new Player(COLUMNS - 2, 1, 'Player 3');
 
 world.add(map);
 world.addPlayer(player1);
 world.addPlayer(player2);
+world.addPlayer(player3);
 
 const canvas = document.createElement('canvas');
 canvas.width = CELL_PIXELS * COLUMNS + 50;
@@ -74,6 +76,11 @@ function loop(dt) {
 	// Here is the game loop
 
 	const t = dt / 1000;
+
+	if (keydowns[73]) player3.moveUp(t); // i
+	if (keydowns[75]) player3.moveDown(t); // k
+	if (keydowns[74]) player3.moveLeft(t); // j
+	if (keydowns[76]) player3.moveRight(t); // l
 
 	if (keydowns[87]) player2.moveUp(t); // W
 	if (keydowns[83]) player2.moveDown(t); // S
@@ -160,8 +167,12 @@ function onDocumentKeyDown( event ) {
 			player1.dropBomb();
 			break;
 
-		case 17:
+		case 16: // 17
 			player2.dropBomb();
+			break;
+
+		case 32: // 17
+			player3.dropBomb();
 			break;
 		// case 16: isShiftDown = true; break;
 		// case 17: isCtrlDown = true; break;
