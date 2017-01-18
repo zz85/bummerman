@@ -1,7 +1,11 @@
+// TODO animation subroutines
+// gameplay animations
+// particles (hero's, fuse, explosions, powerons)
+
 const UNITS = 10;
 
 function createSoftWall() {
-	const wallGeometry = new THREE.BoxBufferGeometry(8, 8, 8);
+	const wallGeometry = new THREE.BoxBufferGeometry(9, 9, 9);
 	const wallMaterial = new THREE.MeshToonMaterial({
 		color: new THREE.Color().setRGB(0.98, 0.45, 1),
 		specular: new THREE.Color().setRGB(1, 1, 1),
@@ -24,7 +28,6 @@ function wrap(mesh) {
 
 
 // Floor
-
 function createFloor() {
 	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, 1, 1);
 	const wallMaterial = new THREE.MeshToonMaterial({
@@ -40,9 +43,28 @@ function createFloor() {
 
 	return wrap(floorMesh);
 }
-	// Hard Wall
+
+// Ground
+function createGround() {
+	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, 1, 1);
+	// const
+	groundShader = new THREE.MeshToonMaterial({
+		color: new THREE.Color().setRGB(0.45, 0.29, 0.1),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.5,
+		reflectivity: 0.5,
+		shading: THREE.SmoothShading,
+	});
+
+	const floorMesh = new THREE.Mesh(floorGeometry, groundShader);
+	floorMesh.rotation.x = -Math.PI / 2;
+
+	return wrap(floorMesh);
+}
+
+// Hard Wall
 function createHardWall() {
-	const wallGeometry = new THREE.BoxBufferGeometry( 8, 8, 8 );
+	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, 9.8, 9.8 );
 	const hardwallMaterial = new THREE.MeshToonMaterial( {
 		color: new THREE.Color().setRGB(0.15, 0.15, .15),
 		specular: new THREE.Color().setRGB(1, 1, 1),
