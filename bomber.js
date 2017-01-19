@@ -88,41 +88,32 @@ keymappings[38] = () => player1.moveUp(); // up
 keymappings[40] = () => player1.moveDown(); // down
 keymappings[37] = () => player1.moveLeft(); // left
 keymappings[39] = () => player1.moveRight(); // right
+keymappings[13] = () => player1.dropBomb(); // return
 
 keymappings[87] = () => player2.moveUp(); // W
 keymappings[83] = () => player2.moveDown(); // S
 keymappings[65] = () => player2.moveLeft(); // A
 keymappings[68] = () => player2.moveRight(); // D
+keymappings[16] = () => player2.dropBomb(); // shift. 15 = caps
+
 
 keymappings[73] = () => player3.moveUp(); // i
 keymappings[75] = () => player3.moveDown(); // k
 keymappings[74] = () => player3.moveLeft(); // j
 keymappings[76] = () => player3.moveRight(); // l
+keymappings[32] = () => player3.dropBomb(); // space
+
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
 document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
 function onDocumentKeyDown( event ) {
+	// console.log(event.keyCode);
 	keydowns[event.keyCode] = 1;
-	console.log(event.keyCode);
 	if (keymappings[event.keyCode]) keymappings[event.keyCode]();
 
 	switch( event.keyCode ) {
 
-		case 13:
-			// Return
-			player1.dropBomb();
-			break;
-
-		case 16: // 17
-			player2.dropBomb();
-			break;
-
-		case 32:
-			player3.dropBomb();
-			break;
-		// case 16: isShiftDown = true; break;
-		// case 17: isCtrlDown = true; break;
 
 	}
 
@@ -131,9 +122,6 @@ function onDocumentKeyDown( event ) {
 function onDocumentKeyUp( event ) {
 	keydowns[event.keyCode] = 0;
 	switch( event.keyCode ) {
-
-		case 16: isShiftDown = false; break;
-		case 17: isCtrlDown = false; break;
 
 	}
 }

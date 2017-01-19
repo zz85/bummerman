@@ -223,6 +223,12 @@ class Player {
 		if (this.bombsUsed >= this.bombsLimit || this.died) {
 			return;
 		}
+
+		for (let bomb of this.world.bombs) {
+			if (this.x === bomb.x && this.y === bomb.y) {
+				return;
+			}
+		}
 		const bomb = new Bomb(this.x, this.y, this.bombStrength, this);
 		this.bombsUsed++;
 		this.world.addBomb(bomb);
