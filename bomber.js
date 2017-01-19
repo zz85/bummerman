@@ -26,7 +26,8 @@ const CELL_PIXELS = 45;
 
 const world = new World();
 const map = new Walls(COLUMNS, ROWS);
-map.defaultWalls();
+// map.defaultWalls();
+map.emptyWalls();
 
 const player1 = new Player(1, 1, 'Player 1');
 const player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
@@ -68,21 +69,23 @@ function loop(dt) {
 	// Here is the game loop
 
 	const t = dt / 1000;
+	player1.update(t);
 
-	if (keydowns[73]) player3.moveUp(t); // i
-	if (keydowns[75]) player3.moveDown(t); // k
-	if (keydowns[74]) player3.moveLeft(t); // j
-	if (keydowns[76]) player3.moveRight(t); // l
 
-	if (keydowns[87]) player2.moveUp(t); // W
-	if (keydowns[83]) player2.moveDown(t); // S
-	if (keydowns[65]) player2.moveLeft(t); // A
-	if (keydowns[68]) player2.moveRight(t); // D
+	// if (keydowns[73]) player3.moveUp(t); // i
+	// if (keydowns[75]) player3.moveDown(t); // k
+	// if (keydowns[74]) player3.moveLeft(t); // j
+	// if (keydowns[76]) player3.moveRight(t); // l
 
-	if (keydowns[38]) player1.moveUp(t);
-	if (keydowns[40]) player1.moveDown(t);
-	if (keydowns[37]) player1.moveLeft(t);
-	if (keydowns[39]) player1.moveRight(t);
+	// if (keydowns[87]) player2.moveUp(t); // W
+	// if (keydowns[83]) player2.moveDown(t); // S
+	// if (keydowns[65]) player2.moveLeft(t); // A
+	// if (keydowns[68]) player2.moveRight(t); // D
+
+	if (keydowns[38]) player1.moveUp(t); // up
+	if (keydowns[40]) player1.moveDown(t); // down
+	if (keydowns[37]) player1.moveLeft(t); // left
+	if (keydowns[39]) player1.moveRight(t); // right
 
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
@@ -163,7 +166,7 @@ function onDocumentKeyDown( event ) {
 			player2.dropBomb();
 			break;
 
-		case 32: // 17
+		case 32:
 			player3.dropBomb();
 			break;
 		// case 16: isShiftDown = true; break;

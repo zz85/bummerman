@@ -4,9 +4,12 @@ class Player {
 		this.bombsLimit = 1;
 		this.bombStrength = 1;
 		this.bombsUsed = 0;
-		this.SPEED = 2;
+		this.SPEED = 3;
 		this.name = name;
+		
 		this.direction = [0, 0];
+		this.targetX = x;
+		this.targetY = y;
 	}
 
 	positionAt(x, y) {
@@ -14,10 +17,19 @@ class Player {
 		this.y = y;
 	}
 
+	targetBy(dx, dy) {
+		if (this.died) return;
+
+		this.direction = [dx, dy];
+		this.targetX = this.snapX() + dx;
+		this.targetY = this.snapY() + dy;
+
+		console.log('current', this.snapX(), this.snapY());
+		console.log('target', this.targetX, this.targetY);
+	}
+
 	moveBy( dx, dy ) {
 		if (this.died) return;
-		const sign = x => x > 0 ? 1 : (x < 0 ? -1 : 0);
-		this.direction = [sign(dx), sign(dy)];
 
 		let tx = dx + this.x;
 		let ty = dy + this.y;
@@ -143,6 +155,16 @@ class Player {
 			}
 		}
 
+		// console.log(this.direction[1],  (this.y - this.targetY))
+		if (this.direction[0] * (this.x - this.targetX) >= 0 &&
+		this.direction[1] * (this.y - this.targetY) >= 0
+		) {
+			this.x = this.targetX;
+			this.y = this.targetY;
+			this.direction = [0, 0];
+		}
+
+
 	}
 
 	coverXs() {
@@ -163,20 +185,32 @@ class Player {
 		return [this.y];
 	}
 
-	moveUp(t) {
-		this.moveBy(0, -this.SPEED * t);
+	snapX() {
+		return this.x + 0.5 | 0;
 	}
 
-	moveDown(t) {
-		this.moveBy(0, this.SPEED * t);
+	snapY() {
+		return this.y + 0.5 | 0;
 	}
 
-	moveLeft(t) {
-		this.moveBy(-this.SPEED * t, 0);
+	moveUp() {
+		this.targetBy(0, -1);
 	}
 
-	moveRight(t) {
-		this.moveBy(this.SPEED * t, 0);
+	moveDown() {
+		this.targetBy(0, 1);
+	}
+
+	moveLeft() {
+		this.targetBy(-1, 0);
+	}
+
+	moveRight() {
+		this.targetBy(1, 0);
+	}
+
+	update(t) {
+		this.moveBy(t * this.SPEED * this.direction[0], t * this.SPEED * this.direction[1]);
 	}
 
 	dropBomb() {

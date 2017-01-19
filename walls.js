@@ -36,6 +36,20 @@ class Walls {
 		this.buildMaze();
 	}
 
+	emptyWalls() {
+		this.forEach((x, y) => {
+			if (x === 0
+				|| x === this.columns - 1
+				|| y === 0
+				|| y === this.rows - 1
+				) {
+				this.cells[this.index(x, y)] = HARD_WALL;
+			};
+		})
+
+		this.buildMaze();
+	}
+
 	blow(x, y) {
 		if (x < 0 || y < 0 || x > this.columns - 1 || y > this.rows - 1) return;
 		if (this.cells[this.index(x, y)] === SOFT_WALL) {
@@ -76,9 +90,9 @@ class Walls {
 			.filter(v => v && !exceptions.has(v))
 			.forEach((a) => {
 				// this.cells[a] = SOFT_WALL;
-				if (Math.random() < 0.9) {
-					this.cells[a] = SOFT_WALL;
-				}
+				// if (Math.random() < 0.9) {
+				// 	this.cells[a] = SOFT_WALL;
+				// }
 			});
 	}
 
