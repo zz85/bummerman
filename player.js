@@ -224,11 +224,15 @@ class Player {
 			return;
 		}
 
+		const snapX = this.x + 0.5 | 0;
+		const snapY = this.y + 0.5 | 0;
 		for (let bomb of this.world.bombs) {
-			if (this.x === bomb.x && this.y === bomb.y) {
+			if (snapX === bomb.x && snapY === bomb.y) {
 				return;
 			}
 		}
+
+		playSound('dropbomb');
 		const bomb = new Bomb(this.x, this.y, this.bombStrength, this);
 		this.bombsUsed++;
 		this.world.addBomb(bomb);

@@ -71,12 +71,15 @@ globalLoop();
 
 function loop(dt) {
 	// Here is the game loop
-
 	const t = dt / 1000;
+
 	for (let player of world.players) {
 		player.update(t);
 	}
 	
+	if (keydowns[13]) player1.dropBomb();
+	if (keydowns[16]) player2.dropBomb();
+	if (keydowns[32]) player3.dropBomb();
 
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
@@ -88,20 +91,20 @@ keymappings[38] = () => player1.moveUp(); // up
 keymappings[40] = () => player1.moveDown(); // down
 keymappings[37] = () => player1.moveLeft(); // left
 keymappings[39] = () => player1.moveRight(); // right
-keymappings[13] = () => player1.dropBomb(); // return
+// keymappings[13] = () => player1.dropBomb(); // return
 
 keymappings[87] = () => player2.moveUp(); // W
 keymappings[83] = () => player2.moveDown(); // S
 keymappings[65] = () => player2.moveLeft(); // A
 keymappings[68] = () => player2.moveRight(); // D
-keymappings[16] = () => player2.dropBomb(); // shift. 15 = caps
+// keymappings[16] = () => player2.dropBomb(); // shift. 15 = caps
 
 
 keymappings[73] = () => player3.moveUp(); // i
 keymappings[75] = () => player3.moveDown(); // k
 keymappings[74] = () => player3.moveLeft(); // j
 keymappings[76] = () => player3.moveRight(); // l
-keymappings[32] = () => player3.dropBomb(); // space
+// keymappings[32] = () => player3.dropBomb(); // space
 
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
