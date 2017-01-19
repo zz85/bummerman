@@ -44,7 +44,6 @@ function wrap(mesh) {
 	return object;
 }
 
-
 // Floor
 function createFloor() {
 	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, 1, 1);

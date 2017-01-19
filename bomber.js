@@ -73,7 +73,10 @@ function loop(dt) {
 	// Here is the game loop
 
 	const t = dt / 1000;
-	player1.update(t);
+	for (let player of world.players) {
+		player.update(t);
+	}
+	
 
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {

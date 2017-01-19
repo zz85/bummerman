@@ -10,6 +10,8 @@ class Player {
 		this.direction = [0, 0];
 		this.targetX = x;
 		this.targetY = y;
+
+		this.lastAngle = 0;
 	}
 
 	positionAt(x, y) {
@@ -21,6 +23,7 @@ class Player {
 		if (this.died) return;
 
 		const [cdx, cdy] = this.direction;
+		this.lastAngle = Math.atan2(dx, dy);
 
 		if (cdx === dx && cdy === dy) {
 			return;
