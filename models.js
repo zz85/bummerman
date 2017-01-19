@@ -17,12 +17,30 @@ function createSoftWall() {
 	const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
 	wallMesh.position.y = UNITS / 2;
 
-	return wrap(wallMesh); 
+	return wrap(wallMesh);
+}
+
+function createItem() {
+	const wallGeometry = new THREE.BoxBufferGeometry(6, 6, 6);
+	const wallMaterial = new THREE.MeshToonMaterial({
+		color: new THREE.Color().setRGB(0.99, 0.49, .35),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.9,
+		reflectivity: 0.9,
+		shading: THREE.SmoothShading,
+		opacity: 0.5,
+		transparent: true
+	});
+
+	const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
+	wallMesh.position.y = UNITS / 2;
+
+	return wrap(wallMesh);
 }
 
 function wrap(mesh) {
 	const object = new THREE.Object3D();
-	object.add(mesh); 
+	object.add(mesh);
 	return object;
 }
 
@@ -79,7 +97,7 @@ function createHardWall() {
 
 function createBomb() {
 	const bomb = new THREE.Object3D();
-	
+
 	const bombMaterial = new THREE.MeshToonMaterial({
 		color: new THREE.Color().setRGB(0.15, 0.15, .15),
 		specular: new THREE.Color().setRGB(1, 1, 1),
@@ -102,7 +120,7 @@ function createBomb() {
 		},
 
 		function ( t ) { //getPoint: t is between 0-1
-			var tx = t; // Math.cos( t ) * 2 * 
+			var tx = t; // Math.cos( t ) * 2 *
 			var ty = t * 3.5;
 			var tz = Math.sin( t ) * 2 * t;
 

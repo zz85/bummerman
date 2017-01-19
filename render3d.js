@@ -4,6 +4,14 @@ let dist = 15;
 let angle = 0.35; // 0 for top down, 1, for isometric
 const threeItems = new Set();
 
+const mapType = {
+	[EMPTY]: createFloor,
+	[HARD_WALL]: createHardWall,
+	[SOFT_WALL]: createSoftWall
+};
+
+const mapCache = {};
+
 function init() {
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -20,6 +28,22 @@ function init() {
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
+
+	// Generate a poll of meshes first
+	map.forEach((x, y) => {
+		mapCache[x + ',' + y + '-' + EMPTY] = mapType[EMPTY]();
+		mapCache[x + ',' + y + '-' + SOFT_WALL] = mapType[SOFT_WALL]();
+		mapCache[x + ',' + y + '-' + HARD_WALL] = mapType[HARD_WALL]();
+
+		positionAt(x, y, mapCache[x + ',' + y + '-' + EMPTY]);
+		positionAt(x, y, mapCache[x + ',' + y + '-' + SOFT_WALL]);
+		positionAt(x, y, mapCache[x + ',' + y + '-' + HARD_WALL]);
+	});
+
+	for (var m in mapCache) {
+		platform.add(mapCache[m]);
+	}
+
 }
 
 function render() {
@@ -38,19 +62,17 @@ function remove(o) {
 	platform.remove(o);
 }
 
-const mapType = {
-	[EMPTY]: createFloor,
-	[HARD_WALL]: createHardWall,
-	[SOFT_WALL]: createSoftWall
-}
-
 function updateObjects() {
 	for (let item of threeItems) {
 		item.refCount = 0;
 	}
 
 	map.forEach((x, y, v) => {
-		positionAt(x, y, add(mapType[v]()));
+		mapCache[x + ',' + y + '-' + EMPTY].visible = false;
+		mapCache[x + ',' + y + '-' + SOFT_WALL].visible = false;
+		mapCache[x + ',' + y + '-' + HARD_WALL].visible = false;
+
+		mapCache[x + ',' + y + '-' + v].visible = true;
 	});
 
 	for (let item of world.objects) {
@@ -72,7 +94,7 @@ function updateObjects() {
 		else if (item instanceof Item) {
 			// TODO
 			if (!item.tag) {
-				item.tag = add(createFloor());
+				item.tag = add(createItem());
 			}
 
 			positionAt(item.x, item.y, item.tag);

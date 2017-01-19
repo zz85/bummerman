@@ -90,9 +90,9 @@ class Walls {
 			.filter(v => v && !exceptions.has(v))
 			.forEach((a) => {
 				// this.cells[a] = SOFT_WALL;
-				// if (Math.random() < 0.9) {
-				// 	this.cells[a] = SOFT_WALL;
-				// }
+				if (Math.random() < 0.9) {
+					this.cells[a] = SOFT_WALL;
+				}
 			});
 	}
 

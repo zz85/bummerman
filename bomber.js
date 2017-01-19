@@ -28,8 +28,8 @@ function initGame() {
 
 	world = new World();
 	map = new Walls(COLUMNS, ROWS);
-	// map.defaultWalls();
-	map.emptyWalls();
+	map.defaultWalls();
+	// map.emptyWalls();
 
 	player1 = new Player(1, 1, 'Player 1');
 	player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
