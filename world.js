@@ -69,7 +69,7 @@ class World {
 
 	hasBomb(x, y) {
 		for (let bomb of this.bombs) {
-			if (bomb.snapX() === x && bomb.snapY() === y) {
+			if (bomb.x === x && bomb.y === y) {
 				return true;
 			}
 		}
@@ -97,7 +97,7 @@ class World {
 
 		// check for Bombs
 		for (let bomb of this.bombs) {
-			if (bomb.snapX() === x && bomb.snapY() === y) {
+			if (bomb.x === x && bomb.y === y) {
 				bomb.explode();
 			}
 		}

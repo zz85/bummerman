@@ -2,8 +2,10 @@ const BOMB_FUSE_TIME = 3000;
 
 class Bomb {
 	constructor(x, y, strength = 1, owner) {
-		this.x = x;
-		this.y = y;
+		this.rx = x;
+		this.ry = y;
+		this.x = this.rx + 0.5 | 0;
+		this.y = this.ry + 0.5 | 0;
 		this.strength = strength;
 
 		this.CREATED = 0; // Not exploded
@@ -15,13 +17,19 @@ class Bomb {
 		this.owner = owner;
 	}
 
-	snapX() {
-		return this.x + 0.5 | 0;
+	/*
+	get x() {
+		return this.rx + 0.5 | 0;
 	}
+	*/
 
-	snapY() {
-		return this.y + 0.5 | 0;
-	}
+	// snapX() {
+	// 	return this.x + 0.5 | 0;
+	// }
+
+	// snapY() {
+	// 	return this.y + 0.5 | 0;
+	// }
 
 	plant() {
 		this.planted = Date.now();
@@ -35,8 +43,7 @@ class Bomb {
 
 		playSound('explosion');
 
-		const x = this.snapX();
-		const y = this.snapY();
+		const {x, y} = this;
 
 		const check = ([dx, dy]) => {
 			const tx = dx + x;
