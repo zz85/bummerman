@@ -20,7 +20,7 @@
 
 const COLUMNS = 15;
 const ROWS = 15;
-const CELL_PIXELS = 45;
+
 
 // Game World Starts
 
@@ -38,17 +38,12 @@ world.addPlayer(player1);
 world.addPlayer(player2);
 world.addPlayer(player3);
 
-const canvas = document.createElement('canvas');
-canvas.width = CELL_PIXELS * COLUMNS + 50;
-canvas.height = CELL_PIXELS * COLUMNS + 50;
-document.body.appendChild(canvas);
-
 const pre = document.createElement('pre');
 pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
 
 document.body.appendChild(pre);
 
-const ctx = canvas.getContext('2d');
+init();
 let last = performance.now();
 
 const keydowns = {};
