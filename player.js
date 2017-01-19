@@ -20,16 +20,30 @@ class Player {
 	targetBy(dx, dy) {
 		if (this.died) return;
 
-		this.direction = [dx, dy];
-		this.targetX = this.snapX() + dx;
-		this.targetY = this.snapY() + dy;
+		const [cdx, cdy] = this.direction;
 
-		console.log('current', this.snapX(), this.snapY());
+		if (cdx === dx && cdy === dy) {
+			return;
+		}
+
+		this.direction = [dx, dy];
+		const snapX = this.x + 0.5 | 0;
+		const snapY = this.y + 0.5 | 0; 
+		this.targetX = snapX + dx;
+		this.targetY = snapY + dy;
+
+		if (this.world.isBlocked(this.targetX, this.targetY)) {
+			this.direction = [0, 0];
+		}
+
+		console.log('current', snapX, snapY);
 		console.log('target', this.targetX, this.targetY);
 	}
 
 	moveBy( dx, dy ) {
 		if (this.died) return;
+		
+		if (dx === 0 && dy === 0) return;
 
 		let tx = dx + this.x;
 		let ty = dy + this.y;
@@ -155,7 +169,6 @@ class Player {
 			}
 		}
 
-		// console.log(this.direction[1],  (this.y - this.targetY))
 		if (this.direction[0] * (this.x - this.targetX) >= 0 &&
 		this.direction[1] * (this.y - this.targetY) >= 0
 		) {
@@ -163,8 +176,6 @@ class Player {
 			this.y = this.targetY;
 			this.direction = [0, 0];
 		}
-
-
 	}
 
 	coverXs() {
@@ -183,14 +194,6 @@ class Player {
 		}
 
 		return [this.y];
-	}
-
-	snapX() {
-		return this.x + 0.5 | 0;
-	}
-
-	snapY() {
-		return this.y + 0.5 | 0;
 	}
 
 	moveUp() {

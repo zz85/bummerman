@@ -52,6 +52,7 @@ const ctx = canvas.getContext('2d');
 let last = performance.now();
 
 const keydowns = {};
+const keymappings = {};
 
 function globalLoop() {
 	requestAnimationFrame(globalLoop);
@@ -71,84 +72,26 @@ function loop(dt) {
 	const t = dt / 1000;
 	player1.update(t);
 
-
-	// if (keydowns[73]) player3.moveUp(t); // i
-	// if (keydowns[75]) player3.moveDown(t); // k
-	// if (keydowns[74]) player3.moveLeft(t); // j
-	// if (keydowns[76]) player3.moveRight(t); // l
-
-	// if (keydowns[87]) player2.moveUp(t); // W
-	// if (keydowns[83]) player2.moveDown(t); // S
-	// if (keydowns[65]) player2.moveLeft(t); // A
-	// if (keydowns[68]) player2.moveRight(t); // D
-
-	if (keydowns[38]) player1.moveUp(t); // up
-	if (keydowns[40]) player1.moveDown(t); // down
-	if (keydowns[37]) player1.moveLeft(t); // left
-	if (keydowns[39]) player1.moveRight(t); // right
-
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
 	// 	flumes.blow();
 	// }
 }
 
-function render() {
-	// Here is the render Loop
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+keymappings[38] = () => player1.moveUp(); // up
+keymappings[40] = () => player1.moveDown(); // down
+keymappings[37] = () => player1.moveLeft(); // left
+keymappings[39] = () => player1.moveRight(); // right
 
-	let now = Date.now();
-	// walls
-	map.forEach((x, y, v) => {
+keymappings[87] = () => player2.moveUp(); // W
+keymappings[83] = () => player2.moveDown(); // S
+keymappings[65] = () => player2.moveLeft(); // A
+keymappings[68] = () => player2.moveRight(); // D
 
-		switch (v) {
-			case 1: ctx.fillStyle = '#333'; break;
-			case 2: ctx.fillStyle = '#888'; break;
-			default: ctx.fillStyle = '#eee';
-		}
-
-		ctx.strokeStyle = '#333';
-		ctx.fillRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-		if (v) ctx.strokeRect(x * CELL_PIXELS, y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-	});
-
-	const f = (t) => t < 0.5 ? t * 2 : 2 - t * 2;
-	// Math.sin((now - item.planted)/ 1000 * 8)
-
-	for (let item of world.objects) {
-		if (item instanceof Bomb) {
-			let size = 1 - f(((now - item.planted) / 800) % 1) * 0.2;
-			ctx.fillStyle = 'red';
-			ctx.beginPath();
-			ctx.arc((item.snapX() + 0.5) * CELL_PIXELS, (item.snapY() + 0.5) * CELL_PIXELS, CELL_PIXELS / 3 * size, 0, Math.PI * 2);
-			ctx.fill();
-		}
-		else if (item instanceof Flumes) {
-			ctx.fillStyle = 'orange';
-			ctx.fillRect(item.x * CELL_PIXELS, item.y * CELL_PIXELS, CELL_PIXELS, CELL_PIXELS);
-		}
-		else if (item instanceof Item) {
-			ctx.fillStyle = 'orange';
-			ctx.fillRect((item.x + 0.1) * CELL_PIXELS, (item.y + 0.1) * CELL_PIXELS, CELL_PIXELS * 0.8, CELL_PIXELS * 0.8);
-
-			ctx.fillStyle = 'red';
-			ctx.fillText(item.type, (item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS);
-		}
-	}
-
-	for (let player of world.players) {
-		// TODO disolve player after dying...
-		const x = player.x * CELL_PIXELS;
-		const y = player.y * CELL_PIXELS;
-		// player
-		ctx.fillStyle = '#0d0';
-		ctx.fillRect(x, y, CELL_PIXELS, CELL_PIXELS);
-
-		ctx.fillStyle = '#999';
-		ctx.fillText(`${player.name} (${player.x}, ${player.y})`, x + 10, y + 10);
-	}
-
-}
+keymappings[73] = () => player3.moveUp(); // i
+keymappings[75] = () => player3.moveDown(); // k
+keymappings[74] = () => player3.moveLeft(); // j
+keymappings[76] = () => player3.moveRight(); // l
 
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
 document.addEventListener( 'keyup', onDocumentKeyUp, false );
@@ -156,7 +99,10 @@ document.addEventListener( 'keyup', onDocumentKeyUp, false );
 function onDocumentKeyDown( event ) {
 	keydowns[event.keyCode] = 1;
 	console.log(event.keyCode);
+	if (keymappings[event.keyCode]) keymappings[event.keyCode]();
+
 	switch( event.keyCode ) {
+
 		case 13:
 			// Return
 			player1.dropBomb();
