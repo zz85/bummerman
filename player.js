@@ -12,6 +12,17 @@ class Player {
 		this.targetY = y;
 
 		this.lastAngle = 0;
+		this.SHRINK = 0.0;
+	}
+
+	aabb() {
+		// returns corner coordinates of rectangle.
+		return [
+			this.x,
+			this.x + 1 - this.SHRINK * 2,
+			this.y,
+			this.y + 1 - this.SHRINK * 2,
+		];
 	}
 
 	positionAt(x, y) {
@@ -31,25 +42,20 @@ class Player {
 		// otherwise abort movements
 		// now move. see if there's collision. if so, snap to bounds.
 
-		const [cdx, cdy] = this.direction;
 		this.lastAngle = Math.atan2(dx, dy);
-
-		if (cdx === dx && cdy === dy) {
-			return;
-		}
-
 		this.direction = [dx, dy];
-		const snapX = this.x + 0.5 | 0;
-		const snapY = this.y + 0.5 | 0; 
-		this.targetX = snapX + dx;
-		this.targetY = snapY + dy;
 
-		if (this.world.isBlocked(this.targetX, this.targetY)) {
-			this.direction = [0, 0];
-		}
+		// const snapX = this.x + 0.5 | 0;
+		// const snapY = this.y + 0.5 | 0; 
+		// this.targetX = snapX + dx;
+		// this.targetY = snapY + dy;
 
-		console.log('current', snapX, snapY);
-		console.log('target', this.targetX, this.targetY);
+		// if (this.world.isBlocked(this.targetX, this.targetY)) {
+		// 	this.direction = [0, 0];
+		// }
+
+		// console.log('current', snapX, snapY);
+		// console.log('target', this.targetX, this.targetY);
 	}
 
 	moveBy( dx, dy ) {
@@ -70,24 +76,46 @@ class Player {
 
 		// check if tx is out of bounds, limit it to bounds.
 		if (dx > 0) {
-			const nbounds = tx + 0.99 | 0;
-			const bounds = this.x + 0.99 | 0;
-			if (nbounds !== bounds
-				&& this.world.hasBomb(nbounds, ty | 0)) {
-				tx = tx | 0;
+			const [x1, x2, y1, y2] = this.aabb(); 
+
+			// const currentGridX = x2 | 0;
+			const nextX = Math.ceil(x2);
+			const targetGridX = x2 + dx | 0;
+			console.log('nextX', nextX, 'targetGridX', targetGridX, x2 + dx);
+			let maxX = null;
+
+			for (let cx = nextX; cx <= targetGridX; cx++) {
+				if (
+					this.world.hasBomb(cx, y1 | 0) ||
+					this.world.isBlocked(cx, y1 | 0)
+					) {
+						console.log('blocked', cx);
+					maxX = cx;
+					break;
+				}
 			}
 
-			// right
-			const dec = ty % 1; // Are we y aligned?
-			const blocked = (1 - dec) * right_top_blocked + dec * right_bottom_blocked;
+			if (maxX) tx = maxX - (1 - this.SHRINK * 2);
+			console.log('tx', tx);
 
-			if (blocked > ALLOWANCE) {
-				tx = tx | 0;
-			}
-			else if (blocked > 0) {
-				// side movements
-				ty = ty + 0.5 | 0;
-			}
+			// const nbounds = tx + 0.99 | 0;
+			// const bounds = this.x + 0.99 | 0;
+			// if (nbounds !== bounds
+			// 	&& this.world.hasBomb(nbounds, ty | 0)) {
+			// 	tx = tx | 0;
+			// }
+
+			// // right
+			// const dec = ty % 1; // Are we y aligned?
+			// const blocked = (1 - dec) * right_top_blocked + dec * right_bottom_blocked;
+
+			// if (blocked > ALLOWANCE) {
+			// 	tx = tx | 0;
+			// }
+			// else if (blocked > 0) {
+			// 	// side movements
+			// 	ty = ty + 0.5 | 0;
+			// }
 		}
 		if (dx < 0) {
 			const nbounds = tx | 0;

@@ -55,12 +55,13 @@ function render() {
 
 	for (let player of world.players) {
 		// TODO disolve player after dying...
-		const x = player.x * CELL_PIXELS;
-		const y = player.y * CELL_PIXELS;
+		const MARGIN = player.SHRINK;
+		const x = (player.x) * CELL_PIXELS;
+		const y = (player.y) * CELL_PIXELS;
 		// player
 		ctx.fillStyle = '#0d0';
-		ctx.fillRect(x, y, CELL_PIXELS, CELL_PIXELS);
-
+		ctx.fillRect(x, y, CELL_PIXELS * (1 - MARGIN * 2), CELL_PIXELS * (1 - MARGIN * 2));
+		
 		ctx.fillStyle = '#999';
 		ctx.fillText(`${player.name} (${player.x}, ${player.y})`, x + 10, y + 10);
 	}
