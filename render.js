@@ -18,7 +18,6 @@ function render() {
 	let now = Date.now();
 	// walls
 	map.forEach((x, y, v) => {
-
 		switch (v) {
 			case 1: ctx.fillStyle = '#333'; break;
 			case 2: ctx.fillStyle = '#888'; break;

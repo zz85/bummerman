@@ -21,29 +21,36 @@
 const COLUMNS = 15;
 const ROWS = 15;
 
+let world, map, player1, player2, player3;
 
-// Game World Starts
+function initGame() {
+	// Game World Starts
 
-const world = new World();
-const map = new Walls(COLUMNS, ROWS);
-// map.defaultWalls();
-map.emptyWalls();
+	world = new World();
+	map = new Walls(COLUMNS, ROWS);
+	// map.defaultWalls();
+	map.emptyWalls();
 
-const player1 = new Player(1, 1, 'Player 1');
-const player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
-const player3 = new Player(COLUMNS - 2, 1, 'Player 3');
+	player1 = new Player(1, 1, 'Player 1');
+	player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
+	player3 = new Player(COLUMNS - 2, 1, 'Player 3');
 
-world.add(map);
-world.addPlayer(player1);
-world.addPlayer(player2);
-world.addPlayer(player3);
+	world.add(map);
+	world.addPlayer(player1);
+	world.addPlayer(player2);
+	world.addPlayer(player3);
+}
 
 const pre = document.createElement('pre');
-pre.style.cssText = 'font-family: monospace; font-size: 20px; margin: 20px';
+pre.style.cssText = `font-family: monospace; font-size: 20px; margin: 20px;
+position: absolute; top: 10px; left: 10px
+`;
 
 document.body.appendChild(pre);
 
-init();
+initGame();
+init(); // init graphics unit
+
 let last = performance.now();
 
 const keydowns = {};
@@ -55,6 +62,7 @@ function globalLoop() {
 	const dt = now - last;
 	last = now;
 	if (dt > 1000) return;
+
 	loop(dt);
 	render();
 }
