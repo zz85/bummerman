@@ -22,6 +22,15 @@ class Player {
 	targetBy(dx, dy) {
 		if (this.died) return;
 
+		// if abs(dx), check if y falls within movable range
+		// should be max 0.25 above current grid,
+		// 0.25 above bottom grid
+		// else, abort left-right
+
+		// if abs(dy) || up-down, check if x is within range
+		// otherwise abort movements
+		// now move. see if there's collision. if so, snap to bounds.
+
 		const [cdx, cdy] = this.direction;
 		this.lastAngle = Math.atan2(dx, dy);
 
@@ -172,6 +181,7 @@ class Player {
 			}
 		}
 
+		/*
 		if (this.direction[0] * (this.x - this.targetX) >= 0 &&
 		this.direction[1] * (this.y - this.targetY) >= 0
 		) {
@@ -179,6 +189,7 @@ class Player {
 			this.y = this.targetY;
 			this.direction = [0, 0];
 		}
+		*/
 	}
 
 	coverXs() {
@@ -197,6 +208,10 @@ class Player {
 		}
 
 		return [this.y];
+	}
+
+	moveStop() {
+		this.direction = [0, 0];
 	}
 
 	moveUp() {
