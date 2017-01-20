@@ -1,5 +1,5 @@
 class Player {
-	constructor(x, y, name) {
+	constructor(x, y, name, color) {
 		this.positionAt(x || 0, y || 0);
 		this.bombsLimit = 1;
 		this.bombStrength = 1;
@@ -13,6 +13,7 @@ class Player {
 
 		this.lastAngle = 0;
 		this.SHRINK = 0.0;
+		this.color = color;
 	}
 
 	aabb(x = this.x, y = this.y) {

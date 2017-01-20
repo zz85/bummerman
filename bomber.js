@@ -2,8 +2,9 @@
 // - Music
 // Player AI
 // Network
-// 2.5D view
-// Time elements
+// GameAPI
+// Colors for players
+// Correct resizing
 
 // # Improvement List
 // - Better / fairer item distribution
@@ -17,6 +18,8 @@
 // - Better collision detections
 // - 2 Players
 // - Audio effects
+// - Time elements
+
 
 const COLUMNS = 15;
 const ROWS = 15;
@@ -31,9 +34,9 @@ function initGame() {
 	map.defaultWalls();
 	// map.emptyWalls();
 
-	player1 = new Player(1, 1, 'Player 1');
-	player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2');
-	player3 = new Player(COLUMNS - 2, 1, 'Player 3');
+	player1 = new Player(1, 1, 'Player 1', '#f00');
+	player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', '#0f0');
+	player3 = new Player(COLUMNS - 2, 1, 'Player 3', '#00f');
 
 	world.add(map);
 	world.addPlayer(player1);

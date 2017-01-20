@@ -168,11 +168,11 @@ function createFlumes() {
 	return wrap(ball);;
 }
 
-function createHero() {
+function createHero(style = 'red') {
 	const man = new THREE.Object3D();
 
 	const headMaterial = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.35, 0.15, .95),
+		color: new THREE.Color().setRGB(0.35, 0.15, .95).setStyle(style),
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,

@@ -101,7 +101,7 @@ function updateObjects() {
 		}
 		else if (item instanceof Player) {
 			if (!item.tag) {
-				item.tag = add(createHero());
+				item.tag = add(createHero(item.color));
 			}
 
 			item.tag.rotation.y = item.lastAngle;

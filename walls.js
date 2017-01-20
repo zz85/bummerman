@@ -30,7 +30,7 @@ class Walls {
 				|| (x % 2 === 0 && y % 2 === 0)
 				) {
 			        this.cells[this.index(x, y)] = HARD_WALL;
-				};
+			};
 		})
 
 		this.buildMaze();
@@ -82,8 +82,6 @@ class Walls {
 			this.index(maxX - 1, maxY),
 			this.index(maxX, maxY - 1),
 		]);
-
-		console.log(exceptions);
 
 		this.cells
 			.map((c, i) => c === 0 && i)

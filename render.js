@@ -59,7 +59,7 @@ function render() {
 		const x = (player.x) * CELL_PIXELS;
 		const y = (player.y) * CELL_PIXELS;
 		// player
-		ctx.fillStyle = '#0d0';
+		ctx.fillStyle = player.color;
 		ctx.fillRect(x, y, CELL_PIXELS * (1 - MARGIN * 2), CELL_PIXELS * (1 - MARGIN * 2));
 		
 		ctx.fillStyle = '#999';
