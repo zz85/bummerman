@@ -73,6 +73,11 @@ function loop(dt) {
 	// Here is the game loop
 	const t = dt / 1000;
 
+	player1.update(t);
+	// for (let player of world.players) {
+	// 	player.update(t);
+	// }
+
 	if      (keydowns[38]) player1.moveUp(); // up
 	else if (keydowns[40]) player1.moveDown(); // down
 	else if (keydowns[37]) player1.moveLeft(); // left
@@ -93,10 +98,6 @@ function loop(dt) {
 	if (keydowns[76]) player3.moveRight(); // l
 	if (keydowns[32]) player3.dropBomb(); // space
 
-	for (let player of world.players) {
-		player.update(t);
-	}
-
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
 	// 	flumes.blow();
@@ -112,7 +113,7 @@ document.addEventListener( 'keyup', onDocumentKeyUp, false );
 function onDocumentKeyDown( event ) {
 	// console.log(event.keyCode);
 	keydowns[event.keyCode] = 1;
-	if (keymappings[event.keyCode]) keymappings[event.keyCode]();
+	// if (keymappings[event.keyCode]) keymappings[event.keyCode]();
 
 	switch( event.keyCode ) {
 
