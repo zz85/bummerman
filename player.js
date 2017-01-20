@@ -99,19 +99,19 @@ class Player {
 	
 		const c = rects.some(r => {
 			if (this.collision(new_aabb, r)) {
-				if (new_aabb[0] < r[0]) {
+				if (dx > 0) {
 					tx = r[0] - (1 - this.SHRINK * 2);
 				}
 
-				if (new_aabb[0] > r[0]) {
+				if (dx < 0) {
 					tx = r[1];
 				}
 
-				if (new_aabb[2] < r[2]) {
+				if (dy > 0) {
 					ty = r[2] - (1 - this.SHRINK * 2);
 				}
 
-				if (new_aabb[2] > r[2]) {
+				if (dy > 0) {
 					ty = r[3]
 				}
 
