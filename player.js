@@ -25,6 +25,17 @@ class Player {
 		];
 	}
 
+	smallerAabb() {
+		const { x, y } = this;
+		const THRESHOLD = 0.25;
+		return [
+			x + THRESHOLD,
+			x + 1 - THRESHOLD * 2,
+			y + THRESHOLD,
+			y + 1 - THRESHOLD * 2,
+		];
+	}
+
 	corners([x1, x2, y1, y2]) {
 		return [
 			[x1, y1],
@@ -44,13 +55,17 @@ class Player {
 		this.y = y;
 	}
 
+	isIn(x, y) {
+		return this.collision(this.aabb(), this.aabb(x, y));
+	}
+
 	targetBy(dx, dy) {
 		if (this.died) return;
 
 		// if abs(dx), check if y falls within movable range
 		// should be max 0.25 above current grid,
 		// 0.25 above bottom grid
-		// else, abort left-right
+		// else, abort left-right`
 
 		// if abs(dy) || up-down, check if x is within range
 		// otherwise abort movements
@@ -58,6 +73,14 @@ class Player {
 
 		this.lastAngle = Math.atan2(dx, dy);
 		this.direction = [dx, dy];
+
+		// this.corners(this.aabb())
+
+		// const snapX = this.x + 0.5 + dx * 0.5 | 0;
+		// const snapY = this.y + 0.5 + dy * 0.5 | 0;
+		// if (this.world.isBlocked(snapX + dx, snapY + dy)) {
+		// 	this.direction = [0, 0];
+		// };
 
 		// const snapX = this.x + 0.5 | 0;
 		// const snapY = this.y + 0.5 | 0; 
@@ -75,7 +98,7 @@ class Player {
 	moveBy( dx, dy ) {
 		if (this.died) return;
 		
-		// if (dx === 0 && dy === 0) return;
+		if (dx === 0 && dy === 0) return;
 
 		let tx = dx + this.x;
 		let ty = dy + this.y;
@@ -87,158 +110,46 @@ class Player {
 		const rects = this.corners(new_aabb)
 			.map(([x, y]) => [x | 0, y | 0])
 			.reduce((bounds, [x, y]) => {
-				if (this.world.isBlocked(x, y)) {
+				if (
+					this.world.isBlocked(x, y) || 
+					(
+						!this.isIn(x, y) && 
+						this.world.hasBomb(x, y))
+				) {
 					bounds.push(this.aabb(x, y));
 				}
 
 				return bounds;
 			}, []);
-
-		
-		console.log(rects.length);
 	
-		const c = rects.some(r => {
+		rects.some(r => {
 			if (this.collision(new_aabb, r)) {
-				if (dx > 0) {
-					tx = r[0] - (1 - this.SHRINK * 2);
+				const diffX = Math.min(new_aabb[1]-r[0], r[1] - new_aabb[0]);
+				const diffY = Math.min(r[3] - new_aabb[2], new_aabb[3] - r[2]);
+				const THRESHOLD = 0.5;
+
+				if (new_aabb[0] < r[0]) {
+					if (diffX < THRESHOLD) tx = r[0] - (1 - this.SHRINK * 2);
 				}
 
-				if (dx < 0) {
-					tx = r[1];
+				if (new_aabb[0] > r[0]) {
+					if (diffX < THRESHOLD) tx = r[1];
 				}
 
-				if (dy > 0) {
-					ty = r[2] - (1 - this.SHRINK * 2);
+				if (new_aabb[2] < r[2]) {
+					if (diffY < THRESHOLD) ty = r[2] - (1 - this.SHRINK * 2);
 				}
 
-				if (dy > 0) {
-					ty = r[3]
+				if (new_aabb[2] > r[2]) {
+					if (diffY < THRESHOLD) ty = r[3]
 				}
 
-				// this.direction = [0, 0];
-				console.log('collide', r, dx, dy);
+				this.direction = [0, 0];
 			}
 		});
 
-		console.log( `=> ${tx}, ${ty}`);
-
 		this.x = tx;
 		this.y = ty;
-
-		// const right_top_blocked = this.world.isBlocked(tx + 1 | 0, ty | 0);
-		// const right_bottom_blocked = this.world.isBlocked(tx + 1 | 0, ty + 1 | 0);
-
-		// const left_top_blocked = this.world.isBlocked(tx | 0, ty | 0);
-		// const left_bottom_blocked = this.world.isBlocked(tx | 0, ty + 1 | 0);
-
-		// const ALLOWANCE = 0.4;
-
-		// // check if tx is out of bounds, limit it to bounds.
-		// if (dx > 0) {
-		// 	const [x1, x2, y1, y2] = this.aabb(); 
-
-		// 	// const currentGridX = x2 | 0;
-		// 	const nextX = Math.ceil(x2);
-		// 	const targetGridX = x2 + dx | 0;
-		// 	console.log('nextX', nextX, 'targetGridX', targetGridX, x2 + dx);
-		// 	let maxX = null;
-
-		// 	for (let cx = nextX; cx <= targetGridX; cx++) {
-		// 		if (
-		// 			this.world.hasBomb(cx, y1 | 0) ||
-		// 			this.world.isBlocked(cx, y1 | 0)
-		// 			) {
-		// 				console.log('blocked', cx);
-		// 			maxX = cx;
-		// 			break;
-		// 		}
-		// 	}
-
-		// 	if (maxX) tx = maxX - (1 - this.SHRINK * 2);
-		// 	console.log('tx', tx);
-
-		// 	// const nbounds = tx + 0.99 | 0;
-		// 	// const bounds = this.x + 0.99 | 0;
-		// 	// if (nbounds !== bounds
-		// 	// 	&& this.world.hasBomb(nbounds, ty | 0)) {
-		// 	// 	tx = tx | 0;
-		// 	// }
-
-		// 	// // right
-		// 	// const dec = ty % 1; // Are we y aligned?
-		// 	// const blocked = (1 - dec) * right_top_blocked + dec * right_bottom_blocked;
-
-		// 	// if (blocked > ALLOWANCE) {
-		// 	// 	tx = tx | 0;
-		// 	// }
-		// 	// else if (blocked > 0) {
-		// 	// 	// side movements
-		// 	// 	ty = ty + 0.5 | 0;
-		// 	// }
-		// }
-		// if (dx < 0) {
-		// 	const nbounds = tx | 0;
-		// 	const bounds = this.x | 0;
-		// 	if (nbounds !== bounds
-		// 		&& this.world.hasBomb(nbounds, ty | 0)) {
-		// 		tx = tx + 1 | 0;
-		// 	}
-
-		// 	// left
-		// 	const dec = ty % 1; // Are we y aligned?
-		// 	const blocked = (1 - dec) * left_top_blocked + dec * left_bottom_blocked;
-
-		// 	if (blocked > ALLOWANCE) {
-		// 		tx = tx + 1 | 0;
-		// 	}
-		// 	else if (blocked > 0) {
-		// 		// side movements
-		// 		ty = ty + 0.5 | 0;
-		// 	}
-		// }
-		// if (dy > 0) {
-		// 	// down
-
-		// 	const nbounds = ty + 0.99 | 0;
-		// 	const bounds = this.y + 0.99 | 0;
-		// 	if (nbounds !== bounds
-		// 		&& this.world.hasBomb(tx | 0, nbounds)) {
-		// 		ty = ty | 0;
-		// 	}
-
-		// 	const dec = tx % 1; // check x alignment
-		// 	const blocked = (1 - dec) * left_bottom_blocked + dec * right_bottom_blocked;
-
-		// 	if (blocked > ALLOWANCE) {
-		// 		ty = ty | 0;
-		// 	}
-		// 	else if (blocked > 0) {
-		// 		// side movements
-		// 		tx = tx + 0.5 | 0;
-		// 	}
-		// 	// console.log('bottom blocked', blocked, 'ratio', dec, 'target y', ty);
-		// }
-		// if (dy < 0) {
-		// 	// up
-
-		// 	const nbounds = ty | 0;
-		// 	const bounds = this.y | 0;
-		// 	if (nbounds !== bounds
-		// 		&& this.world.hasBomb(tx | 0, nbounds)) {
-		// 		ty = ty + 1 | 0;
-		// 	}
-
-		// 	const dec = tx % 1; // check x alignment
-		// 	const blocked = (1 - dec) * left_top_blocked + dec * right_top_blocked;
-
-		// 	if (blocked > ALLOWANCE) {
-		// 		ty = ty + 1 | 0;
-		// 	}
-		// 	else if (blocked > 0) {
-		// 		// side movements
-		// 		tx = tx + 0.5 | 0;
-		// 	}
-		// }
 
 		const snapX = this.x + 0.5 | 0;
 		const snapY = this.y + 0.5 | 0;

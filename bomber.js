@@ -81,22 +81,24 @@ function loop(dt) {
 	if      (keydowns[13]) player1.dropBomb(); // return
 
 	if (keydowns[87]) player2.moveUp(); // W
-	if (keydowns[83]) player2.moveDown(); // S
-	if (keydowns[65]) player2.moveLeft(); // A
-	if (keydowns[68]) player2.moveRight(); // D
+	else if (keydowns[83]) player2.moveDown(); // S
+	else if (keydowns[65]) player2.moveLeft(); // A
+	else if (keydowns[68]) player2.moveRight(); // D
+	else                   player2.moveStop();
 	if (keydowns[16]) player2.dropBomb(); // shift. 15 = caps
 
 
-	if (keydowns[73]) player3.moveUp(); // i
-	if (keydowns[75]) player3.moveDown(); // k
-	if (keydowns[74]) player3.moveLeft(); // j
-	if (keydowns[76]) player3.moveRight(); // l
-	if (keydowns[32]) player3.dropBomb(); // space
+	if      (keydowns[73]) player3.moveUp(); // i
+	else if (keydowns[75]) player3.moveDown(); // k
+	else if (keydowns[74]) player3.moveLeft(); // j
+	else if (keydowns[76]) player3.moveRight(); // l
+	else                   player3.moveStop();
+	if      (keydowns[32]) player3.dropBomb(); // space
 
-	player1.update(t);
-	// for (let player of world.players) {
-	// 	player.update(t);
-	// }
+	// player1.update(t);
+	for (let player of world.players) {
+		player.update(t);
+	}
 
 
 	// TODO remove global timeouts?

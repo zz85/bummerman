@@ -79,8 +79,12 @@ class World {
 	blow(x, y) {
 		// check for Players
 		for (let player of this.players) {
-			if (player.coverXs().find(v => v === x)
-				&& player.coverYs().find(v => v === y)) {
+			if (
+				// player.coverXs().find(v => v === x)
+				// && player.coverYs().find(v => v === y)
+				player.collision(player.smallerAabb(), player.aabb(x, y))
+
+				) {
 				pre.innerHTML = `${player.name} died!`;
 				// TODO - credit killed by.
 				if (!player.died) player.die();

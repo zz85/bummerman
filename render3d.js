@@ -128,13 +128,13 @@ function positionAt(x, y, item) {
 
 function updateRender() {
 	// platform.rotation.y += 0.001;
-	// camera.position.y = UNITS * dist;
-	// camera.position.z = UNITS * dist * angle;
-
-	const t = Date.now() / 1000;
 	camera.position.y = UNITS * dist;
-	camera.position.x = Math.cos(t) * UNITS * dist;
-	camera.position.z = Math.sin(t) * UNITS * dist;
+	camera.position.z = UNITS * dist * angle;
+
+	// const t = Date.now() / 1000;
+	// camera.position.y = UNITS * dist;
+	// camera.position.x = Math.cos(t) * UNITS * dist;
+	// camera.position.z = Math.sin(t) * UNITS * dist;
 
 
 	camera.lookAt(scene.position);
