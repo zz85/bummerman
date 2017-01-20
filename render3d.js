@@ -113,6 +113,9 @@ function updateObjects() {
 				item.tag = add(createHero(item.color));
 			}
 
+			item.tag.head.rotation.y = Math.sin(now / 1000 * 4) * 0.2;
+			item.tag.rotation.x = Math.sin(now / 1000 * 1) * 0.1;
+
 			const t = player.died ? Math.min((now - player.died) / 1000, 1) : 0;
 			item.tag.scale.setScalar(1 - t * 0.8);
 			item.tag.rotation.x = t * -Math.PI / 2;

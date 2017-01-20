@@ -1,6 +1,8 @@
 // TODO animation subroutines
 // gameplay animations
 // particles (hero's, fuse, explosions, powerons)
+// shoes, hands, legs
+//
 
 const UNITS = 10;
 
@@ -255,5 +257,7 @@ function createHero(style = 'red') {
 	man.add(body);
 	man.scale.multiplyScalar(4);
 
-	return wrap(man);
+	const o = wrap(man);
+	o.head = head;
+	return o;
 }

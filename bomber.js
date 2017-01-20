@@ -3,13 +3,13 @@
 // Player AI
 // Network
 // GameAPI
-// Colors for players
 // Correct resizing
 
 // # Improvement List
 // - Better / fairer item distribution
 // - Nicer Graphics
 // - More Powerups
+// - Time elements
 
 // # Bug-list
 
@@ -18,8 +18,7 @@
 // - Better collision detections
 // - 2 Players
 // - Audio effects
-// - Time elements
-
+// - Colors for players
 
 const COLUMNS = 15;
 const ROWS = 15;
