@@ -158,8 +158,8 @@ function createFlumes() {
 		shininess: 0.0,
 		reflectivity: 0.0,
 		wireframe: false,
-		transparent: true,
-		opacity: 0.85
+		// transparent: true,
+		// opacity: 0.85
 	});
 
 	ball = new THREE.Mesh(ballGeometry, flumesShader);

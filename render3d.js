@@ -63,6 +63,7 @@ function remove(o) {
 }
 
 function updateObjects() {
+	const now = Date.now();
 	for (let item of threeItems) {
 		item.refCount = 0;
 	}
@@ -75,12 +76,17 @@ function updateObjects() {
 		mapCache[x + ',' + y + '-' + v].visible = true;
 	});
 
+	const f = (t) => t < 0.5 ? t * 2 : 2 - t * 2;
+
+	// TODO move animation update into subroutines?
 	for (let item of world.objects) {
 		if (item instanceof Bomb) {
-			// let size = 1 - f(((now - item.planted) / 800) % 1) * 0.2;
+			let size = 1 - f(((now - item.planted) / 500) % 1) * 0.05;
 			if (!item.tag) {
 				item.tag = add(createBomb());
 			}
+
+			item.tag.scale.setScalar(size);
 
 			positionAt(item.x, item.y, item.tag);
 		}
@@ -88,7 +94,9 @@ function updateObjects() {
 			if (!item.tag) {
 				item.tag = add(createFlumes());
 			}
-			
+			item.tag.rotation.x = now * item.seed1;
+			item.tag.rotation.y = now * item.seed2;
+			item.tag.rotation.z = now * item.seed3;
 			positionAt(item.x, item.y, item.tag);
 		}
 		else if (item instanceof Item) {
@@ -100,10 +108,14 @@ function updateObjects() {
 			positionAt(item.x, item.y, item.tag);
 		}
 		else if (item instanceof Player) {
+			const player = item;
 			if (!item.tag) {
 				item.tag = add(createHero(item.color));
 			}
 
+			const t = player.died ? Math.min((now - player.died) / 1000, 1) : 0;
+			item.tag.scale.setScalar(1 - t * 0.8);
+			item.tag.rotation.x = t * -Math.PI / 2;
 			item.tag.rotation.y = item.lastAngle;
 			positionAt(item.x, item.y, item.tag);
 		}
@@ -111,7 +123,7 @@ function updateObjects() {
 
 	for (let item of threeItems) {
 		if (item.refCount === 0) {
-			remove(item);	
+			remove(item);
 		}
 	}
 }
