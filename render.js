@@ -54,8 +54,9 @@ function render() {
 	}
 
 	for (let player of world.players) {
-		// TODO disolve player after dying...
-		const MARGIN = player.SHRINK;
+		let t = 0;
+		if (player.died) t = Math.min((now - player.died) / 2000, 1);
+		const MARGIN = player.SHRINK + t * 0.5;
 		const x = (player.x) * CELL_PIXELS;
 		const y = (player.y) * CELL_PIXELS;
 		// player
