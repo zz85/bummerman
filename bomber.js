@@ -4,6 +4,8 @@
 // Network
 // GameAPI
 // Correct resizing
+// FPS View
+// VR View
 
 // # Improvement List
 // - Better / fairer item distribution

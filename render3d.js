@@ -144,16 +144,25 @@ function positionAt(x, y, item) {
 function updateRender() {
 	// platform.rotation.y += 0.001;
 
-	camera.position.y = UNITS * dist;
-	camera.position.z = UNITS * dist * angle;
-
-	// Rotation
-	// const t = Date.now() / 1000;
 	// camera.position.y = UNITS * dist;
-	// camera.position.x = Math.cos(t) * UNITS * dist;
-	// camera.position.z = Math.sin(t) * UNITS * dist;
+	// camera.position.z = UNITS * dist * angle;
+	// camera.lookAt(scene.position);
+
+	// // Rotation
+	// // const t = Date.now() / 1000;
+	// // camera.position.y = UNITS * dist;
+	// // camera.position.x = Math.cos(t) * UNITS * dist;
+	// // camera.position.z = Math.sin(t) * UNITS * dist;
 
 
-	camera.lookAt(scene.position);
+	// camera.lookAt(scene.position);
+	// renderer.render(scene, camera);
+
+	// 4 4
+	camera.position.y = player1.tag.position.y + UNITS * 8;
+	camera.position.z = player1.tag.position.z + UNITS * 8;
+	camera.position.x = player1.tag.position.x;
+	camera.lookAt(player1.tag.matrixWorld.getPosition() );
+
 	renderer.render(scene, camera);
 }
