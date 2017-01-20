@@ -131,6 +131,8 @@ function updateObjects() {
 	}
 }
 
+var absPosition = new THREE.Vector3();
+
 function positionAt(x, y, item) {
 	const rx = (x - COLUMNS / 2) * UNITS;
 	const ry = (y - ROWS / 2) * UNITS;
@@ -159,10 +161,13 @@ function updateRender() {
 	// renderer.render(scene, camera);
 
 	// 4 4
-	camera.position.y = player1.tag.position.y + UNITS * 8;
-	camera.position.z = player1.tag.position.z + UNITS * 8;
+
+	camera.setFocalLength(16)
+	camera.position.y = player1.tag.position.y + UNITS * 2;
+	camera.position.z = player1.tag.position.z + UNITS * 2;
 	camera.position.x = player1.tag.position.x;
-	camera.lookAt(player1.tag.matrixWorld.getPosition() );
+	absPosition.setFromMatrixPosition(player1.tag.matrixWorld);
+	camera.lookAt(absPosition);
 
 	renderer.render(scene, camera);
 }
