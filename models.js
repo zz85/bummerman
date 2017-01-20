@@ -81,7 +81,7 @@ function createGround() {
 
 // Hard Wall
 function createHardWall() {
-	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, 9.8, 9.8 );
+	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, UNITS, 9.8 );
 	const hardwallMaterial = new THREE.MeshToonMaterial( {
 		color: new THREE.Color().setRGB(0.15, 0.15, .15),
 		specular: new THREE.Color().setRGB(1, 1, 1),
@@ -203,7 +203,7 @@ function createHero(style = 'red') {
 
 	} )( roundedRectShape, -1, -1, 2, 2, 1 );
 
-	var extrudeSettings = { amount: .6, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: .2, bevelThickness: .2 }
+	var extrudeSettings = { amount: .9, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: .2, bevelThickness: .2 }
 	var headGeometry = new THREE.ExtrudeGeometry( roundedRectShape, extrudeSettings );
 
 	head = new THREE.Mesh(headGeometry, headMaterial);
