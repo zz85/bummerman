@@ -98,23 +98,24 @@ class Player {
 		console.log(rects.length);
 	
 		const c = rects.some(r => {
-			if (this.collision(aabb, r)) {
-				if (dx > 0) {
+			if (this.collision(new_aabb, r)) {
+				if (new_aabb[0] < r[0]) {
 					tx = r[0] - (1 - this.SHRINK * 2);
 				}
-				if (dx < 0) {
+
+				if (new_aabb[0] > r[0]) {
 					tx = r[1];
 				}
 
-				if (dy > 0) {
+				if (new_aabb[2] < r[2]) {
 					ty = r[2] - (1 - this.SHRINK * 2);
 				}
 
-				if (dy < 0) {
+				if (new_aabb[2] > r[2]) {
 					ty = r[3]
 				}
 
-				this.direction = [0, 0];
+				// this.direction = [0, 0];
 				console.log('collide', r, dx, dy);
 			}
 		});
