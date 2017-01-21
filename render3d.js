@@ -3,6 +3,7 @@ let platform;
 let dist = 15;
 let angle = 0.35; // 0 for top down, 1, for isometric
 const threeItems = new Set();
+const options = {};
 
 const mapType = {
 	[EMPTY]: createFloor,
@@ -81,12 +82,14 @@ function updateObjects() {
 	// TODO move animation update into subroutines?
 	for (let item of world.objects) {
 		if (item instanceof Bomb) {
-			let size = 1 - f(((now - item.planted) / 500) % 1) * 0.05;
 			if (!item.tag) {
 				item.tag = add(createBomb());
 			}
 
-			item.tag.scale.setScalar(size);
+			const t = f(((now - item.planted) / 500) % 1)
+			item.tag.rotation.y = t * 0.5;
+			item.tag.rotation.x = t * 0.05;
+			item.tag.scale.setScalar(1 - t * 0.05);
 
 			positionAt(item.x, item.y, item.tag);
 		}
@@ -144,30 +147,29 @@ function positionAt(x, y, item) {
 }
 
 function updateRender() {
-	// platform.rotation.y += 0.001;
 
-	// camera.position.y = UNITS * dist;
-	// camera.position.z = UNITS * dist * angle;
-	// camera.lookAt(scene.position);
+	if (options.rotate) {
+		// platform.rotation.y += 0.001;
 
-	// // Rotation
-	// // const t = Date.now() / 1000;
-	// // camera.position.y = UNITS * dist;
-	// // camera.position.x = Math.cos(t) * UNITS * dist;
-	// // camera.position.z = Math.sin(t) * UNITS * dist;
+		// // Rotation
+		// // const t = Date.now() / 1000;
+		// // camera.position.y = UNITS * dist;
+		// // camera.position.x = Math.cos(t) * UNITS * dist;
+		// // camera.position.z = Math.sin(t) * UNITS * dist;
+	}
 
+	camera.position.y = UNITS * dist;
+	camera.position.z = UNITS * dist * angle;
+	camera.lookAt(scene.position);
 
-	// camera.lookAt(scene.position);
-	// renderer.render(scene, camera);
-
-	// 4 4
-
-	camera.setFocalLength(16)
-	camera.position.y = player1.tag.position.y + UNITS * 2;
-	camera.position.z = player1.tag.position.z + UNITS * 2;
-	camera.position.x = player1.tag.position.x;
-	absPosition.setFromMatrixPosition(player1.tag.matrixWorld);
-	camera.lookAt(absPosition);
+	if (options.playerCamera) {
+		camera.setFocalLength(16);
+		camera.position.y = player1.tag.position.y + UNITS * 2;
+		camera.position.z = player1.tag.position.z + UNITS * 2;
+		camera.position.x = player1.tag.position.x;
+		absPosition.setFromMatrixPosition(player1.tag.matrixWorld);
+		camera.lookAt(absPosition);
+	}
 
 	renderer.render(scene, camera);
 }
