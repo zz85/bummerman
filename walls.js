@@ -11,6 +11,10 @@ class Walls {
 		return this.cells[this.index(x, y)];
 	}
 
+	set(x, y, v) {
+		this.cells[this.index(x, y)] = v;
+	}
+
 	index(x, y) {
 		return x + this.columns * y;
 	}

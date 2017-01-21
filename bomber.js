@@ -47,6 +47,8 @@ function initGame() {
 	world.addPlayer(player2);
 	world.addPlayer(player3);
 	world.addPlayer(player4);
+
+	bot1 = new AiPlayer(player1, world);
 }
 
 const pre = document.createElement('pre');
@@ -103,14 +105,14 @@ function loop(dt) {
 	else                   player3.moveStop();
 	if      (keydowns[32]) player3.dropBomb(); // space
 
+	bot1.update();
+
 	// TODO
 	// Add Game Api Controllers
 
 	for (let player of world.players) {
 		player.update(t);
 	}
-
-
 
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
