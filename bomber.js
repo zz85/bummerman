@@ -25,6 +25,8 @@
 const COLUMNS = 15;
 const ROWS = 15;
 
+let player1controls = false;
+
 let world, map;
 
 let player1, player2, player3, player4;
@@ -53,7 +55,9 @@ function initGame() {
 
 const pre = document.createElement('pre');
 pre.style.cssText = `font-family: monospace; font-size: 20px; margin: 20px;
-position: absolute; top: 10px; left: 10px
+position: absolute; top: 10px; left: 10px;
+color: white;
+text-shadow: black 2px 2px;
 `;
 
 document.body.appendChild(pre);
@@ -83,12 +87,16 @@ function loop(dt) {
 	// Here is the game loop
 	const t = dt / 1000;
 
-	// if      (keydowns[38]) player1.moveUp(); // up
-	// else if (keydowns[40]) player1.moveDown(); // down
-	// else if (keydowns[37]) player1.moveLeft(); // left
-	// else if (keydowns[39]) player1.moveRight(); // right
-	// else                   player1.moveStop();
-	// if      (keydowns[13]) player1.dropBomb(); // return
+	if (player1controls) {
+		if      (keydowns[38]) player1.moveUp(); // up
+		else if (keydowns[40]) player1.moveDown(); // down
+		else if (keydowns[37]) player1.moveLeft(); // left
+		else if (keydowns[39]) player1.moveRight(); // right
+		else                   player1.moveStop();
+		if      (keydowns[13]) player1.dropBomb(); // return
+	} else {
+		bot1.update();
+	}
 
 	if (keydowns[87]) player2.moveUp(); // W
 	else if (keydowns[83]) player2.moveDown(); // S
@@ -105,7 +113,7 @@ function loop(dt) {
 	else                   player3.moveStop();
 	if      (keydowns[32]) player3.dropBomb(); // space
 
-	bot1.update();
+	
 
 	// TODO
 	// Add Game Api Controllers

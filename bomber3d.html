@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">	
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<title>Joosh bomberman 3D WIP</title>
 
 	<style>
@@ -10,7 +10,7 @@
 			margin: 0;
             overflow: hidden;
 		}
-		
+
 		canvas {
 			width: 100%;
 			height: 100%
@@ -19,12 +19,15 @@
 </head>
 
 <body>
+
     <button onclick="angle = 0;">Top View</button>
     <button onclick="angle = 0.5">Default View</button>
     <button onclick="angle = 1">Horizon View</button>
     <button onclick="dist = 15">Ok View</button>
     <button onclick="dist = 5">Near View</button>
     <button onclick="dist = 25">Far View</button>
+    <button onclick="initGame()">New Game</button>
+
 
     <button onclick="options.playerCamera = true">Player View</button>
     <button onclick="options.playerCamera = false">Map View</button>

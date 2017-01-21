@@ -27,7 +27,7 @@ class AiPlayer {
 		const safeMap = this.safeMap;
 
 		safeMap.cells.fill(true);
-		const realMap = this.world.map; 
+		const realMap = this.world.map;
 
 		// Rule no. 1 - Survival.
 		// If there are bombs, run!
@@ -49,7 +49,7 @@ class AiPlayer {
 				if (realMap.get(cx, y)) {
 					break;
 				}
-				
+
 				safeMap.set(cx, y, false);
 			}
 
@@ -58,7 +58,7 @@ class AiPlayer {
 				if (realMap.get(cx, y)) {
 					break;
 				}
-				
+
 				safeMap.set(cx, y, false);
 			}
 
@@ -67,7 +67,7 @@ class AiPlayer {
 				if (realMap.get(x, cy)) {
 					break;
 				}
-				
+
 				safeMap.set(x, cy, false);
 			}
 
@@ -76,7 +76,7 @@ class AiPlayer {
 				if (realMap.get(x, cy)) {
 					break;
 				}
-				
+
 				safeMap.set(x, cy, false);
 			}
 		}
@@ -111,9 +111,9 @@ class AiPlayer {
 			.map((o) => {
 				const {x, y} = o;
 				let score = 0;
-				if (realMap.get(x - 1, y + 0) === 2) score++; 
-				if (realMap.get(x + 1, y + 0) === 2) score++; 
-				if (realMap.get(x - 0, y - 1) === 2) score++; 
+				if (realMap.get(x - 1, y + 0) === 2) score++;
+				if (realMap.get(x + 1, y + 0) === 2) score++;
+				if (realMap.get(x - 0, y - 1) === 2) score++;
 				if (realMap.get(x - 0, y + 1) === 2) score++;
 
 				if (this.world.hasItem(x, y)) {
@@ -127,12 +127,14 @@ class AiPlayer {
 
 				return o;
 			});
-		
+
 		// console.log(sort);
 		sort.sort((a, b) => {
 			if (b.score !== a.score)
 				return b.score - a.score;
-			return (b.x - a.x) + (b.y - a.y);  
+			const x = (b.x - a.x);
+			if (x) return x;
+			return (b.y - a.y);
 		});
 		// console.log(Object.keys(places));
 		// console.log('sort', sort);
@@ -158,6 +160,11 @@ class AiPlayer {
 		};
 
 
+		let debug = '';
+
+		const nowSafe = safeMap.get(gridX, gridY);
+		debug += nowSafe ? ' Safe. ' : ' Unsafe. '
+
 		if (candidate) {
 			const paths = {};
 			findPath(paths, candidate.x, candidate.y, gridX, gridY);
@@ -168,7 +175,12 @@ class AiPlayer {
 				// console.log('route', route);
 				// console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
 
-				this.player.targetBy(route.x - this.player.x, route.y - this.player.y);
+				if (nowSafe && !safeMap.get(route.x, route.y)) {
+					this.player.moveStop();
+				}
+				else {
+					this.player.targetBy(route.x - this.player.x, route.y - this.player.y);
+				}
 			}
 		}
 
@@ -176,11 +188,13 @@ class AiPlayer {
 		// 1. You can hide after dropping bomb
 		// Where? Where you can blow walls, enemy players
 		if (gridX === candidate.x && gridY === candidate.y) {
+			debug += ' drop bomb. '
 			this.player.dropBomb();
 		}
 
+		pre.innerHTML = debug;
+
 		// console.log(safeMap.debugWalls());
-		
 
 		// TODO to be a more intelligent bot, it should also read time.
 
