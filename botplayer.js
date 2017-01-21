@@ -89,7 +89,7 @@ class AiPlayer {
 		// where can bot go?
 		const places = {};
 
-		const findPlaces = (places, x, y, prev) => {
+		const findPlaces = (places, x, y) => {
 			const key = x + ':' + y;
 			if (key in places) return;
 
@@ -97,9 +97,7 @@ class AiPlayer {
 			if (blocked) return;
 			places[key] = {
 				x: x,
-				y: y,
-				blocked,
-				prev
+				y: y
 			};
 			findPlaces(places, x - 1, y + 0, places[key]);
 			findPlaces(places, x + 1, y + 0, places[key]);
@@ -111,7 +109,7 @@ class AiPlayer {
 
 		const sort = Object.keys(places).map(k => places[k])
 			.map((o) => {
-				const {x, y, blocked} = o;
+				const {x, y} = o;
 				let score = 0;
 				if (realMap.get(x - 1, y + 0) === 2) score++; 
 				if (realMap.get(x + 1, y + 0) === 2) score++; 
@@ -122,7 +120,7 @@ class AiPlayer {
 					score += 4;
 				}
 				if (!safeMap.get(x, y)) {
-					score -= 10;
+					score = -10;
 				}
 
 				o.score = score;
@@ -131,7 +129,11 @@ class AiPlayer {
 			});
 		
 		// console.log(sort);
-		sort.sort((a, b) => (b.score - a.score));
+		sort.sort((a, b) => {
+			if (b.score !== a.score)
+				return b.score - a.score;
+			return (b.x - a.x) + (b.y - a.y);  
+		});
 		// console.log(Object.keys(places));
 		// console.log('sort', sort);
 		const candidate = sort[0];
@@ -145,7 +147,6 @@ class AiPlayer {
 			paths[key] = {
 				x: x,
 				y: y,
-				blocked,
 				prev
 			};
 
@@ -164,13 +165,16 @@ class AiPlayer {
 			let route = paths[`${gridX}:${gridY}`].prev;
 
 			if (route) {
-				console.log('route', route);
-				console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
+				// console.log('route', route);
+				// console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
 
 				this.player.targetBy(route.x - this.player.x, route.y - this.player.y);
 			}
 		}
 
+		// When to drop bombs?
+		// 1. You can hide after dropping bomb
+		// Where? Where you can blow walls, enemy players
 		if (gridX === candidate.x && gridY === candidate.y) {
 			this.player.dropBomb();
 		}
