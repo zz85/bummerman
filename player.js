@@ -73,7 +73,8 @@ class Player {
 		// now move. see if there's collision. if so, snap to bounds.
 
 		this.lastAngle = Math.atan2(dx, dy);
-		this.direction = [dx, dy];
+		const clamp = (x) => x > 0 ? 1 : x < 0 ? -1 : 0;
+		this.direction = [clamp(dx), clamp(dy)];
 
 		// this.corners(this.aabb())
 
@@ -127,7 +128,7 @@ class Player {
 			if (this.collision(new_aabb, r)) {
 				const diffX = Math.min(new_aabb[1]-r[0], r[1] - new_aabb[0]);
 				const diffY = Math.min(r[3] - new_aabb[2], new_aabb[3] - r[2]);
-				const THRESHOLD = 0.5;
+				const THRESHOLD = 0.3;
 
 				if (new_aabb[0] < r[0]) {
 					if (diffX < THRESHOLD) tx = r[0] - (1 - this.SHRINK * 2);

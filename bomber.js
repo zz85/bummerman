@@ -83,12 +83,12 @@ function loop(dt) {
 	// Here is the game loop
 	const t = dt / 1000;
 
-	if      (keydowns[38]) player1.moveUp(); // up
-	else if (keydowns[40]) player1.moveDown(); // down
-	else if (keydowns[37]) player1.moveLeft(); // left
-	else if (keydowns[39]) player1.moveRight(); // right
-	else                   player1.moveStop();
-	if      (keydowns[13]) player1.dropBomb(); // return
+	// if      (keydowns[38]) player1.moveUp(); // up
+	// else if (keydowns[40]) player1.moveDown(); // down
+	// else if (keydowns[37]) player1.moveLeft(); // left
+	// else if (keydowns[39]) player1.moveRight(); // right
+	// else                   player1.moveStop();
+	// if      (keydowns[13]) player1.dropBomb(); // return
 
 	if (keydowns[87]) player2.moveUp(); // W
 	else if (keydowns[83]) player2.moveDown(); // S

@@ -51,7 +51,7 @@ class Walls {
 			};
 		})
 
-		this.buildMaze();
+		// this.buildMaze();
 	}
 
 	blow(x, y) {
