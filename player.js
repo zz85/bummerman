@@ -188,24 +188,6 @@ class Player {
 		*/
 	}
 
-	coverXs() {
-		const basex = Math.floor(this.x);
-		if (this.x > basex) {
-			return [basex, basex + 1];
-		}
-
-		return [this.x];
-	}
-
-	coverYs() {
-		const basey = Math.floor(this.y);
-		if (this.y > basey) {
-			return [basey, basey + 1];
-		}
-
-		return [this.y];
-	}
-
 	moveStop() {
 		this.direction = [0, 0];
 	}

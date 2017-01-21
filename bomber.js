@@ -25,7 +25,9 @@
 const COLUMNS = 15;
 const ROWS = 15;
 
-let world, map, player1, player2, player3;
+let world, map;
+
+let player1, player2, player3, player4;
 
 function initGame() {
 	// Game World Starts
@@ -38,11 +40,13 @@ function initGame() {
 	player1 = new Player(1, 1, 'Player 1', '#f00');
 	player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', '#0f0');
 	player3 = new Player(COLUMNS - 2, 1, 'Player 3', '#00f');
+	player4 = new Player(1, ROWS - 2, 'Player 4', '#f0f');
 
-	world.add(map);
+	world.setMap(map);
 	world.addPlayer(player1);
 	world.addPlayer(player2);
 	world.addPlayer(player3);
+	world.addPlayer(player4);
 }
 
 const pre = document.createElement('pre');
@@ -99,10 +103,13 @@ function loop(dt) {
 	else                   player3.moveStop();
 	if      (keydowns[32]) player3.dropBomb(); // space
 
-	// player1.update(t);
+	// TODO
+	// Add Game Api Controllers
+
 	for (let player of world.players) {
 		player.update(t);
 	}
+
 
 
 	// TODO remove global timeouts?
