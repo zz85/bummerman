@@ -16,7 +16,7 @@ class AiPlayer {
 		}
 
 		const now = Date.now();
-		if (now - this.last < 200) {
+		if (now - this.last < 1000) {
 			return;
 		}
 
@@ -118,6 +118,9 @@ class AiPlayer {
 				if (realMap.get(x - 0, y - 1) === 2) score++; 
 				if (realMap.get(x - 0, y + 1) === 2) score++;
 
+				if (this.world.hasItem(x, y)) {
+					score += 4;
+				}
 				if (!safeMap.get(x, y)) {
 					score -= 10;
 				}
@@ -132,14 +135,40 @@ class AiPlayer {
 		// console.log(Object.keys(places));
 		// console.log('sort', sort);
 		const candidate = sort[0];
+
+		const findPath = (paths, x, y, hx, hy, prev) => {
+			const key = x + ':' + y;
+			if (key in paths) return;
+
+			const blocked = !!realMap.get(x, y);
+			if (blocked) return;
+			paths[key] = {
+				x: x,
+				y: y,
+				blocked,
+				prev
+			};
+
+			if (x === hx && y === hy) return;
+			findPath(paths, x - 1, y + 0, hx, hy, paths[key]);
+			findPath(paths, x + 1, y + 0, hx, hy, paths[key]);
+			findPath(paths, x - 0, y - 1, hx, hy, paths[key]);
+			findPath(paths, x - 0, y + 1, hx, hy, paths[key]);
+		};
+
+
 		if (candidate) {
-			while (candidate.prev && candidate.prev.x !== gridX && candidate.prev.y !== gridY) {
-				candidate = candidate.prev;
+			const paths = {};
+			findPath(paths, candidate.x, candidate.y, gridX, gridY);
+
+			let route = paths[`${gridX}:${gridY}`].prev;
+
+			if (route) {
+				console.log('route', route);
+				console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
+
+				this.player.targetBy(route.x - gridX, route.y - gridY);
 			}
-
-			console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
-
-			this.player.targetBy(candidate.x - gridX, candidate.y - gridY);
 		}
 
 		if (gridX === candidate.x && gridY === candidate.y) {

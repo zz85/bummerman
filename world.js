@@ -66,13 +66,22 @@ class World {
 		return false;
 	}
 
+	// more like getBomb() but nvm..
 	hasBomb(x, y) {
 		for (let bomb of this.bombs) {
 			if (bomb.x === x && bomb.y === y) {
-				return true;
+				return bomb;
 			}
 		}
 		return false;
+	}
+
+	hasItem(x, y) {
+		for (let item of this.items) {
+			if (item.x === x && item.y === y) {
+				return item;
+			}
+		}
 	}
 
 	setMap(map) {
@@ -95,18 +104,12 @@ class World {
 		}
 
 		// check for Items
-		for (let item of this.items) {
-			if (item.x === x && item.y === y) {
-				this.removeItem(item);
-			}
-		}
+		const item = this.hasItem(x, y);
+		if (item) this.removeItem(item);
 
 		// check for Bombs
-		for (let bomb of this.bombs) {
-			if (bomb.x === x && bomb.y === y) {
-				bomb.explode();
-			}
-		}
+		const bomb = this.hasBomb(x, y);
+		if (bomb) bomb.explode();
 
 		// check for Walls
 		if (map.blow(x, y)) {
