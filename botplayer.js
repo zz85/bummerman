@@ -16,7 +16,7 @@ class AiPlayer {
 		}
 
 		const now = Date.now();
-		if (now - this.last < 1000) {
+		if (now - this.last < 200) {
 			return;
 		}
 
@@ -167,14 +167,13 @@ class AiPlayer {
 				console.log('route', route);
 				console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
 
-				this.player.targetBy(route.x - gridX, route.y - gridY);
+				this.player.targetBy(route.x - this.player.x, route.y - this.player.y);
 			}
 		}
 
 		if (gridX === candidate.x && gridY === candidate.y) {
 			this.player.dropBomb();
 		}
-
 
 		// console.log(safeMap.debugWalls());
 		
