@@ -116,18 +116,18 @@ function createBomb() {
 	cap.position.y = 5;
 	bomb.add(cap);
 
-	const Path = THREE.Curve.create(
-		function () {
-		},
+	function Path() {
 
-		function ( t ) { //getPoint: t is between 0-1
-			var tx = t; // Math.cos( t ) * 2 *
-			var ty = t * 3.5;
-			var tz = Math.sin( t ) * 2 * t;
+	}
+	Path.prototype = Object.create( THREE.Curve.prototype );
+	Path.prototype.constructor = Path;
+	Path.prototype.getPoint = function ( t ) { //getPoint: t is between 0-1
+		var tx = t; // Math.cos( t ) * 2 *
+		var ty = t * 3.5;
+		var tz = Math.sin( t ) * 2 * t;
 
-			return new THREE.Vector3( tx, ty, tz );
-		}
-	);
+		return new THREE.Vector3( tx, ty, tz );
+	}
 
 	const path = new Path();
 
