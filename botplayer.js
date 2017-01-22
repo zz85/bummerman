@@ -29,10 +29,28 @@ class AiPlayer {
 		safeMap.cells.fill(true);
 		const realMap = this.world.map;
 
-		// Rule no. 1 - Survival.
-		// If there are bombs, run!
-		// Based on bombs, build a safe map.
+		// Bomberman Narrative
 
+		// Bomberman sees a space
+		// He places a bomb
+		// He moves away from the area of fire
+		
+		// He waits for bomb to blow
+		// He places another bomb
+		// He moves away from the area of fire
+		// He collects an item
+
+		// He continues bombing
+		// He sees enemies
+		// He moves towards them
+		// He drops bombs around them they might be trapped in
+
+		// The Loop
+
+		// Rule no. 1 - Survival.
+		// If there are bombs, or in the path of fire, run!
+
+		// Based on bombs, build a safe map.
 		realMap.forEach((x, y, v) => {
 			if (v) {
 				safeMap.set(x, y, false);
@@ -197,7 +215,7 @@ class AiPlayer {
 		// console.log(safeMap.debugWalls());
 
 		// TODO to be a more intelligent bot, it should also read time.
-
+		// Random Bot
 		// this.player.targetBy( (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
 	}
 
