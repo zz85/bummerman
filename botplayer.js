@@ -76,7 +76,7 @@ class AiPlayer {
 	safeToBomb(places, bx, by, strength) {
 		const places2 = Object.assign({}, places);
 		places2[this._(bx, by)] = false;
-		for (let i = 1; i < strength; i++) {
+		for (let i = 1; i <= strength; i++) {
 			const key = this._(bx + i, by);
 			if (key in places2) {
 				places2[key] = false;
@@ -85,7 +85,7 @@ class AiPlayer {
 			}
 		}
 
-		for (let i = 1; i < strength; i++) {
+		for (let i = 1; i <= strength; i++) {
 			const key = this._(bx - i, by);
 			if (key in places2) {
 				places2[key] = false;
@@ -94,7 +94,7 @@ class AiPlayer {
 			}
 		}
 
-		for (let i = 1; i < strength; i++) {
+		for (let i = 1; i <= strength; i++) {
 			const key = this._(bx, by + i);
 			if (key in places2) {
 				places2[key] = false;
@@ -103,7 +103,7 @@ class AiPlayer {
 			}
 		}
 
-		for (let i = 1; i < strength; i++) {
+		for (let i = 1; i <= strength; i++) {
 			const key = this._(bx, by - i);
 			if (key in places2) {
 				places2[key] = false;
@@ -156,7 +156,21 @@ class AiPlayer {
 		// 2. Drop Bomb
 		// 3. Wait
 
+		// Qns
 		// Do we need a "fight or flight" mode?
+		// Interval decision making?
+
+		// Find best places to drop bombs.
+		// 1. Proximity to other players
+		// 2. Best place to blow bricks
+		// 3. Abort if after dropping attack vectors become high
+		// 4. Running a chain of fire
+		// 5. In general, create the biggest surface attack vector
+		// 6. It's a little like Go.
+
+		// When in the line of fire
+		// 1. Find the shortest / safest place to get out of it
+		// 2. Attempt to stick to the plan and avoid the fire
 
 		const realMap = this.world.map;
 		const safeMap = this.updateSafeMap();
@@ -173,7 +187,7 @@ class AiPlayer {
 			const key = x + ':' + y;
 			if (key in places) return;
 
-			const blocked = !!realMap.get(x, y);
+			const blocked = !!realMap.get(x, y) || (!player.isIn(x, y) && this.world.hasBomb(x, y));
 			if (blocked) return;
 
 			places[key] = {
@@ -188,10 +202,6 @@ class AiPlayer {
 		};
 
 		findPlaces(places, gridX, gridY);
-
-		// Find best places to drop bombs.
-		// 1. Proximity to other players
-		// 2. Best place to blow bricks
 
 		const sort = Object.keys(places).map(k => places[k])
 			.map((o) => {
@@ -215,8 +225,9 @@ class AiPlayer {
 					score -= 2;
 				}
 
-				// const dist = ((x - player.x) ** 2 + (y - player.y) ** 2) ** 0.5;
-				// score += Math.max(10 - dist, 0);
+				// const nearest = ((x - player.x) ** 2 + (y - player.y) ** 2) ** 0.5;
+				// const f = Math.max(5 - dist, 0) / 5;
+				// score += f * 5;
 
 				if (!safeMap.get(x, y)) {
 					score = -10;
@@ -282,7 +293,7 @@ class AiPlayer {
 		let debug = '';
 
 		const nowSafe = safeMap.get(gridX, gridY);
-		debug += nowSafe ? ' Safe. ' : ' Unsafe. '
+		debug += nowSafe ? ' Safe. ' : ' Unsafe. ';
 
 		if (candidate) {
 			const shortest = bfsPath(candidate.x, candidate.y, gridX, gridY);
@@ -290,9 +301,10 @@ class AiPlayer {
 
 			if (route) {
 				// console.log('route', route);
-				debug += `@ ${gridX},${gridY} -> ${candidate.x},${candidate.y} `;
+				debug += ` @${gridX},${gridY} -> ${candidate.x},${candidate.y}. `;
 
 				if (nowSafe && !safeMap.get(route.x, route.y)) {
+					debug += ' Unsafe to move. ';
 					player.moveStop();
 				}
 				else {
@@ -301,19 +313,19 @@ class AiPlayer {
 			}
 		}
 
-		// When to drop bombs?
-		// 1. You can hide after dropping bomb
-		// Where? Where you can blow walls, enemy players
-		if (gridX === candidate.x && gridY === candidate.y) {
-			debug += ' drop bomb. '
+		debug += ` ${player.bombsUsed}/${player.bombsLimit} bombs. `;
+
+		const safeToBomb = this.safeToBomb(places, gridX, gridY, player.bombStrength);
+		debug += ` ${safeToBomb ? 'Safe' : 'Unsafe' } bomb site. `
+
+		if (nowSafe && safeToBomb && 
+			(!candidate || gridX === candidate.x && gridY === candidate.y)) {
 			player.dropBomb();
 		}
 
 		pre.innerHTML = debug;
 
 		// console.log(safeMap.debugWalls());
-
-		// TODO to be a more intelligent bot, it should also read time.
 		// Random Bot
 		// player.targetBy( (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
 	}
