@@ -69,6 +69,56 @@ class AiPlayer {
 		return safeMap;
 	}
 
+	_(x, y) {
+		return x + ':' + y;
+	}
+
+	safeToBomb(places, bx, by, strength) {
+		const places2 = Object.assign({}, places);
+		places2[this._(bx, by)] = false;
+		for (let i = 1; i < strength; i++) {
+			const key = this._(bx + i, by);
+			if (key in places2) {
+				places2[key] = false;
+			} else {
+				break;
+			}
+		}
+
+		for (let i = 1; i < strength; i++) {
+			const key = this._(bx - i, by);
+			if (key in places2) {
+				places2[key] = false;
+			} else {
+				break;
+			}
+		}
+
+		for (let i = 1; i < strength; i++) {
+			const key = this._(bx, by + i);
+			if (key in places2) {
+				places2[key] = false;
+			} else {
+				break;
+			}
+		}
+
+		for (let i = 1; i < strength; i++) {
+			const key = this._(bx, by - i);
+			if (key in places2) {
+				places2[key] = false;
+			} else {
+				break;
+			}
+		}
+
+		for (let k in places2) {
+			if (places2[k]) return true;
+		}
+
+		return false;
+	}
+
 	update() {
 		if (this.player.died) {
 			return;
@@ -159,6 +209,12 @@ class AiPlayer {
 					score += 4;
 				}
 
+				if (this.safeToBomb(places, x, y, player.bombStrength)) {
+					score += 2;
+				} else {
+					score -= 2;
+				}
+
 				// const dist = ((x - player.x) ** 2 + (y - player.y) ** 2) ** 0.5;
 				// score += Math.max(10 - dist, 0);
 
@@ -190,24 +246,37 @@ class AiPlayer {
 		// console.log('sort', sort);
 		const candidate = sort[0];
 
-		const findPath = (paths, x, y, hx, hy, prev) => {
-			const key = x + ':' + y;
-			if (key in paths) return;
+		const bfsPath = (startX, startY, targetX, targetY) => {
+			const paths = {}; // cache
+			const jobs = []; // queue
 
-			const blocked = !!realMap.get(x, y);
-			if (blocked) return;
-			paths[key] = {
-				x: x,
-				y: y,
-				prev
-			};
+			jobs.push([startX, startY, null]); // start
 
-			if (x === hx && y === hy) return;
-			findPath(paths, x - 1, y + 0, hx, hy, paths[key]);
-			findPath(paths, x + 1, y + 0, hx, hy, paths[key]);
-			findPath(paths, x - 0, y - 1, hx, hy, paths[key]);
-			findPath(paths, x - 0, y + 1, hx, hy, paths[key]);
-		};
+			while (jobs.length) {
+				const job = jobs.shift();
+				const [x, y, prev] = job;
+
+				const key = x + ':' + y;
+				if (paths[key]) continue; // processed before
+
+				const blocked = !!realMap.get(x, y); // TODO check bombs
+				if (blocked) continue;
+
+				paths[key] = { x, y, prev }; // store in cache
+
+				if (x === targetX && y === targetY)
+				// break; // we're done
+					return paths[key];
+
+				// search more
+				jobs.push([x - 1, y + 0, paths[key]]);
+				jobs.push([x + 1, y + 0, paths[key]]);
+				jobs.push([x - 0, y - 1, paths[key]]);
+				jobs.push([x - 0, y + 1, paths[key]]);
+			}
+
+			// return paths;
+		}
 
 
 		let debug = '';
@@ -216,14 +285,12 @@ class AiPlayer {
 		debug += nowSafe ? ' Safe. ' : ' Unsafe. '
 
 		if (candidate) {
-			const paths = {};
-			findPath(paths, candidate.x, candidate.y, gridX, gridY);
-
-			let route = paths[`${gridX}:${gridY}`].prev;
+			const shortest = bfsPath(candidate.x, candidate.y, gridX, gridY);
+			let route = shortest && shortest.prev;
 
 			if (route) {
 				// console.log('route', route);
-				// console.log(`${gridX},${gridY} -> ${candidate.x},${candidate.y}`);
+				debug += `@ ${gridX},${gridY} -> ${candidate.x},${candidate.y} `;
 
 				if (nowSafe && !safeMap.get(route.x, route.y)) {
 					player.moveStop();
