@@ -62,7 +62,7 @@ class World {
 
 	isBlocked(x, y) {
 		// expect snapped integers
-		if (map.get(x, y)) return true;
+		if (this.map.get(x, y)) return true;
 		return false;
 	}
 
@@ -80,6 +80,16 @@ class World {
 		for (let item of this.items) {
 			if (item.x === x && item.y === y) {
 				return item;
+			}
+		}
+	}
+
+	hasPlayer(x, y) {
+		for (let player of this.players) {
+			if (
+				player.collision(player.smallerAabb(), player.aabb(x, y))
+			) {
+				return player;
 			}
 		}
 	}
@@ -112,7 +122,7 @@ class World {
 		if (bomb) bomb.explode();
 
 		// check for Walls
-		if (map.blow(x, y)) {
+		if (this.map.blow(x, y)) {
 			
 			if (Math.random() < 0.5) {
 				this.addItem(new Item(x, y, Math.random() * 3 | 0));

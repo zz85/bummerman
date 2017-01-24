@@ -8,6 +8,7 @@ class AiPlayer {
 
 
 		this.last = Date.now();
+		this.lastDecisionTime = Date.now();
 	}
 
 	updateSafeMap() {
@@ -73,50 +74,107 @@ class AiPlayer {
 		return x + ':' + y;
 	}
 
+	fireCheck(strength, cb) {
+		cb(0, 0);
+
+		for (let i = 1; i <= strength; i++) {
+			if (cb(-i, 0)) break;
+		}
+
+		for (let i = 1; i <= strength; i++) {
+			if (cb(i, 0)) break;
+		}
+
+		for (let i = 1; i <= strength; i++) {
+			if (cb(0, i)) break;
+		}
+
+		for (let i = 1; i <= strength; i++) {
+			if (cb(0, -i)) break;
+		}
+	}
+
 	safeToBomb(places, bx, by, strength) {
+		const realMap = this.world.map;
+
+		let safe = false;
+		let players = 0;
+		let walls = 0;
+
+
 		const places2 = Object.assign({}, places);
-		places2[this._(bx, by)] = false;
-		for (let i = 1; i <= strength; i++) {
-			const key = this._(bx + i, by);
+
+		const firing = (dx, dy) => {
+			const x = bx + dx;
+			const y = by + dy;
+			const wall = realMap.get(x, y);
+
+			// abort
+			if (wall === 1) return true;
+			if (wall === 2) {
+				walls++;
+			}
+
+			for (let player of this.world.players) {
+				if (player !== this.player && player.isIn(x, y)) {
+					players++;
+				}
+			}
+
+			const key = this._(x, y);
 			if (key in places2) {
 				places2[key] = false;
-			} else {
-				break;
-			}
+			}		
 		}
 
-		for (let i = 1; i <= strength; i++) {
-			const key = this._(bx - i, by);
-			if (key in places2) {
-				places2[key] = false;
-			} else {
-				break;
-			}
-		}
-
-		for (let i = 1; i <= strength; i++) {
-			const key = this._(bx, by + i);
-			if (key in places2) {
-				places2[key] = false;
-			} else {
-				break;
-			}
-		}
-
-		for (let i = 1; i <= strength; i++) {
-			const key = this._(bx, by - i);
-			if (key in places2) {
-				places2[key] = false;
-			} else {
-				break;
-			}
-		}
+		this.fireCheck(strength, firing);
 
 		for (let k in places2) {
-			if (places2[k]) return true;
+			if (places2[k]) {
+				safe = true;
+				break;
+			}
 		}
 
-		return false;
+		return {
+			safe,
+			players,
+			walls
+		};
+	}
+
+	// breath first search 
+	bfsPath(startX, startY, targetX, targetY) {
+		const paths = {}; // cache
+		const jobs = []; // queue
+		const realMap = this.world.map;
+
+		jobs.push([startX, startY, null]); // start
+
+		while (jobs.length) {
+			const job = jobs.shift();
+			const [x, y, prev] = job;
+
+			const key = x + ':' + y;
+			if (paths[key]) continue; // processed before
+
+			const blocked = !!realMap.get(x, y); // TODO check bombs
+			if (blocked) continue;
+
+			paths[key] = { x, y, prev }; // store in cache
+
+			if (x === targetX && y === targetY)
+			// break; // we're done
+				return paths[key];
+
+			// search more
+			jobs.push([x - 1, y + 0, paths[key]]);
+			jobs.push([x + 1, y + 0, paths[key]]);
+			jobs.push([x - 0, y - 1, paths[key]]);
+			jobs.push([x - 0, y + 1, paths[key]]);
+		}
+
+		// return paths;
 	}
 
 	update() {
@@ -125,13 +183,22 @@ class AiPlayer {
 		}
 
 		const now = Date.now();
-		if (now - this.last < 200) {
-			return;
+		if (now - this.last >= 200) {
+			this.last = now;
+			this.botUpdate();
 		}
 
-		console.log('thinking..');
+		// console.log('thinking..');
 
-		this.last = now;
+		if (now - this.lastDecisionTime >= 1000) {
+			// this.decisionUpdate();
+			this.lastDecisionTime = now;
+		}
+	}
+
+	botUpdate() {
+
+
 
 		// Bomberman Narrative
 
@@ -203,7 +270,12 @@ class AiPlayer {
 
 		findPlaces(places, gridX, gridY);
 
-		const sort = Object.keys(places).map(k => places[k])
+		let best_score = -Infinity;
+
+		// TODO
+		// make safety map + then attack map
+		// tweak scoring to calculating the number of liveness from a bomb
+		let sort = Object.keys(places).map(k => places[k])
 			.map((o) => {
 				const {x, y} = o;
 				let score = 0;
@@ -216,78 +288,52 @@ class AiPlayer {
 
 				// boost score if items is there
 				if (this.world.hasItem(x, y)) {
-					score += 4;
+					score += 10;
 				}
 
-				if (this.safeToBomb(places, x, y, player.bombStrength)) {
+				const analysis = this.safeToBomb(places, x, y, player.bombStrength);
+				// console.log(x, y, analysis);
+				if (analysis.safe) {
 					score += 2;
 				} else {
-					score -= 2;
+					// score -= 2;
+				}
+				
+				if (analysis.players) {
+					score += 10 * analysis.players;
 				}
 
-				// const nearest = ((x - player.x) ** 2 + (y - player.y) ** 2) ** 0.5;
-				// const f = Math.max(5 - dist, 0) / 5;
-				// score += f * 5;
+				if (analysis.walls) {
+					score += analysis.walls
+				}
 
 				if (!safeMap.get(x, y)) {
 					score = -10;
 				}
 
 				o.score = score;
+				best_score = Math.max(best_score, score);
 
 				return o;
+			})
+			.filter(o => o.score === best_score)
+			.sort((a, b) => {
+				// if (b.score !== a.score)
+				// 	return b.score - a.score;
+
+				const dxa = a.x - player.x;
+				const dya = a.y - player.y;
+				const dista = dxa * dxa + dya * dya;
+
+				const dxb = b.x - player.x;
+				const dyb = b.y - player.y;
+				const distb = dxb * dxb + dyb * dyb;
+
+				return dista - distb;
 			});
-
-		// console.log(sort);
-		sort.sort((a, b) => {
-			if (b.score !== a.score)
-				return b.score - a.score;
-
-			const dxa = a.x - player.x;
-			const dya = a.y - player.y;
-			const dista = dxa * dxa + dya * dya;
-
-			const dxb = b.x - player.x;
-			const dyb = b.y - player.y;
-			const distb = dxb * dxb + dyb * dyb;
-
-			return dista - distb;
-		});
 		// console.log(Object.keys(places));
 		// console.log('sort', sort);
 		const candidate = sort[0];
-
-		const bfsPath = (startX, startY, targetX, targetY) => {
-			const paths = {}; // cache
-			const jobs = []; // queue
-
-			jobs.push([startX, startY, null]); // start
-
-			while (jobs.length) {
-				const job = jobs.shift();
-				const [x, y, prev] = job;
-
-				const key = x + ':' + y;
-				if (paths[key]) continue; // processed before
-
-				const blocked = !!realMap.get(x, y); // TODO check bombs
-				if (blocked) continue;
-
-				paths[key] = { x, y, prev }; // store in cache
-
-				if (x === targetX && y === targetY)
-				// break; // we're done
-					return paths[key];
-
-				// search more
-				jobs.push([x - 1, y + 0, paths[key]]);
-				jobs.push([x + 1, y + 0, paths[key]]);
-				jobs.push([x - 0, y - 1, paths[key]]);
-				jobs.push([x - 0, y + 1, paths[key]]);
-			}
-
-			// return paths;
-		}
 
 
 		let debug = '';
@@ -296,7 +342,7 @@ class AiPlayer {
 		debug += nowSafe ? ' Safe. ' : ' Unsafe. ';
 
 		if (candidate) {
-			const shortest = bfsPath(candidate.x, candidate.y, gridX, gridY);
+			const shortest = this.bfsPath(candidate.x, candidate.y, gridX, gridY);
 			let route = shortest && shortest.prev;
 
 			if (route) {
@@ -315,7 +361,7 @@ class AiPlayer {
 
 		debug += ` ${player.bombsUsed}/${player.bombsLimit} bombs. `;
 
-		const safeToBomb = this.safeToBomb(places, gridX, gridY, player.bombStrength);
+		const safeToBomb = this.safeToBomb(places, gridX, gridY, player.bombStrength).safe;
 		debug += ` ${safeToBomb ? 'Safe' : 'Unsafe' } bomb site. `
 
 		if (nowSafe && safeToBomb && 
