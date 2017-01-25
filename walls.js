@@ -68,24 +68,17 @@ class Walls {
 		const minY = 1;
 		const maxY = this.rows - 2;
 
-		// TODO can be futher generatize around player's spawning point
-		const exceptions = new Set([
-			this.index(minX, minY),
-			this.index(minX, minY + 1),
-			this.index(minX + 1, minY),
+		const blockedOut = [];
+		for (let player of world.players) {
+			const { x, y } = player;
+			blockedOut.push(this.index(x, y));
+			blockedOut.push(this.index(x + 1, y));
+			blockedOut.push(this.index(x - 1, y));
+			blockedOut.push(this.index(x, y + 1));
+			blockedOut.push(this.index(x, y - 1));
+		}
 
-			this.index(maxX, minY),
-			this.index(maxX - 1, minY),
-			this.index(maxX, minY + 1),
-
-			this.index(minX, maxY),
-			this.index(minX, maxY - 1),
-			this.index(minX + 1, maxY),
-
-			this.index(maxX, maxY),
-			this.index(maxX - 1, maxY),
-			this.index(maxX, maxY - 1),
-		]);
+		const exceptions = new Set(blockedOut);
 
 		this.cells
 			.map((c, i) => c === 0 && i)

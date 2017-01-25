@@ -6,9 +6,8 @@ class AiPlayer {
 
 		this.safeMap = new Walls(COLUMNS, ROWS);
 
-
-		this.last = Date.now();
-		this.lastDecisionTime = Date.now();
+		this.last = 0;
+		this.lastDecisionTime = 0;
 	}
 
 	updateSafeMap() {
@@ -96,21 +95,18 @@ class AiPlayer {
 
 	safeToBomb(places, bx, by, strength) {
 		const realMap = this.world.map;
+		const places2 = Object.assign({}, places);
 
 		let safe = false;
 		let players = 0;
 		let walls = 0;
-
-
-		const places2 = Object.assign({}, places);
 
 		const firing = (dx, dy) => {
 			const x = bx + dx;
 			const y = by + dy;
 			const wall = realMap.get(x, y);
 
-			// abort
-			if (wall === 1) return true;
+			if (wall === 1) return true; // abort
 			if (wall === 2) {
 				walls++;
 			}
@@ -144,34 +140,36 @@ class AiPlayer {
 	}
 
 	// breath first search 
-	bfsPath(startX, startY, targetX, targetY) {
+	bfsPath(startX, startY, targetX, targetY, maxDepth = 100) {
 		const paths = {}; // cache
 		const jobs = []; // queue
 		const realMap = this.world.map;
 
-		jobs.push([startX, startY, null]); // start
+		jobs.push([startX, startY, null, 0]); // start
 
 		while (jobs.length) {
 			const job = jobs.shift();
-			const [x, y, prev] = job;
+			const [x, y, prev, depth] = job;
+			if (depth > maxDepth) continue;
 
 			const key = x + ':' + y;
 			if (paths[key]) continue; // processed before
 
-			const blocked = !!realMap.get(x, y); // TODO check bombs
+			const blocked = !!realMap.get(x, y); //TODO check bombs
 			if (blocked) continue;
+			if (!this.player.isIn(x, y) && this.world.hasBomb(x, y)) continue;
 
-			paths[key] = { x, y, prev }; // store in cache
+			paths[key] = { x, y, prev, depth }; // store in cache
 
 			if (x === targetX && y === targetY)
 			// break; // we're done
 				return paths[key];
 
 			// search more
-			jobs.push([x - 1, y + 0, paths[key]]);
-			jobs.push([x + 1, y + 0, paths[key]]);
-			jobs.push([x - 0, y - 1, paths[key]]);
-			jobs.push([x - 0, y + 1, paths[key]]);
+			jobs.push([x - 1, y + 0, paths[key], depth + 1]);
+			jobs.push([x + 1, y + 0, paths[key], depth + 1]);
+			jobs.push([x - 0, y - 1, paths[key], depth + 1]);
+			jobs.push([x - 0, y + 1, paths[key], depth + 1]);
 		}
 
 		// return paths;
@@ -183,7 +181,7 @@ class AiPlayer {
 		}
 
 		const now = Date.now();
-		if (now - this.last >= 200) {
+		if (now - this.last >= 100) {
 			this.last = now;
 			this.botUpdate();
 		}
@@ -191,15 +189,12 @@ class AiPlayer {
 		// console.log('thinking..');
 
 		if (now - this.lastDecisionTime >= 1000) {
-			// this.decisionUpdate();
+			this.decisionUpdate();
 			this.lastDecisionTime = now;
 		}
 	}
 
-	botUpdate() {
-
-
-
+	decisionUpdate() {
 		// Bomberman Narrative
 
 		// Bomberman sees a space
@@ -239,6 +234,27 @@ class AiPlayer {
 		// 1. Find the shortest / safest place to get out of it
 		// 2. Attempt to stick to the plan and avoid the fire
 
+		// Player tatics
+		// drop bomb on directional change
+		// directional change on dropping bomb
+
+		this.enemyMode = false;
+
+		for (let player of this.world.players) {
+			if (player === this.player) continue;
+
+			const found = this.bfsPath(player.x | 0, player.y | 0, this.player.x | 0, this.player.y | 0, 10);
+			if (found) {
+				// console.log('Enemy contacted!', found, player);
+				this.enemyMode = true;
+			}
+		}
+
+		// get out of fire mode
+
+	}
+
+	botUpdate() {
 		const realMap = this.world.map;
 		const safeMap = this.updateSafeMap();
 		const player = this.player;
@@ -280,12 +296,6 @@ class AiPlayer {
 				const {x, y} = o;
 				let score = 0;
 
-				// increase score if there're bricks to blow
-				if (realMap.get(x - 1, y + 0) === 2) score++;
-				if (realMap.get(x + 1, y + 0) === 2) score++;
-				if (realMap.get(x - 0, y - 1) === 2) score++;
-				if (realMap.get(x - 0, y + 1) === 2) score++;
-
 				// boost score if items is there
 				if (this.world.hasItem(x, y)) {
 					score += 10;
@@ -298,11 +308,12 @@ class AiPlayer {
 				} else {
 					// score -= 2;
 				}
-				
+
 				if (analysis.players) {
 					score += 10 * analysis.players;
 				}
 
+				// increase score if there're bricks to blow
 				if (analysis.walls) {
 					score += analysis.walls
 				}
@@ -313,6 +324,8 @@ class AiPlayer {
 
 				o.score = score;
 				best_score = Math.max(best_score, score);
+
+				Object.assign(o, analysis);
 
 				return o;
 			})
@@ -333,8 +346,7 @@ class AiPlayer {
 			});
 		// console.log(Object.keys(places));
 		// console.log('sort', sort);
-		const candidate = sort[0];
-
+		const candidate = sort[0]; // Math.random() * sort.length | 0
 
 		let debug = '';
 
@@ -347,6 +359,7 @@ class AiPlayer {
 
 			if (route) {
 				// console.log('route', route);
+				debug += ` walls ${candidate.walls}, Safe ${candidate.safe}, ${candidate.players}\n `
 				debug += ` @${gridX},${gridY} -> ${candidate.x},${candidate.y}. `;
 
 				if (nowSafe && !safeMap.get(route.x, route.y)) {
@@ -367,9 +380,14 @@ class AiPlayer {
 		if (nowSafe && safeToBomb && 
 			(!candidate || gridX === candidate.x && gridY === candidate.y)) {
 			player.dropBomb();
+			this.lastBombDrop = Date.now(); // start dropping bombs
 		}
 
-		pre.innerHTML = debug;
+		// if (Date.now() - this.lastBombDrop < 2000 && safeToBomb && Math.random() > 0.7 && player.dropBomb()) {
+		// 	// this.lastBombDrop = Date.now();
+		// }
+
+		// pre.innerHTML = debug;
 
 		// console.log(safeMap.debugWalls());
 		// Random Bot

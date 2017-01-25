@@ -231,6 +231,7 @@ class Player {
 		this.bombsUsed++;
 		this.world.addBomb(bomb);
 		bomb.plant();
+		return true;
 	}
 
 	die() {

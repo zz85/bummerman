@@ -1,4 +1,4 @@
-let USE_EFFECT = false;
+let USE_EFFECT = true;
 
 let scene, camera, renderer;
 let effect;
@@ -48,8 +48,8 @@ function init() {
 		platform.add(mapCache[m]);
 	}
 
-	renderer.gammaInput = true;
-	renderer.gammaOutput = true;
+	// renderer.gammaInput = true;
+	// renderer.gammaOutput = true;
 	effect = new THREE.OutlineEffect( renderer, { defaultThickness: 0.007 } );
 
 	window.addEventListener( 'resize', onWindowResize, false );
