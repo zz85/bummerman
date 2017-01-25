@@ -26,44 +26,15 @@ class AiPlayer {
 
 		// Mark out places where bombs and fires are
 		for (let bomb of this.world.bombs) {
-			const {x, y} = bomb;
-			safeMap.set(x, y, false);
+			const { x, y } = bomb;
 
-			for (let l = 1; l <= bomb.strength; l++) {
-				const cx = x - l;
-				if (realMap.get(cx, y)) {
-					break;
+			this.fireCheck(bomb.strength, (dx, dy) => {
+				if (realMap.get(x + dx, y + dy)) {
+					return true;
 				}
 
-				safeMap.set(cx, y, false);
-			}
-
-			for (let l = 1; l <= bomb.strength; l++) {
-				const cx = x + l;
-				if (realMap.get(cx, y)) {
-					break;
-				}
-
-				safeMap.set(cx, y, false);
-			}
-
-			for (let l = 1; l <= bomb.strength; l++) {
-				const cy = y - l;
-				if (realMap.get(x, cy)) {
-					break;
-				}
-
-				safeMap.set(x, cy, false);
-			}
-
-			for (let l = 1; l <= bomb.strength; l++) {
-				const cy = y + l;
-				if (realMap.get(x, cy)) {
-					break;
-				}
-
-				safeMap.set(x, cy, false);
-			}
+				safeMap.set(x + dx, y + dy, false);
+			});
 		}
 
 		return safeMap;
@@ -112,6 +83,7 @@ class AiPlayer {
 			}
 
 			for (let player of this.world.players) {
+				if (player.died) continue;
 				if (player !== this.player && player.isIn(x, y)) {
 					players++;
 				}
@@ -242,6 +214,7 @@ class AiPlayer {
 
 		for (let player of this.world.players) {
 			if (player === this.player) continue;
+			if (player.died) continue;
 
 			const found = this.bfsPath(player.x | 0, player.y | 0, this.player.x | 0, this.player.y | 0, 10);
 			if (found) {
@@ -266,7 +239,8 @@ class AiPlayer {
 		// where can bot go?
 		const places = {};
 
-		const findPlaces = (places, x, y) => {
+		const findPlaces = (places, x, y, depth = 0) => {
+			if (depth > 5) return;
 			const key = x + ':' + y;
 			if (key in places) return;
 
@@ -278,10 +252,10 @@ class AiPlayer {
 				y: y
 			};
 
-			findPlaces(places, x - 1, y + 0, places[key]);
-			findPlaces(places, x + 1, y + 0, places[key]);
-			findPlaces(places, x - 0, y - 1, places[key]);
-			findPlaces(places, x - 0, y + 1, places[key]);
+			findPlaces(places, x - 1, y + 0, places[key], depth + 1);
+			findPlaces(places, x + 1, y + 0, places[key], depth + 1);
+			findPlaces(places, x - 0, y - 1, places[key], depth + 1);
+			findPlaces(places, x - 0, y + 1, places[key], depth + 1);
 		};
 
 		findPlaces(places, gridX, gridY);

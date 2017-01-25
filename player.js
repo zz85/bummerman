@@ -57,6 +57,7 @@ class Player {
 	}
 
 	isIn(x, y) {
+		if (this.died) return false;
 		return this.collision(this.aabb(), this.aabb(x, y));
 	}
 

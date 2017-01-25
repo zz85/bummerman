@@ -60,8 +60,6 @@ function initGame() {
 	map.defaultWalls();
 	// map.emptyWalls();
 
-
-
 	bot1 = new AiPlayer(player1, world);
 	bot2 = new AiPlayer(player2, world);
 	bot3 = new AiPlayer(player3, world);
@@ -135,7 +133,6 @@ function loop(dt) {
 	if      (keydowns[32]) player3.dropBomb(); // space
 
 	bots.forEach(b => b.update());
-	bot1.update();
 
 	// TODO
 	// Add Game Api Controllers
