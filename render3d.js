@@ -1,4 +1,7 @@
+let USE_EFFECT = false;
+
 let scene, camera, renderer;
+let effect;
 let platform;
 let dist = 15;
 let angle = 0.35; // 0 for top down, 1, for isometric
@@ -45,6 +48,11 @@ function init() {
 		platform.add(mapCache[m]);
 	}
 
+	renderer.gammaInput = true;
+	renderer.gammaOutput = true;
+	effect = new THREE.OutlineEffect( renderer, { defaultThickness: 0.007 } );
+
+	window.addEventListener( 'resize', onWindowResize, false );
 }
 
 function render() {
@@ -171,5 +179,16 @@ function updateRender() {
 		camera.lookAt(absPosition);
 	}
 
-	renderer.render(scene, camera);
+	if (USE_EFFECT) {
+		effect.render( scene, camera );
+	}
+	else {
+		renderer.render(scene, camera);
+	}
+}
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
 }
