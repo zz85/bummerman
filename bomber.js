@@ -147,9 +147,6 @@ function loop(dt) {
 	// }
 }
 
-
-
-
 document.addEventListener( 'keydown', onDocumentKeyDown, false );
 document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
@@ -162,7 +159,6 @@ function onDocumentKeyDown( event ) {
 
 
 	}
-
 }
 
 function onDocumentKeyUp( event ) {
