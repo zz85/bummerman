@@ -1,11 +1,11 @@
 // # TODO-list
 // - Music
-// Player AI
 // Network
 // GameAPI
 // Correct resizing
 // FPS View
 // VR View
+// Start / End Games.
 
 // # Improvement List
 // - Better / fairer item distribution
@@ -21,6 +21,7 @@
 // - 2 Players
 // - Audio effects
 // - Colors for players
+// - Player AI
 
 const COLUMNS = 15;
 const ROWS = 15;

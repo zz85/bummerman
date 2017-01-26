@@ -227,9 +227,41 @@ class AiPlayer {
 
 	}
 
-	botUpdate() {
+	findPlaces() {
+		// find accessible players that playaer can go to.
 		const realMap = this.world.map;
-		const safeMap = this.updateSafeMap();
+
+		const startX = this.player.x | 0;
+		const startY = this.player.y | 0;
+
+		// where can bot go?
+		const places = {};
+		const queue = [];
+		queue.push([startX, startY, 0]);
+
+		while (queue.length) {
+			const [x, y, depth] = queue.pop();
+
+			const key = x + ':' + y;
+			if (key in places) continue;
+
+			// if (depth > 5) continue;
+
+			const blocked = !!realMap.get(x, y) || (!this.player.isIn(x, y) && this.world.hasBomb(x, y));
+			if (blocked) continue;
+
+			places[key] = { x, y, depth };
+
+			queue.push([x - 1, y + 0, depth + 1]);
+			queue.push([x + 1, y + 0, depth + 1]);
+			queue.push([x - 0, y - 1, depth + 1]);
+			queue.push([x - 0, y + 1, depth + 1]);
+		}
+
+		return places;
+	}
+
+	botUpdate() {
 		const player = this.player;
 
 		// current grid
@@ -237,28 +269,8 @@ class AiPlayer {
 		const gridY = player.y + 0.5 | 0;
 
 		// where can bot go?
-		const places = {};
-
-		const findPlaces = (places, x, y, depth = 0) => {
-			if (depth > 5) return;
-			const key = x + ':' + y;
-			if (key in places) return;
-
-			const blocked = !!realMap.get(x, y) || (!player.isIn(x, y) && this.world.hasBomb(x, y));
-			if (blocked) return;
-
-			places[key] = {
-				x: x,
-				y: y
-			};
-
-			findPlaces(places, x - 1, y + 0, places[key], depth + 1);
-			findPlaces(places, x + 1, y + 0, places[key], depth + 1);
-			findPlaces(places, x - 0, y - 1, places[key], depth + 1);
-			findPlaces(places, x - 0, y + 1, places[key], depth + 1);
-		};
-
-		findPlaces(places, gridX, gridY);
+		const safeMap = this.updateSafeMap();
+		const places = this.findPlaces();
 
 		let best_score = -Infinity;
 
