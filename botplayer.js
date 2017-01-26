@@ -376,8 +376,6 @@ class AiPlayer {
 		// pre.innerHTML = debug;
 
 		// console.log(safeMap.debugWalls());
-		// Random Bot
-		// player.targetBy( (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
 	}
 
 }

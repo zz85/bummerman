@@ -46,7 +46,6 @@ function initGame() {
 	player3 = new Player(COLUMNS - 6, 4, 'Player 3', '#00f');
 	player4 = new Player(5, ROWS - 6, 'Player 4', '#f0f');
 
-
 	// player1 = new Player(1, 1, 'Player 1', '#f00');
 	// player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', '#0f0');
 	// player3 = new Player(COLUMNS - 2, 1, 'Player 3', '#00f');
@@ -61,7 +60,7 @@ function initGame() {
 	map.defaultWalls();
 	// map.emptyWalls();
 
-	bot1 = new AiPlayer(player1, world);
+	bot1 = new AiPlayer2(player1, world);
 	bot2 = new AiPlayer(player2, world);
 	bot3 = new AiPlayer(player3, world);
 	bot4 = new AiPlayer(player4, world);
