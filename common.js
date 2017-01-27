@@ -13,9 +13,10 @@ require('flumes.js');
 require('bomb.js');
 require('walls.js');
 require('player.js');
-require('ai/botplayer.js');
-require('ai/botplayer02.js');
-require('ai/botplayer03.js');
+require('ai/bot.js');
+require('ai/bot02.js');
+require('ai/bot03.js');
+require('ai/bot04.js');
 
 // <!-- Sounds -->
 require('jsfxr.js');
