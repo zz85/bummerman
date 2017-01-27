@@ -33,27 +33,24 @@
     <button onclick="options.playerCamera = false">Map View</button>
     <button onclick="USE_EFFECT = !USE_EFFECT">Outline Effect</button>
 
-    <script src="https://threejs.org/build/three.min.js"></script>
-    <script src="https://threejs.org/examples/js/effects/OutlineEffect.js"></script>
+    <button onclick="player1bot = !player1bot">Player 1 Bot</button>
+    <button onclick="player2bot = !player2bot">Player 2 Bot</button>
+    <button onclick="player3bot = !player3bot">Player 3 Bot</button>
+    <button onclick="player4bot = !player4bot">Player 4 Bot</button>
 
-	<script src="models.js"></script>
+    <script src="/gits/three.js/build/three.min.js"></script>
+    <script src="/gits/three.js/examples/js/effects/OutlineEffect.js"></script>
 
-    <!-- Game -->
-    <script src="world.js"></script>
-    <script src="item.js"></script>
-    <script src="flumes.js"></script>
-    <script src="bomb.js"></script>
-    <script src="walls.js"></script>
-    <script src="player.js"></script>
-    <script src="botplayer.js"></script>
+    <script src="models.js"></script>
 
-    <!-- Sounds -->
-    <script src="jsfxr.js"></script>
-    <script src="sounds.js"></script>
+    <!-- Common -->
+    <script src="common.js"></script>
 
     <!-- Main -->
-    <script src="render3d.js"></script>
-    <script src="bomber.js"></script>
-</body>
+
+    <script>
+    require('render3d.js');
+    require('bomber.js');
+    </script>
 
 </html>

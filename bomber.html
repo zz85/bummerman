@@ -14,24 +14,15 @@
 		</style>
 	</head>
 	<body>
-		<!-- Game -->
-		<script src="world.js"></script>
-		<script src="item.js"></script>
-		<script src="flumes.js"></script>
-		<script src="bomb.js"></script>
-		<script src="walls.js"></script>
-		<script src="player.js"></script>
-		<script src="ai/botplayer.js"></script>
-		<script src="ai/botplayer2.js"></script>
-		<script src="ai/botplayer03.js"></script>
-
-		<!-- Sounds -->
-		<script src="jsfxr.js"></script>
-		<script src="sounds.js"></script>
+		<!-- Common -->
+		<script src="common.js"></script>
 
 		<!-- Main -->
-		<script src="render.js"></script>
-		<script src="bomber.js"></script>
+
+		<script>
+		require('render.js');
+		require('bomber.js');
+		</script>
 
 	</body>
 </html>

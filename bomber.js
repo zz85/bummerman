@@ -66,9 +66,6 @@ function initGame() {
 	bot4 = new Bot(player4, world);
 
 	bots = [
-		bot1,
-		bot2,
-		bot3,
 		bot4
 	];
 }
@@ -107,7 +104,7 @@ function loop(dt) {
 	// Here is the game loop
 	const t = dt / 1000;
 
-	if (player1bot);
+	if (player1bot) bot1.update();
 	else if (keydowns[38]) player1.moveUp(); // up
 	else if (keydowns[40]) player1.moveDown(); // down
 	else if (keydowns[37]) player1.moveLeft(); // left
@@ -115,7 +112,7 @@ function loop(dt) {
 	else                   player1.moveStop();
 	if      (keydowns[13]) player1.dropBomb(); // return
 
-	if (player2bot);
+	if (player2bot) bot2.update();
 	else if (keydowns[87]) player2.moveUp(); // W
 	else if (keydowns[83]) player2.moveDown(); // S
 	else if (keydowns[65]) player2.moveLeft(); // A
@@ -124,7 +121,7 @@ function loop(dt) {
 	if (keydowns[16]) player2.dropBomb(); // shift. 15 = caps
 
 
-	if (player3bot);
+	if (player3bot) bot3.update();
 	else if (keydowns[73]) player3.moveUp(); // i
 	else if (keydowns[75]) player3.moveDown(); // k
 	else if (keydowns[74]) player3.moveLeft(); // j
