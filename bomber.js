@@ -60,10 +60,10 @@ function initGame() {
 	map.defaultWalls();
 	// map.emptyWalls();
 
-	bot1 = new AiPlayer2(player1, world);
-	bot2 = new AiPlayer(player2, world);
-	bot3 = new AiPlayer(player3, world);
-	bot4 = new AiPlayer(player4, world);
+	bot1 = new Bot03(player1, world);
+	bot2 = new Bot02(player2, world);
+	bot3 = new Bot(player3, world);
+	bot4 = new Bot(player4, world);
 
 	bots = [
 		bot1,

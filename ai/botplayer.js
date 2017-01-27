@@ -1,4 +1,4 @@
-class AiPlayer {
+class Bot {
 
 	constructor(player, world) {
 		this.player = player;
@@ -153,6 +153,13 @@ class AiPlayer {
 		}
 
 		const now = Date.now();
+
+
+		if (now - this.lastDecisionTime >= 1000) {
+			this.decisionUpdate();
+			this.lastDecisionTime = now;
+		}
+
 		if (now - this.last >= 100) {
 			this.last = now;
 			this.botUpdate();
@@ -160,10 +167,6 @@ class AiPlayer {
 
 		// console.log('thinking..');
 
-		if (now - this.lastDecisionTime >= 1000) {
-			this.decisionUpdate();
-			this.lastDecisionTime = now;
-		}
 	}
 
 	decisionUpdate() {
@@ -227,10 +230,8 @@ class AiPlayer {
 
 	}
 
-	findPlaces() {
+	findPlaces(realMap = this.world.map) {
 		// find accessible players that playaer can go to.
-		const realMap = this.world.map;
-
 		const startX = this.player.x | 0;
 		const startY = this.player.y | 0;
 

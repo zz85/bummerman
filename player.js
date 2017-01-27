@@ -58,7 +58,14 @@ class Player {
 
 	isIn(x, y) {
 		if (this.died) return false;
+
 		return this.collision(this.aabb(), this.aabb(x, y));
+	}
+
+	isInSmaller(x, y) {
+		if (this.died) return false;
+
+		return this.collision(this.smallerAabb(), this.aabb(x, y));
 	}
 
 	targetBy(dx, dy) {

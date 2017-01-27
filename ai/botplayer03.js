@@ -1,6 +1,9 @@
-class AiPlayer2 extends AiPlayer {
-
-	/* A Bot that randomly walks around and drop bombs */
+class Bot03 extends Bot {
+	/* Bot03
+		A Bot that randomly walks around like Bot02
+		However, it only drop bombs when
+		there's a way out to hide.
+	*/
 	constructor(player, world) {
 		super(player, world);
 
@@ -12,6 +15,7 @@ class AiPlayer2 extends AiPlayer {
 
 		const safeMap = this.updateSafeMap();
 		const places = this.findPlaces();
+		this.places = places;
 
 		const keys = Object.keys(places);
 		const chosen = keys[keys.length * Math.random() | 0];
@@ -26,13 +30,19 @@ class AiPlayer2 extends AiPlayer {
 		const {x, y} = destination;
 		const player = this.player;
 
-		if (player.isIn(x, y)) {
+		const px = player.x + 0.5 | 0;
+		const py = player.y + 0.5 | 0;
+
+		if (player.isInSmaller(x, y)) {
 			player.moveStop();
-			if (Math.random() > 0.5) player.dropBomb();
+			const analysis = this.safeToBomb(this.places, px, py, player.bombStrength);
+			if (analysis.safe)
+				player.dropBomb();
+			// if (Math.random() > 0.5) player.dropBomb();
 			this.destination = null;
 		}
 
-		const shortest = this.bfsPath(x, y, player.x + 0.5 | 0, player.y + 0.5 | 0);
+		const shortest = this.bfsPath(x, y, px, py);
 		let route = shortest && shortest.prev;
 		if (route) {
 			player.targetBy(route.x - player.x, route.y - player.y);
