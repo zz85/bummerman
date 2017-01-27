@@ -18,10 +18,7 @@ class Bot {
 
 		// Mark out places that are inaccessible
 		realMap.forEach((x, y, v) => {
-			if (v) {
-				safeMap.set(x, y, false);
-				return;
-			}
+			safeMap.set(x, y, !v);
 		});
 
 		// Mark out places where bombs and fires are
@@ -112,7 +109,7 @@ class Bot {
 	}
 
 	// breath first search 
-	bfsPath(startX, startY, targetX, targetY, maxDepth = 100) {
+	bfsPath(startX, startY, targetX, targetY, maxDepth = 20) {
 		const paths = {}; // cache
 		const jobs = []; // queue
 		const realMap = this.world.map;
@@ -155,7 +152,7 @@ class Bot {
 		const now = Date.now();
 
 
-		if (now - this.lastDecisionTime >= 1000) {
+		if (now - this.lastDecisionTime >= 500) {
 			this.decisionUpdate();
 			this.lastDecisionTime = now;
 		}
