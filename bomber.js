@@ -103,6 +103,22 @@ function globalLoop() {
 globalLoop();
 
 function loop(dt) {
+	let alive = [];
+	for (let player of world.players) {
+		if (!player.died) alive.push(player);
+	}
+
+	if (alive.length <= 1 && world.bombs.size === 0) {
+		pre.innerHTML = 'Game over!\n';
+		if (alive.length === 1) {
+			pre.innerHTML += `${alive[0].name} won!`;
+		}
+		else {
+			pre.innerHTML += `It's a Draw!`
+		}
+		return;
+	}
+
 	// Here is the game loop
 	const t = dt / 1000;
 
