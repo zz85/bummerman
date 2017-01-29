@@ -1,5 +1,10 @@
 class Bot {
-
+	// TODO
+	// 1. Drop bombs are nearest convinence
+	// 2. Be a less perfect bot (without perfect knowledge of bombs and fire power)
+	// 3. Player reactions (drop bombs for approaching enemies, or switch directions)
+	// 4. Hunter (bomb wall towards enemies)
+	// 5. Write test cases
 	constructor(player, world) {
 		this.player = player;
 		this.world = world;
