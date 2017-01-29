@@ -6,6 +6,7 @@
 // FPS View
 // VR View
 // Start / End Games.
+// Vozelization
 
 // # Improvement List
 // - Better / fairer item distribution
@@ -26,10 +27,10 @@
 const COLUMNS = 15;
 const ROWS = 15;
 
-let player1bot = !true;
+let player1bot = true;
 let player2bot = !true;
 let player3bot = !true;
-let player4bot = true;
+let player4bot = !true;
 
 let world, map;
 
@@ -43,7 +44,7 @@ function initGame() {
 
 	player1 = new Player(5, 5, 'Player 1', '#f00');
 	player2 = new Player(COLUMNS - 6, ROWS - 6, 'Player 2', '#0f0');
-	player3 = new Player(COLUMNS - 6, 4, 'Player 3', '#00f');
+	player3 = new Player(COLUMNS - 6, 5, 'Player 3', '#00f');
 	player4 = new Player(5, ROWS - 6, 'Player 4', '#f0f');
 
 	// player1 = new Player(1, 1, 'Player 1', '#f00');
@@ -60,10 +61,11 @@ function initGame() {
 	map.defaultWalls();
 	// map.emptyWalls();
 
-	bot1 = new Bot03(player1, world);
-	bot2 = new Bot02(player2, world);
+	bot1 = new Bot05(player1, world);
+	bot2 = new Bot(player2, world);
 	bot3 = new Bot(player3, world);
-	bot4 = new Bot04(player4, world);
+	// bot4 = new Bot04(player4, world);
+	bot4 = new Bot(player4, world);
 
 	bots = [
 		bot4

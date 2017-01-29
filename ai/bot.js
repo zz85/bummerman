@@ -89,7 +89,7 @@ class Bot {
 			const key = this._(x, y);
 			if (key in places2) {
 				places2[key] = false;
-			}		
+			}
 		}
 
 		this.fireCheck(strength, firing);
@@ -108,7 +108,7 @@ class Bot {
 		};
 	}
 
-	// breath first search 
+	// breath first search
 	bfsPath(startX, startY, targetX, targetY, maxDepth = 20) {
 		const paths = {}; // cache
 		const jobs = []; // queue
@@ -281,7 +281,7 @@ class Bot {
 				let score = 0;
 
 				// boost score if items is there
-				if (this.world.hasItem(x, y)) {
+				if (this.world.hasItem(x, y) && !this.enemyMode) {
 					score += 10;
 				}
 
@@ -298,7 +298,7 @@ class Bot {
 				}
 
 				// increase score if there're bricks to blow
-				if (analysis.walls) {
+				if (analysis.walls && !this.enemyMode) {
 					score += analysis.walls
 				}
 
@@ -361,7 +361,7 @@ class Bot {
 		const safeToBomb = this.safeToBomb(places, gridX, gridY, player.bombStrength).safe;
 		debug += ` ${safeToBomb ? 'Safe' : 'Unsafe' } bomb site. `
 
-		if (nowSafe && safeToBomb && 
+		if (nowSafe && safeToBomb &&
 			(!candidate || gridX === candidate.x && gridY === candidate.y)) {
 			player.dropBomb();
 			this.lastBombDrop = Date.now(); // start dropping bombs

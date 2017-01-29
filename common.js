@@ -17,6 +17,7 @@ require('ai/bot.js');
 require('ai/bot02.js');
 require('ai/bot03.js');
 require('ai/bot04.js');
+require('ai/bot05.js');
 
 // <!-- Sounds -->
 require('jsfxr.js');
