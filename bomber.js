@@ -47,16 +47,20 @@ function initGame() {
 	player3 = new Player(COLUMNS - 6, 5, 'Player 3', '#00f');
 	player4 = new Player(5, ROWS - 6, 'Player 4', '#f0f');
 
-	// player1 = new Player(1, 1, 'Player 1', '#f00');
-	// player2 = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', '#0f0');
-	// player3 = new Player(COLUMNS - 2, 1, 'Player 3', '#00f');
-	// player4 = new Player(1, ROWS - 2, 'Player 4', '#f0f');
+	player1b = new Player(1, 1, 'Player 1', '#f00');
+	player2b = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', '#0f0');
+	player3b = new Player(COLUMNS - 2, 1, 'Player 3', '#00f');
+	player4b = new Player(1, ROWS - 2, 'Player 4', '#f0f');
 
 	world.setMap(map);
 	world.addPlayer(player1);
 	world.addPlayer(player2);
 	world.addPlayer(player3);
 	world.addPlayer(player4);
+	world.addPlayer(player1b);
+	world.addPlayer(player2b);
+	world.addPlayer(player3b);
+	world.addPlayer(player4b);
 
 	map.defaultWalls();
 	// map.emptyWalls();
@@ -68,7 +72,11 @@ function initGame() {
 	bot4 = new Bot(player4, world);
 
 	bots = [
-		bot4
+		bot4,
+		new Bot05(player1b, world),
+		new Bot05(player2b, world),
+		new Bot05(player3b, world),
+		new Bot05(player4b, world)
 	];
 }
 
