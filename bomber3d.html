@@ -38,17 +38,20 @@
     <button onclick="player3bot = !player3bot">Player 3 Bot</button>
     <button onclick="player4bot = !player4bot">Player 4 Bot</button>
 
-    <script src="/gits/three.js/build/three.min.js"></script>
-    <script src="/gits/three.js/examples/js/effects/OutlineEffect.js"></script>
-
-    <script src="models.js"></script>
-
     <!-- Common -->
     <script src="common.js"></script>
 
     <!-- Main -->
 
     <script>
+    // <!-- 3D parts -->
+    let THREE_BASE = 'https://threejs.org/';
+    // Hack for my development
+    if (location.hostname === 'localhost') THREE_BASE = '/gits/three.js/'
+    require(THREE_BASE + 'build/three.min.js');
+    require(THREE_BASE + 'examples/js/effects/OutlineEffect.js');
+    require('models.js');
+
     require('render3d.js');
     require('bomber.js');
     </script>
