@@ -191,7 +191,7 @@ function createHero(style = 'red') {
 	});
 
 	var roundedRectShape = new THREE.Shape();
-	( function roundedRect( ctx, x, y, width, height, radius ){
+	function roundedRect( ctx, x, y, width, height, radius ){
 
 		ctx.moveTo( x, y + radius );
 		ctx.lineTo( x, y + height - radius );
@@ -203,7 +203,9 @@ function createHero(style = 'red') {
 		ctx.lineTo( x + radius, y );
 		ctx.quadraticCurveTo( x, y, x, y + radius );
 
-	} )( roundedRectShape, -1, -1, 2, 2, 1 );
+	}
+	
+	roundedRect(roundedRectShape, -1, -1, 2, 2, 1 );
 
 	var extrudeSettings = { amount: .9, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: .2, bevelThickness: .2 }
 	var headGeometry = new THREE.ExtrudeGeometry( roundedRectShape, extrudeSettings );
@@ -221,8 +223,12 @@ function createHero(style = 'red') {
 	head.position.z = -0.2;
 	head.position.y = 1.9;
 	head.scale.y = 0.8;
+
+	faceGeometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI));
 	face = new THREE.Mesh(faceGeometry, headMaterial);
-	face.rotation.y = Math.PI;
+	// face.rotation.y = Math.PI;
+
+
 	// head.add(face);
 	man.add(head);
 	man.position.y = 3;
@@ -246,13 +252,34 @@ function createHero(style = 'red') {
 	const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
 	const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
 
-	const armGeometry = new THREE.CylinderBufferGeometry( .1, .14, 1.5, 8 );
-	arm = new THREE.Mesh(armGeometry, headMaterial);
-	arm.position.y = 0.5;
-	// arm.position.x = 1;
-	arm.rotation.z = Math.PI / 2;
+	const leftArm = new THREE.Object3D();
 
-	man.add(arm);
+	const armGeometry = new THREE.CylinderBufferGeometry( .14, .1, 0.5, 8 );
+	arm = new THREE.Mesh(armGeometry, bodyMaterial);
+	arm.applyMatrix(new THREE.Matrix4().makeRotationZ( Math.PI / 2));
+
+	// arm.position.y = 0.5;
+	// arm.position.x = 1;
+	// arm.rotation.z = Math.PI / 2;
+
+	
+	const sphereGeometry = new THREE.SphereBufferGeometry(0.3, 0.4, 0.4);
+	const hand = new THREE.Mesh(sphereGeometry, headMaterial);
+	hand.position.y = 0.4;
+	arm.rotation.y = Math.PI / 8;
+	// arm.rotation.z = Math.PI / 8;
+	arm.position.y = 0.2;
+	
+	leftArm.add(arm);
+	arm.add(hand);
+
+	rightArm = leftArm.clone();
+
+	leftArm.position.x = -.5;
+	rightArm.position.x = .5;
+	rightArm.rotation.z = Math.PI;
+	man.add(leftArm);
+	man.add(rightArm);
 
 	man.add(body);
 	man.scale.multiplyScalar(4);
