@@ -5,6 +5,11 @@
 //
 
 const UNITS = 10;
+var simplyModifer = new THREE.SimplifyModifier();
+
+function simply(geometry) {
+	return simplyModifer.modify( geometry, geometry.vertices.length * 0.8 | 0 );
+}
 
 function createSoftWall() {
 	const wallGeometry = new THREE.BoxBufferGeometry(9, 9, 9);
@@ -178,7 +183,7 @@ function createHero(style = 'red') {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: false
+		wireframe: !true
 	});
 
 	// const
@@ -209,6 +214,9 @@ function createHero(style = 'red') {
 
 	var extrudeSettings = { amount: .9, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: .2, bevelThickness: .2 }
 	var headGeometry = new THREE.ExtrudeGeometry( roundedRectShape, extrudeSettings );
+
+	headGeometry = simply(headGeometry);
+	console.log(headGeometry);
 
 	head = new THREE.Mesh(headGeometry, headMaterial);
 
@@ -248,7 +256,8 @@ function createHero(style = 'red') {
 		spline.push(new THREE.Vector2(eggFormula(t), t));
 	}
 
-	const bodyGeometry = new THREE.LatheBufferGeometry( spline );
+	let bodyGeometry = new THREE.LatheGeometry( spline ); // Buffer
+	bodyGeometry = simply(bodyGeometry);
 	const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
 	const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
 
@@ -262,8 +271,7 @@ function createHero(style = 'red') {
 	// arm.position.x = 1;
 	// arm.rotation.z = Math.PI / 2;
 
-	
-	const sphereGeometry = new THREE.SphereBufferGeometry(0.3, 0.4, 0.4);
+	const sphereGeometry = new THREE.SphereBufferGeometry(0.3, 0.4, 0.4); // Buffer
 	const hand = new THREE.Mesh(sphereGeometry, headMaterial);
 	hand.position.y = 0.4;
 	arm.rotation.y = Math.PI / 8;

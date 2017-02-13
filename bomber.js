@@ -8,14 +8,16 @@
 // VR View
 // Start / End Games.
 // Vozelization
+// Integrate Happy Fun Times
 
 // # Improvement List
 // - Better / fairer item distribution
-// - Nicer Graphics
+// - Nicer Graphics (Powerup Items)
 // - More Powerups
 // - Time elements
 
 // # Bug-list
+// Player gets untrapped from dropped bombs.
 
 // # Done-ish
 // - Powerups
@@ -69,7 +71,6 @@ function initGame() {
 	bot1 = new Bot05(player1, world);
 	bot2 = new Bot(player2, world);
 	bot3 = new Bot(player3, world);
-	// bot4 = new Bot04(player4, world);
 	bot4 = new Bot(player4, world);
 
 	bots = [

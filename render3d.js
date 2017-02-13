@@ -20,6 +20,7 @@ function init() {
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 	camera.setFocalLength(35);
+	// camera = new THREE.OrthographicCamera( window.innerWidth / - 8, window.innerWidth / 8, window.innerHeight / 8, window.innerHeight / - 8, - 500, 1000 );
 
 	const pointLight = new THREE.PointLight( 0xffffff );
 	pointLight.position.set(15, 5, 15);
@@ -168,13 +169,15 @@ function updateRender() {
 
 	camera.position.y = UNITS * dist;
 	camera.position.z = UNITS * dist * angle;
+
 	camera.lookAt(scene.position);
 
 	if (options.playerCamera) {
-		camera.setFocalLength(16);
+		// camera.setFocalLength(16);
 		camera.position.y = player1.tag.position.y + UNITS * 2;
 		camera.position.z = player1.tag.position.z + UNITS * 2;
 		camera.position.x = player1.tag.position.x;
+
 		absPosition.setFromMatrixPosition(player1.tag.matrixWorld);
 		camera.lookAt(absPosition);
 	}
