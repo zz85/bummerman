@@ -13,13 +13,16 @@ function simplify(geometry, target) {
 	}
 
 	const reduction = geometry.vertices.length - target;
-
-	console.log('before', geometry.vertices.length, 'after', target);
-	return simplyModifer.modify(geometry, reduction);
+	// console.log('before', geometry.vertices.length, 'after', target);
+	const simplified = simplyModifer.modify(geometry, reduction);
+	
+	return new THREE.BufferGeometry().fromGeometry(simplified);
 }
 
 function createSoftWall() {
-	const wallGeometry = new THREE.BoxBufferGeometry(9, 9, 9);
+	const div = 1;
+	const wallGeometry = new THREE.BoxBufferGeometry(9, 9, 9, div, div, div);
+	randomMovePositions(wallGeometry);
 	const wallMaterial = new THREE.MeshToonMaterial({
 		color: new THREE.Color().setRGB(0.98, 0.45, 1),
 		specular: new THREE.Color().setRGB(1, 1, 1),
@@ -69,8 +72,9 @@ function wrap(mesh) {
 }
 
 // Floor
-function createFloor() {
-	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, 1, 1);
+function createFloor(div=1) {
+	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, div, div);
+	// randomMovePositions(floorGeometry);
 	const wallMaterial = new THREE.MeshToonMaterial({
 		color: new THREE.Color().setRGB(0.1, 0.85, 0.1),
 		specular: new THREE.Color().setRGB(1, 1, 1),
@@ -86,8 +90,9 @@ function createFloor() {
 }
 
 // Ground
-function createGround() {
-	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, 1, 1);
+function createGround(div = 1) {
+	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, div, div);
+	randomMovePositions(floorGeometry);
 	// const
 	groundShader = new THREE.MeshToonMaterial({
 		color: new THREE.Color().setRGB(0.45, 0.29, 0.1),
@@ -103,14 +108,25 @@ function createGround() {
 	return wrap(floorMesh);
 }
 
+function randomMovePositions(bufferGeometry) {
+	const p = bufferGeometry.attributes.position.array;
+	for (let i = 0; i < p.length; i++) {
+		p[i] += (Math.random() - 0.5) * 1;
+	}
+	bufferGeometry.attributes.position.needsUpdate = true;
+}
+
 // Hard Wall
 function createHardWall() {
-	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, UNITS, 9.8 );
+	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, UNITS, 9.8, 3, 3, 3 );
+	randomMovePositions(wallGeometry);
+
 	const hardwallMaterial = new THREE.MeshToonMaterial( {
 		color: new THREE.Color().setRGB(0.15, 0.15, .15),
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
-		reflectivity: 0.0
+		reflectivity: 0.0,
+		wireframe: !true
 	} );
 
 	const hardWall = new THREE.Mesh(wallGeometry, hardwallMaterial);

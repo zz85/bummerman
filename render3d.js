@@ -36,14 +36,18 @@ function init() {
 
 	// Generate a poll of meshes first
 	map.forEach((x, y) => {
-		mapCache[x + ',' + y + '-' + EMPTY] = mapType[EMPTY]();
+		// mapCache[x + ',' + y + '-' + EMPTY] = mapType[EMPTY]();
 		mapCache[x + ',' + y + '-' + SOFT_WALL] = mapType[SOFT_WALL]();
 		mapCache[x + ',' + y + '-' + HARD_WALL] = mapType[HARD_WALL]();
 
-		positionAt(x, y, mapCache[x + ',' + y + '-' + EMPTY]);
+		// positionAt(x, y, mapCache[x + ',' + y + '-' + EMPTY]);
 		positionAt(x, y, mapCache[x + ',' + y + '-' + SOFT_WALL]);
 		positionAt(x, y, mapCache[x + ',' + y + '-' + HARD_WALL]);
 	});
+
+	const ground = createGround(15)
+	ground.scale.multiplyScalar(15);
+	platform.add(ground);
 
 	for (var m in mapCache) {
 		platform.add(mapCache[m]);
@@ -79,11 +83,11 @@ function updateObjects() {
 	}
 
 	map.forEach((x, y, v) => {
-		mapCache[x + ',' + y + '-' + EMPTY].visible = false;
+		// mapCache[x + ',' + y + '-' + EMPTY].visible = false;
 		mapCache[x + ',' + y + '-' + SOFT_WALL].visible = false;
 		mapCache[x + ',' + y + '-' + HARD_WALL].visible = false;
 
-		mapCache[x + ',' + y + '-' + v].visible = true;
+		if (v) mapCache[x + ',' + y + '-' + v].visible = true;
 	});
 
 	const f = (t) => t < 0.5 ? t * 2 : 2 - t * 2;
