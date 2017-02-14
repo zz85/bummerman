@@ -1,4 +1,4 @@
-let USE_EFFECT = true;
+let USE_EFFECT = !true;
 
 let scene, camera, renderer;
 let effect;
@@ -114,7 +114,7 @@ function updateObjects() {
 		else if (item instanceof Item) {
 			// TODO
 			if (!item.tag) {
-				item.tag = add(createItem());
+				item.tag = add(createItem(item.type));
 			}
 
 			positionAt(item.x, item.y, item.tag);

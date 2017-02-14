@@ -2,13 +2,20 @@
 // gameplay animations
 // particles (hero's, fuse, explosions, powerons)
 // shoes, hands, legs
-//
+// simplifyModifier2 / -> Conversion to bufferGeometry.
 
 const UNITS = 10;
 var simplyModifer = new THREE.SimplifyModifier();
 
-function simply(geometry) {
-	return simplyModifer.modify( geometry, geometry.vertices.length * 0.8 | 0 );
+function simplify(geometry, target) {
+	if (!target) {
+		target = geometry.vertices.length * 0.2 | 0;
+	}
+
+	const reduction = geometry.vertices.length - target;
+
+	console.log('before', geometry.vertices.length, 'after', target);
+	return simplyModifer.modify(geometry, reduction);
 }
 
 function createSoftWall() {
@@ -27,10 +34,10 @@ function createSoftWall() {
 	return wrap(wallMesh);
 }
 
-function createItem() {
+function createItem(item=0) {
 	const wallGeometry = new THREE.BoxBufferGeometry(6, 6, 6);
 	const wallMaterial = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.99, 0.49, .35),
+		color: new THREE.Color().setRGB(0.95, 0.95, .95),
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.9,
 		reflectivity: 0.9,
@@ -41,6 +48,16 @@ function createItem() {
 
 	const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
 	wallMesh.position.y = UNITS / 2;
+
+	const factory = {
+		[0]: () => new THREE.Object3D(),
+		[1]: () => createBomb(),
+		[2]: () => createFlumes(),
+	}
+	const b = factory[item]();
+	b.scale.multiplyScalar(0.5);
+	b.position.y = - UNITS / 4;
+	wallMesh.add(b);
 
 	return wrap(wallMesh);
 }
@@ -109,7 +126,7 @@ function createBomb() {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		// wireframe: true
+		wireframe: !true
 	});
 
 	const sphereGeometry = new THREE.SphereBufferGeometry(5.2, 12, 12);
@@ -121,9 +138,7 @@ function createBomb() {
 	cap.position.y = 5;
 	bomb.add(cap);
 
-	function Path() {
-
-	}
+	function Path() {}
 	Path.prototype = Object.create( THREE.Curve.prototype );
 	Path.prototype.constructor = Path;
 	Path.prototype.getPoint = function ( t ) { //getPoint: t is between 0-1
@@ -136,7 +151,8 @@ function createBomb() {
 
 	const path = new Path();
 
-	const fuseGeometry = new THREE.TubeBufferGeometry( path, 20, 0.4, 8, false );
+	// const fuseGeometry = new THREE.TubeBufferGeometry( path, 20, 0.4, 8, false );
+	const fuseGeometry = simplify(new THREE.TubeGeometry( path, 20, 0.4, 8, false ));
 	const fuse = new THREE.Mesh(fuseGeometry, bombMaterial);
 	fuse.position.y = 5
 
@@ -149,14 +165,15 @@ function createBomb() {
 }
 
 function createFlumes() {
-	const ballGeometry = new THREE.SphereBufferGeometry(5, 8, 8);
-	b = ballGeometry;
-	p = ballGeometry.attributes.position.array;
+	let ballGeometry = new THREE.SphereGeometry(5, 8, 8);
+	ballGeometry.mergeVertices();
+	
+	p = ballGeometry.vertices;
 	for (let i = 0; i < p.length; i++) {
-		p[i] += (Math.random() - 0.5) * 1;
+		p[i].x += (Math.random() - 0.5) * 2;
+		p[i].y += (Math.random() - 0.5) * 2;
+		p[i].z += (Math.random() - 0.5) * 2;
 	}
-
-	ballGeometry.attributes.position.needsUpdate = true;
 
 	// const
 	flumesShader = new THREE.MeshToonMaterial({
@@ -215,8 +232,7 @@ function createHero(style = 'red') {
 	var extrudeSettings = { amount: .9, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: .2, bevelThickness: .2 }
 	var headGeometry = new THREE.ExtrudeGeometry( roundedRectShape, extrudeSettings );
 
-	headGeometry = simply(headGeometry);
-	console.log(headGeometry);
+	headGeometry = simplify(headGeometry);
 
 	head = new THREE.Mesh(headGeometry, headMaterial);
 
@@ -257,7 +273,7 @@ function createHero(style = 'red') {
 	}
 
 	let bodyGeometry = new THREE.LatheGeometry( spline ); // Buffer
-	bodyGeometry = simply(bodyGeometry);
+	bodyGeometry = simplify(bodyGeometry);
 	const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
 	const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
 

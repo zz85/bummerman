@@ -42,22 +42,14 @@
 
 		// var dlight = new THREE.DirectionalLight();
 
-		softWall = createSoftWall();
-		floor = createFloor();
-		// floor.scale.multiplyScalar(2);
-
-		hardWall = createHardWall();
-		bomb = createBomb();
-		hero = createHero();
-
 		items = [
-			hero,
 			createItem(),
+			createBomb(),
+			createHero(),
 			createFlumes(),
-			softWall,
-			floor,
-			hardWall,
-			hero
+			createSoftWall(),
+			createFloor(),
+			createHardWall(),
 		];
 
 		index = 0;
