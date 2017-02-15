@@ -19,24 +19,6 @@ function simplify(geometry, target) {
 	return new THREE.BufferGeometry().fromGeometry(simplified);
 }
 
-function createSoftWall() {
-	const div = 1;
-	const wallGeometry = new THREE.BoxBufferGeometry(9, 9, 9, div, div, div);
-	randomMovePositions(wallGeometry);
-	const wallMaterial = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.98, 0.45, 1),
-		specular: new THREE.Color().setRGB(1, 1, 1),
-		shininess: 0.5,
-		reflectivity: 0.5,
-		shading: THREE.SmoothShading,
-	});
-
-	const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
-	wallMesh.position.y = UNITS / 2;
-
-	return wrap(wallMesh);
-}
-
 function createItem(item=0) {
 	const wallGeometry = new THREE.BoxBufferGeometry(6, 6, 6);
 	const wallMaterial = new THREE.MeshToonMaterial({
@@ -44,7 +26,7 @@ function createItem(item=0) {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.9,
 		reflectivity: 0.9,
-		shading: THREE.SmoothShading,
+		// shading: THREE.SmoothShading,
 		opacity: 0.5,
 		transparent: true
 	});
@@ -71,6 +53,24 @@ function wrap(mesh) {
 	return object;
 }
 
+function adjustVertices(geometry, scale=2) {
+	const p = geometry.vertices;
+	for (let i = 0; i < p.length; i++) {
+		p[i].x += (Math.random() - 0.5) * scale;
+		p[i].y += (Math.random() - 0.5) * scale;
+		p[i].z += (Math.random() - 0.5) * scale;
+	}
+}
+
+function randomMovePositions(bufferGeometry, scale=1) {
+	const p = bufferGeometry.attributes.position.array;
+	for (let i = 0; i < p.length; i++) {
+		p[i] += (Math.random() - 0.5) * scale;
+	}
+	bufferGeometry.attributes.position.needsUpdate = true;
+}
+
+
 // Floor
 function createFloor(div=1) {
 	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, div, div);
@@ -92,14 +92,15 @@ function createFloor(div=1) {
 // Ground
 function createGround(div = 1) {
 	const floorGeometry = new THREE.PlaneBufferGeometry(UNITS, UNITS, div, div);
-	randomMovePositions(floorGeometry);
+	randomMovePositions(floorGeometry, 0.2);
 	// const
 	groundShader = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.45, 0.29, 0.1),
+		color: BROWN,
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.5,
 		reflectivity: 0.5,
-		shading: THREE.SmoothShading,
+		shading: THREE.FlatShading,
+		// shading: THREE.SmoothShading,
 	});
 
 	const floorMesh = new THREE.Mesh(floorGeometry, groundShader);
@@ -108,29 +109,71 @@ function createGround(div = 1) {
 	return wrap(floorMesh);
 }
 
-function randomMovePositions(bufferGeometry) {
-	const p = bufferGeometry.attributes.position.array;
-	for (let i = 0; i < p.length; i++) {
-		p[i] += (Math.random() - 0.5) * 1;
-	}
-	bufferGeometry.attributes.position.needsUpdate = true;
+GREY = new THREE.Color().setRGB(0.15, 0.15, .15);
+BROWN = new THREE.Color().setRGB(0.45, 0.29, 0.1);
+PINK = new THREE.Color().setRGB(0.98, 0.45, 1);
+
+// Softwall
+function createSoftWall() {
+	const div = 3;
+	let wallGeometry = new THREE.BoxGeometry(9, 9, 9, div, div, div);
+	wallGeometry.mergeVertices();
+	adjustVertices(wallGeometry);
+
+	wallGeometry = new THREE.BufferGeometry().fromGeometry(wallGeometry);
+	// randomMovePositions(wallGeometry);
+	const wallMaterial = new THREE.MeshToonMaterial({
+		color: 
+		// GREY,
+		// BROWN,
+		// PINK,
+		// new THREE.Color().setRGB(0.98, 0.95, 0.4),
+		new THREE.Color().setStyle('#238443'),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.2,
+		reflectivity: 0.2,
+		shading: THREE.FlatShading,
+	});
+
+	const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
+	wallMesh.position.y = UNITS / 2;
+
+	return wrap(wallMesh);
 }
 
 // Hard Wall
 function createHardWall() {
-	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, UNITS, 9.8, 3, 3, 3 );
-	randomMovePositions(wallGeometry);
+	// const wallGeometry = new THREE.BoxBufferGeometry( 9.8, UNITS, 9.8, 3, 3, 3 );
+	// randomMovePositions(wallGeometry);
+
+	const wallGeometry = new THREE.BoxBufferGeometry( 9.8, UNITS / 4, 9.8, 1, 1, 1 );
+	randomMovePositions(wallGeometry, 0.4);
 
 	const hardwallMaterial = new THREE.MeshToonMaterial( {
-		color: new THREE.Color().setRGB(0.15, 0.15, .15),
+		color: 
+		// BROWN,
+		GREY,
+		
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: !true
+		wireframe: !true,
 	} );
 
 	const hardWall = new THREE.Mesh(wallGeometry, hardwallMaterial);
 	hardWall.position.y = UNITS / 2;
+
+	moo = [];
+	for (let i =0; i < 4; i++) {
+		moo[i] = hardWall.clone();
+	}
+	for (let i = 0; i < 4; i++) {
+		b = moo[i] ;
+		b.position.y = UNITS / 4 * (i + 1);
+		b.rotation.y = Math.random() * 0.5;
+		hardWall.add(b);
+	}
+
 	return wrap(hardWall);
 }
 
@@ -138,14 +181,19 @@ function createBomb() {
 	const bomb = new THREE.Object3D();
 
 	const bombMaterial = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.15, 0.15, .15),
+		color: GREY,
 		specular: new THREE.Color().setRGB(1, 1, 1),
-		shininess: 0.0,
-		reflectivity: 0.0,
-		wireframe: !true
+		shininess: 0.1,
+		reflectivity: 0.1,
+		wireframe: !true,
+		shading: THREE.FlatShading,
 	});
 
-	const sphereGeometry = new THREE.SphereBufferGeometry(5.2, 12, 12);
+	// const sphereGeometry = new THREE.SphereBufferGeometry(5.2, 12, 12);
+	const sphereGeometry = new THREE.OctahedronBufferGeometry(5.2, 2);
+	// const sphereGeometry = new THREE.IcosahedronBufferGeometry(5.2, 2);
+	// const sphereGeometry = simplify(new THREE.IcosahedronGeometry(5.2, 2), 40);
+	
 	const ball = new THREE.Mesh(sphereGeometry, bombMaterial);
 	bomb.add(ball);
 
@@ -198,8 +246,9 @@ function createFlumes() {
 		shininess: 0.0,
 		reflectivity: 0.0,
 		wireframe: false,
-		// transparent: true,
-		// opacity: 0.85
+		shading: THREE.FlatShading,
+		transparent: true,
+		opacity: 0.85
 	});
 
 	ball = new THREE.Mesh(ballGeometry, flumesShader);
@@ -216,7 +265,8 @@ function createHero(style = 'red') {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: !true
+		wireframe: true,
+		shading: THREE.FlatShading
 	});
 
 	// const
@@ -225,7 +275,8 @@ function createHero(style = 'red') {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: false
+		wireframe: true,
+		shading: THREE.FlatShading
 	});
 
 	var roundedRectShape = new THREE.Shape();
@@ -269,6 +320,25 @@ function createHero(style = 'red') {
 	// face.rotation.y = Math.PI;
 
 
+	const feet = new THREE.BoxBufferGeometry(0.2, 0.5, 0.2);
+	const feet2 = new THREE.Mesh(feet, headMaterial);
+	feet2.position.y = -0.5;
+
+	const shoe = new THREE.BoxBufferGeometry(0.3, 0.15, 0.4);
+	const shoe2 = new THREE.Mesh(shoe, headMaterial);
+	shoe2.position.y = -0.2;
+
+
+	feet2.add(shoe2);
+	feet2.position.x = -0.2;
+	man.add(feet2);
+
+	feet3 = feet2.clone();
+	feet3.position.x = 0.2;
+	man.add(feet3)
+
+
+
 	// head.add(face);
 	man.add(head);
 	man.position.y = 3;
@@ -289,6 +359,8 @@ function createHero(style = 'red') {
 	}
 
 	let bodyGeometry = new THREE.LatheGeometry( spline ); // Buffer
+
+	adjustVertices(bodyGeometry, 0.05);
 	bodyGeometry = simplify(bodyGeometry);
 	const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
 	const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -302,6 +374,8 @@ function createHero(style = 'red') {
 	// arm.position.y = 0.5;
 	// arm.position.x = 1;
 	// arm.rotation.z = Math.PI / 2;
+	body.scale.y = 0.7;
+	body.position.y = 0.4;
 
 	const sphereGeometry = new THREE.SphereBufferGeometry(0.3, 0.4, 0.4); // Buffer
 	const hand = new THREE.Mesh(sphereGeometry, headMaterial);
