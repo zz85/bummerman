@@ -20,6 +20,7 @@
 	<!--https://threejs.org/build/-->
 	<script src="/gits/three.js/build/three.js"></script>
 	<script src="/gits/three.js/examples/js/modifiers/SimplifyModifier.js"></script>
+	<script src="vendor/ThreeCSG.js"></script>
 	<script src="models.js"></script>
 	<script>
 		var scene = new THREE.Scene();
@@ -43,6 +44,7 @@
 		// var dlight = new THREE.DirectionalLight();
 
 		items = [
+			createCSG(),
 			createHero(),
 			createItem(),
 			createBomb(),

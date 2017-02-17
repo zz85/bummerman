@@ -250,6 +250,48 @@ function createBomb() {
 	return wrap(bomb);
 }
 
+function createCSG() {
+	let ballGeometry = new THREE.SphereGeometry(5, 20, 20);
+	
+	// const
+	flumesShader = new THREE.MeshToonMaterial({
+		color: new THREE.Color().setRGB(0.95, 0.44, .15),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.0,
+		reflectivity: 0.0,
+		wireframe: !true,
+		shading: THREE.FlatShading,
+		// transparent: true,
+		// opacity: 0.85
+	});
+
+	ball = new THREE.Mesh(ballGeometry, flumesShader);
+	ball.position.y = 5;
+	ball.scale.multiplyScalar(1.2);
+	// ball.scale.y *= 0.4;
+
+	var sphere_bsp = new ThreeBSP( ball );
+	var boxGeo = new THREE.BoxGeometry(7, 7, 7);
+	box = new THREE.Mesh(boxGeo, flumesShader);
+	box.position.y = 5;
+	box.position.z = 6;
+
+	var box_bsp = new ThreeBSP( box );
+
+	var result = sphere_bsp.subtract(box_bsp).toGeometry();
+	console.log(result);
+	result.mergeVertices();
+	result = simplify(result, 200);
+	result.computeVertexNormals();
+	var mesh = new THREE.Mesh(result, flumesShader);
+
+	// var mesh = sphere_bsp.subtract(box_bsp).toMesh(flumesShader)
+	
+	
+
+	return wrap(mesh);
+}
+
 function createFlumes() {
 	let ballGeometry = new THREE.SphereGeometry(5, 8, 8);
 	ballGeometry.mergeVertices();
@@ -276,7 +318,7 @@ function createFlumes() {
 	ball = new THREE.Mesh(ballGeometry, flumesShader);
 	ball.position.y = 5;
 	ball.scale.multiplyScalar(1.2);
-	return wrap(ball);;
+	return wrap(ball);
 }
 
 function createHero(style = 'red', bodyStyle = 'yellow') {
@@ -325,9 +367,12 @@ function createHero(style = 'red', bodyStyle = 'yellow') {
 	var extrudeSettings = { amount: .9, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: .2, bevelThickness: .2 }
 	var headGeometry = new THREE.ExtrudeGeometry( roundedRectShape, extrudeSettings );
 
-	headGeometry = simplify(headGeometry);
+	// headGeometry = simplify(headGeometry);
 
-	head = new THREE.Mesh(headGeometry, headMaterial);
+	// head = new THREE.Mesh(headGeometry, headMaterial);
+
+	head = createCSG();
+	head.scale.set(0.2, 0.2, 0.2);
 
 	tailGeometry = new THREE.SphereBufferGeometry(0.4, 8, 8);
 	tail = new THREE.Mesh(tailGeometry, headMaterial);
@@ -337,9 +382,9 @@ function createHero(style = 'red', bodyStyle = 'yellow') {
 
 	var faceGeometry = new THREE.CircleBufferGeometry( 3, 12 );
 
-	head.position.z = -0.2;
+	// head.position.z = -0.2;
 	head.position.y = 1.9;
-	head.scale.y = 0.8;
+	// head.scale.y = 0.8;
 
 	faceGeometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI));
 	face = new THREE.Mesh(faceGeometry, headMaterial);
