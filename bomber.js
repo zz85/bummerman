@@ -45,15 +45,25 @@ function initGame() {
 	world = new World();
 	map = new Walls(COLUMNS, ROWS);
 
-	player1 = new Player(5, 5, 'Player 1', '#f00');
-	player2 = new Player(COLUMNS - 6, ROWS - 6, 'Player 2', '#0f0');
-	player3 = new Player(COLUMNS - 6, 5, 'Player 3', '#00f');
-	player4 = new Player(5, ROWS - 6, 'Player 4', '#f0f');
+	// PC1 = '#f00'
+	// PC2 = '#0f0'
+	// PC3 = '#00f'
+	// PC4 = '#f0f'
+	PC1 = COLORS[0][8]
+	PC2 = COLORS[1][8]
+	PC3 = COLORS[2][8]
+	PC4 = COLORS[3][8]
 
-	player1b = new Player(1, 1, 'Player 1', '#f00');
-	player2b = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', '#0f0');
-	player3b = new Player(COLUMNS - 2, 1, 'Player 3', '#00f');
-	player4b = new Player(1, ROWS - 2, 'Player 4', '#f0f');
+
+	player1 = new Player(5, 5, 'Player 1', PC1);
+	player2 = new Player(COLUMNS - 6, ROWS - 6, 'Player 2', PC2);
+	player3 = new Player(COLUMNS - 6, 5, 'Player 3', PC3);
+	player4 = new Player(5, ROWS - 6, 'Player 4', PC4);
+
+	player1b = new Player(1, 1, 'Player 1', PC1);
+	player2b = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', PC2);
+	player3b = new Player(COLUMNS - 2, 1, 'Player 3', PC3);
+	player4b = new Player(1, ROWS - 2, 'Player 4', PC4);
 
 	world.setMap(map);
 	world.addPlayer(player1);

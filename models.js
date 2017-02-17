@@ -20,12 +20,12 @@ BLA = ["#ffffff","#f0f0f0","#d9d9d9","#bdbdbd","#969696","#737373","#525252","#2
 // orange red
 // BREW = ["#ffffcc","#ffeda0","#fed976","#feb24c","#fd8d3c","#fc4e2a","#e31a1c","#bd0026","#800026"]
 // orange tones
-// BREW = ["#ffffe5","#fff7bc","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#993404","#662506"]
+ORA = ["#ffffe5","#fff7bc","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#993404","#662506"]
 // ice blue tones
 BLU = ["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#08519c","#08306b"];
 
 
-COLORS = [PUR, BLA, BLU]
+COLORS = [PUR, BLA, BLU, ORA]
 BREW = BLU
 BREW = COLORS[Math.random() * COLORS.length | 0];
 
