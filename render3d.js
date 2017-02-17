@@ -126,7 +126,7 @@ function updateObjects() {
 		else if (item instanceof Player) {
 			const player = item;
 			if (!item.tag) {
-				item.tag = add(createHero(item.color));
+				item.tag = add(createHero(item.color, item.color2));
 			}
 
 			item.tag.head.rotation.y = Math.sin(now / 1000 * 4) * 0.2;

@@ -279,11 +279,13 @@ function createFlumes() {
 	return wrap(ball);;
 }
 
-function createHero(style = 'red') {
+function createHero(style = 'red', bodyStyle = 'yellow') {
 	const man = new THREE.Object3D();
 
 	const headMaterial = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.35, 0.15, .95).setStyle(style),
+		color: new THREE.Color()
+			.setRGB(0.35, 0.15, .95)
+			.setStyle(style),
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
@@ -293,11 +295,13 @@ function createHero(style = 'red') {
 
 	// const
 	bodyMaterial = new THREE.MeshToonMaterial({
-		color: new THREE.Color().setRGB(0.94, 0.43, .2),
+		color: new THREE.Color()
+			.setRGB(0.94, 0.43, .2)
+			.setStyle(bodyStyle),
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: true,
+		wireframe: !true,
 		shading: THREE.FlatShading
 	});
 
