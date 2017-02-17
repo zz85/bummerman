@@ -40,19 +40,9 @@
 
     <!-- Common -->
     <script src="common.js"></script>
-
-    <!-- Main -->
+    <script src="common_3d.js"></script>
 
     <script>
-    // <!-- 3D parts -->
-    let THREE_BASE = 'https://threejs.org/';
-    // Hack for my development
-    if (location.hostname === 'localhost') THREE_BASE = '/gits/three.js/'
-    require(THREE_BASE + 'build/three.min.js');
-    require(THREE_BASE + 'examples/js/effects/OutlineEffect.js');
-    require(THREE_BASE + 'examples/js/modifiers/SimplifyModifier.js');
-    require('vendor/ThreeCSG.js');
-    require('models.js');
 
     require('render3d.js');
     require('bomber.js');

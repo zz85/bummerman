@@ -7,28 +7,6 @@
 const UNITS = 10;
 var simplyModifer = new THREE.SimplifyModifier();
 
-/* COLORS */
-// https://bl.ocks.org/mbostock/5577023
-// purple
-PUR = ["#fcfbfd","#efedf5","#dadaeb","#bcbddc","#9e9ac8","#807dba","#6a51a3","#54278f","#3f007d"]
-// mixed
-// BREW = ["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928"]
-// red green
-// BREW = ["#a50026","#d73027","#f46d43","#fdae61","#fee08b","#ffffbf","#d9ef8b","#a6d96a","#66bd63","#1a9850","#006837"]
-// montone black *
-BLA = ["#ffffff","#f0f0f0","#d9d9d9","#bdbdbd","#969696","#737373","#525252","#252525","#000000"]
-// orange red
-// BREW = ["#ffffcc","#ffeda0","#fed976","#feb24c","#fd8d3c","#fc4e2a","#e31a1c","#bd0026","#800026"]
-// orange tones
-ORA = ["#ffffe5","#fff7bc","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#993404","#662506"]
-// ice blue tones
-BLU = ["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#08519c","#08306b"];
-
-
-COLORS = [PUR, BLA, BLU, ORA]
-BREW = BLU
-BREW = COLORS[Math.random() * COLORS.length | 0];
-
 GREY = new THREE.Color().setRGB(0.15, 0.15, .15);
 BROWN = new THREE.Color().setRGB(0.45, 0.29, 0.1);
 PINK = new THREE.Color().setRGB(0.98, 0.45, 1);
@@ -248,6 +226,46 @@ function createBomb() {
 	bomb.scale.multiplyScalar(0.85);
 
 	return wrap(bomb);
+}
+
+function createClark() {
+	// const
+	flumesShader = new THREE.MeshToonMaterial({
+		color: new THREE.Color().setRGB(0.95, 0.44, .15),
+		specular: new THREE.Color().setRGB(1, 1, 1),
+		shininess: 0.0,
+		reflectivity: 0.0,
+		wireframe: !true,
+		shading: THREE.FlatShading,
+		// transparent: true,
+		// opacity: 0.85
+	});
+
+	var boxGeo = new THREE.CubeGeometry(7, 7, 5, 2, 2, 2);
+	subdivision = new THREE.SubdivisionModifier(2);
+	subdivision.modify(boxGeo);
+
+	console.log('b4', boxGeo.faces.length, boxGeo.faces[0], boxGeo.faces[0] instanceof THREE.Face4);
+	boxGeo = THREE.convertFace4s(boxGeo);
+	console.log('after', boxGeo.faces.length, boxGeo.faces[0]);
+
+	// boxGeo = simplify(boxGeo, 200);
+	// console.log('simplify', boxGeo.faces.length, boxGeo.faces[0]);
+
+
+	
+	console.log('z', boxGeo);
+
+	box = new THREE.Mesh(boxGeo, flumesShader);
+	box.position.y = 5;
+	box.position.z = 6;
+
+
+
+	// result.mergeVertices();
+	// result = simplify(result, 200);
+
+	return wrap(box);
 }
 
 function createCSG() {

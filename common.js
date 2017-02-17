@@ -23,3 +23,4 @@ require('ai/bot05.js');
 require('jsfxr.js');
 require('sounds.js');
 
+require('colors.js');
