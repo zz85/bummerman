@@ -104,7 +104,8 @@ THREE.CubeGeometry = function ( width, height, depth, widthSegments, heightSegme
 
 	}
 
-	this.computeCentroids();
+	// this.computeCentroids();
+	THREE.computeCentroids(this);
 	this.mergeVertices();
 
 };
@@ -112,38 +113,49 @@ THREE.CubeGeometry = function ( width, height, depth, widthSegments, heightSegme
 THREE.CubeGeometry.prototype = Object.create( THREE.Geometry.prototype );
 
 
+/*
 THREE.CubeGeometry.prototype.computeCentroids = function () {
+
+		THREE.computeCentroids(this);
+};
+*/
+
+THREE.computeCentroids = function (geometry) {
 
 		var f, fl, face;
 
-		for ( f = 0, fl = this.faces.length; f < fl; f ++ ) {
+		for ( f = 0, fl = geometry.faces.length; f < fl; f ++ ) {
 
-				face = this.faces[ f ];
+				face = geometry.faces[ f ];
+				if (!face.centroid) face.centroid = new THREE.Vector3();
 				face.centroid.set( 0, 0, 0 );
 
 				if ( face instanceof THREE.Face3 ) {
 
-						face.centroid.add( this.vertices[ face.a ] );
-						face.centroid.add( this.vertices[ face.b ] );
-						face.centroid.add( this.vertices[ face.c ] );
+						face.centroid.add( geometry.vertices[ face.a ] );
+						face.centroid.add( geometry.vertices[ face.b ] );
+						face.centroid.add( geometry.vertices[ face.c ] );
 						face.centroid.divideScalar( 3 );
 
 				} else if ( face instanceof THREE.Face4 ) {
 
-						face.centroid.add( this.vertices[ face.a ] );
-						face.centroid.add( this.vertices[ face.b ] );
-						face.centroid.add( this.vertices[ face.c ] );
-						face.centroid.add( this.vertices[ face.d ] );
+						face.centroid.add( geometry.vertices[ face.a ] );
+						face.centroid.add( geometry.vertices[ face.b ] );
+						face.centroid.add( geometry.vertices[ face.c ] );
+						face.centroid.add( geometry.vertices[ face.d ] );
 						face.centroid.divideScalar( 4 );
 
 				}
 
 		}
-
 };
 
 
 THREE.CubeGeometry.prototype.mergeVertices = function () {
+	THREE.mergeVertices( this );
+}
+
+THREE.mergeVertices = function ( geometry ) {
 
 	var verticesMap = {}; // Hashmap for looking up vertice by position coordinates (and making sure they are unique)
 	var unique = [], changes = [];
@@ -155,17 +167,17 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 	var indices, k, j, jl, u;
 
 	// reset cache of vertices as it now will be changing.
-	this.__tmpVertices = undefined;
+	geometry.__tmpVertices = undefined;
 
-	for ( i = 0, il = this.vertices.length; i < il; i ++ ) {
+	for ( i = 0, il = geometry.vertices.length; i < il; i ++ ) {
 
-		v = this.vertices[ i ];
+		v = geometry.vertices[ i ];
 		key = [ Math.round( v.x * precision ), Math.round( v.y * precision ), Math.round( v.z * precision ) ].join( '_' );
 
 		if ( verticesMap[ key ] === undefined ) {
 
 			verticesMap[ key ] = i;
-			unique.push( this.vertices[ i ] );
+			unique.push( geometry.vertices[ i ] );
 			changes[ i ] = unique.length - 1;
 
 		} else {
@@ -182,9 +194,9 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 	// have to remove them from the geometry.
 	var faceIndicesToRemove = [];
 
-	for( i = 0, il = this.faces.length; i < il; i ++ ) {
+	for( i = 0, il = geometry.faces.length; i < il; i ++ ) {
 
-		face = this.faces[ i ];
+		face = geometry.faces[ i ];
 
 		if ( face instanceof THREE.Face3 ) {
 
@@ -227,7 +239,7 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 
 					// if more than one duplicated vertex is found
 					// we can't generate any valid Face3's, thus
-					// we need to remove this face complete.
+					// we need to remove geometry face complete.
 					if ( dupIndex >= 0 ) {
 
 						faceIndicesToRemove.push( i );
@@ -245,9 +257,9 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 
 				var newFace = new THREE.Face3( indices[0], indices[1], indices[2], face.normal, face.color, face.materialIndex );
 
-				for ( j = 0, jl = this.faceVertexUvs.length; j < jl; j ++ ) {
+				for ( j = 0, jl = geometry.faceVertexUvs.length; j < jl; j ++ ) {
 
-					u = this.faceVertexUvs[ j ][ i ];
+					u = geometry.faceVertexUvs[ j ][ i ];
 
 					if ( u ) {
 						u.splice( dupIndex, 1 );
@@ -268,7 +280,7 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 					newFace.vertexColors.splice( dupIndex, 1 );
 				}
 
-				this.faces[ i ] = newFace;
+				geometry.faces[ i ] = newFace;
 			}
 
 		}
@@ -277,11 +289,11 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 
 	for ( i = faceIndicesToRemove.length - 1; i >= 0; i -- ) {
 
-		this.faces.splice( i, 1 );
+		geometry.faces.splice( i, 1 );
 
-		for ( j = 0, jl = this.faceVertexUvs.length; j < jl; j ++ ) {
+		for ( j = 0, jl = geometry.faceVertexUvs.length; j < jl; j ++ ) {
 
-			this.faceVertexUvs[ j ].splice( i, 1 );
+			geometry.faceVertexUvs[ j ].splice( i, 1 );
 
 		}
 
@@ -289,8 +301,8 @@ THREE.CubeGeometry.prototype.mergeVertices = function () {
 
 	// Use unique set of vertices
 
-	var diff = this.vertices.length - unique.length;
-	this.vertices = unique;
+	var diff = geometry.vertices.length - unique.length;
+	geometry.vertices = unique;
 	return diff;
 
 }

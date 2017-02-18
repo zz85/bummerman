@@ -6,6 +6,7 @@ require(THREE_BASE + 'SimplifyModifier.js');
 
 require(THREE_BASE + 'Face4.js');
 require(THREE_BASE + 'CubeGeometry.js');
+require(THREE_BASE + 'ClarkSubdivisionModifier.js');
 require(THREE_BASE + 'SubdivisionModifier.js');
 require('vendor/ThreeCSG.js');
 require('models.js');

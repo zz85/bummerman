@@ -6,6 +6,8 @@
 
 const UNITS = 10;
 var simplyModifer = new THREE.SimplifyModifier();
+var subdivisionModifier = new THREE.SubdivisionModifier(2); // loop
+var clarkModifier = new THREE.ClarkSubdivisionModifier(3);
 
 GREY = new THREE.Color().setRGB(0.15, 0.15, .15);
 BROWN = new THREE.Color().setRGB(0.45, 0.29, 0.1);
@@ -18,7 +20,7 @@ GROUND_COLOR = new THREE.Color().setStyle(BREW[6]);
 // new THREE.Color().setStyle('#238443'),
 
 
-function simplify(geometry, target) {
+function simplify(geometry, target, non) {
 	if (!target) {
 		target = geometry.vertices.length * 0.2 | 0;
 	}
@@ -26,8 +28,26 @@ function simplify(geometry, target) {
 	const reduction = geometry.vertices.length - target;
 	// console.log('before', geometry.vertices.length, 'after', target);
 	const simplified = simplyModifer.modify(geometry, reduction);
+	if (non) return simplified;
 	
 	return new THREE.BufferGeometry().fromGeometry(simplified);
+}
+
+function clarkSubdivide(geometry, subdivisions=3) {
+	THREE.computeCentroids(geometry);
+	
+	clarkModifier.subdivisions = subdivisions;
+	clarkModifier.modify(geometry);
+	geometry = THREE.convertFace4s(geometry);
+	console.log('after box faces', geometry.faces.length);
+	return geometry;
+}
+
+function subdivide(geometry, subdivisions=3) {
+	subdivisionModifier.subdivisions = subdivisions;
+	subdivisionModifier.modify(geometry);
+	console.log('after box faces', geometry.faces.length);
+	return geometry;
 }
 
 function createItem(item=0) {
@@ -235,32 +255,21 @@ function createClark() {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: !true,
+		// wireframe: true,
 		shading: THREE.FlatShading,
 		// transparent: true,
 		// opacity: 0.85
 	});
 
 	var boxGeo = new THREE.CubeGeometry(7, 7, 5, 2, 2, 2);
-	subdivision = new THREE.SubdivisionModifier(2);
-	subdivision.modify(boxGeo);
 
-	console.log('b4', boxGeo.faces.length, boxGeo.faces[0], boxGeo.faces[0] instanceof THREE.Face4);
-	boxGeo = THREE.convertFace4s(boxGeo);
-	console.log('after', boxGeo.faces.length, boxGeo.faces[0]);
-
-	// boxGeo = simplify(boxGeo, 200);
-	// console.log('simplify', boxGeo.faces.length, boxGeo.faces[0]);
-
-
-	
-	console.log('z', boxGeo);
+	boxGeo = clarkSubdivide(boxGeo);
+	boxGeo = simplify(boxGeo, 300);
+	// console.log('simplify', boxGeo.faces.length);
 
 	box = new THREE.Mesh(boxGeo, flumesShader);
 	box.position.y = 5;
 	box.position.z = 6;
-
-
 
 	// result.mergeVertices();
 	// result = simplify(result, 200);
@@ -268,8 +277,13 @@ function createClark() {
 	return wrap(box);
 }
 
-function createCSG() {
-	let ballGeometry = new THREE.SphereGeometry(5, 20, 20);
+function createCSG(shader) {
+	var parts = 1;
+	let ballGeometry = 
+		new THREE.BoxGeometry(7, 6, 7, parts, parts, parts);
+		// new THREE.SphereGeometry(5, 20, 20);
+		// new THREE.CubeGeometry(7, 6, 5, parts, parts, parts);
+	boxGeo = new THREE.BoxGeometry(7, 6, 7, parts, parts, parts);
 	
 	// const
 	flumesShader = new THREE.MeshToonMaterial({
@@ -277,33 +291,48 @@ function createCSG() {
 		specular: new THREE.Color().setRGB(1, 1, 1),
 		shininess: 0.0,
 		reflectivity: 0.0,
-		wireframe: !true,
+		// wireframe: true,
 		shading: THREE.FlatShading,
 		// transparent: true,
 		// opacity: 0.85
 	});
+	if (!shader) shader = flumesShader;
 
-	ball = new THREE.Mesh(ballGeometry, flumesShader);
+	ball = new THREE.Mesh(ballGeometry, shader);
 	ball.position.y = 5;
 	ball.scale.multiplyScalar(1.2);
 	// ball.scale.y *= 0.4;
 
 	var sphere_bsp = new ThreeBSP( ball );
-	var boxGeo = new THREE.BoxGeometry(7, 7, 7);
-	box = new THREE.Mesh(boxGeo, flumesShader);
+
+	var boxGeo =
+		new THREE.CubeGeometry(7, 6, 5, parts, parts, parts);
+	
+	
+	box = new THREE.Mesh(boxGeo, shader);
 	box.position.y = 5;
-	box.position.z = 6;
+	box.position.z = 6.5;
+
 
 	var box_bsp = new ThreeBSP( box );
 
 	var result = sphere_bsp.subtract(box_bsp).toGeometry();
-	console.log(result);
-	result.mergeVertices();
-	result = simplify(result, 200);
-	result.computeVertexNormals();
-	var mesh = new THREE.Mesh(result, flumesShader);
+	// console.log(result);
+	
+	THREE.mergeVertices( result );
+	// THREE.computeCentroids( result );
+	// result.computeFaceNormals();
+	// result.computeVertexNormals();
 
-	// var mesh = sphere_bsp.subtract(box_bsp).toMesh(flumesShader)
+	// result = subdivide(result, 1);
+	// result = clarkSubdivide(result, 1);
+	
+	// result = simplify(result, 200);
+	
+	var mesh = new THREE.Mesh(result, shader);
+	mesh.scale.y = 0.9;
+
+	// var mesh = sphere_bsp.subtract(box_bsp).toMesh(shader)
 	
 	
 
@@ -389,7 +418,7 @@ function createHero(style = 'red', bodyStyle = 'yellow') {
 
 	// head = new THREE.Mesh(headGeometry, headMaterial);
 
-	head = createCSG();
+	head = createCSG(headMaterial);
 	head.scale.set(0.2, 0.2, 0.2);
 
 	tailGeometry = new THREE.SphereBufferGeometry(0.4, 8, 8);
