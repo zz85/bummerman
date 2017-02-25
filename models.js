@@ -514,7 +514,7 @@ function createHero(style = 'red', bodyStyle = 'yellow') {
 	man.add(rightArm);
 
 	man.add(body);
-	man.scale.multiplyScalar(4);
+	man.scale.multiplyScalar(5);
 
 	const o = wrap(man);
 	o.head = head;

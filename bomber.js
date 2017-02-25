@@ -30,10 +30,10 @@
 const COLUMNS = 15;
 const ROWS = 15;
 
-let player1bot = true;
+let player1bot = !true;
 let player2bot = !true;
-let player3bot = !true;
-let player4bot = !true;
+let player3bot = true;
+let player4bot = true;
 
 let world, map;
 
@@ -70,25 +70,26 @@ function initGame() {
 	world.addPlayer(player2);
 	world.addPlayer(player3);
 	world.addPlayer(player4);
-	world.addPlayer(player1b);
-	world.addPlayer(player2b);
-	world.addPlayer(player3b);
-	world.addPlayer(player4b);
+	// world.addPlayer(player1b);
+	// world.addPlayer(player2b);
+	// world.addPlayer(player3b);
+	// world.addPlayer(player4b);
 
 	map.defaultWalls();
 	// map.emptyWalls();
 
-	bot1 = new Bot05(player1, world);
-	bot2 = new Bot(player2, world);
+	// bot1 = new Bot(player1, world);
+	// bot2 = new Bot(player2, world);
 	bot3 = new Bot(player3, world);
 	bot4 = new Bot(player4, world);
 
 	bots = [
+		bot3,
 		bot4,
-		new Bot05(player1b, world),
-		new Bot05(player2b, world),
-		new Bot05(player3b, world),
-		new Bot05(player4b, world)
+		// new Bot05(player1b, world),
+		// new Bot05(player2b, world),
+		// new Bot05(player3b, world),
+		// new Bot05(player4b, world)
 	];
 }
 
