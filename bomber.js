@@ -144,28 +144,28 @@ function loop(dt) {
 	const t = dt / 1000;
 
 	if (player1bot) bot1.update();
-	else if (keydowns[38]) player1.moveUp(); // up
-	else if (keydowns[40]) player1.moveDown(); // down
-	else if (keydowns[37]) player1.moveLeft(); // left
-	else if (keydowns[39]) player1.moveRight(); // right
-	else                   player1.moveStop();
+	var up = keydowns[38];
+	var down = keydowns[40];
+	var left = keydowns[37];
+	var right = keydowns[39];
+	player1.updateControls(up, down, left, right);
 	if      (keydowns[13]) player1.dropBomb(); // return
 
 	if (player2bot) bot2.update();
-	else if (keydowns[87]) player2.moveUp(); // W
-	else if (keydowns[83]) player2.moveDown(); // S
-	else if (keydowns[65]) player2.moveLeft(); // A
-	else if (keydowns[68]) player2.moveRight(); // D
-	else                   player2.moveStop();
+	if (keydowns[87]) player2.moveUp(); // W
+	if (keydowns[83]) player2.moveDown(); // S
+	if (keydowns[65]) player2.moveLeft(); // A
+	if (keydowns[68]) player2.moveRight(); // D
+	// else                   player2.moveStop();
 	if (keydowns[16]) player2.dropBomb(); // shift. 15 = caps
 
 
 	if (player3bot) bot3.update();
-	else if (keydowns[73]) player3.moveUp(); // i
-	else if (keydowns[75]) player3.moveDown(); // k
-	else if (keydowns[74]) player3.moveLeft(); // j
-	else if (keydowns[76]) player3.moveRight(); // l
-	else                   player3.moveStop();
+	if (keydowns[73]) player3.moveUp(); // i
+	if (keydowns[75]) player3.moveDown(); // k
+	if (keydowns[74]) player3.moveLeft(); // j
+	if (keydowns[76]) player3.moveRight(); // l
+	// else                   player3.moveStop();
 	if      (keydowns[32]) player3.dropBomb(); // space
 
 	bots.forEach(b => b.update());

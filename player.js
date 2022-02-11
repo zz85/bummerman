@@ -4,9 +4,9 @@ class Player {
 		this.bombsLimit = 1;
 		this.bombStrength = 1;
 		this.bombsUsed = 0;
-		this.SPEED = 3;
+		this.SPEED = 5;
 		this.name = name;
-		
+
 		this.direction = [0, 0];
 		this.targetX = x;
 		this.targetY = y;
@@ -94,7 +94,7 @@ class Player {
 		// };
 
 		// const snapX = this.x + 0.5 | 0;
-		// const snapY = this.y + 0.5 | 0; 
+		// const snapY = this.y + 0.5 | 0;
 		// this.targetX = snapX + dx;
 		// this.targetY = snapY + dy;
 
@@ -108,7 +108,7 @@ class Player {
 
 	moveBy( dx, dy ) {
 		if (this.died) return;
-		
+
 		if (dx === 0 && dy === 0) return;
 
 		let tx = dx + this.x;
@@ -117,14 +117,14 @@ class Player {
 		const aabb = this.aabb();
 		const [x1, x2, y1, y2] = aabb;
 		const new_aabb = [x1 + dx, x2 + dx, y1 + dy, y2 + dy];
-		
+
 		const rects = this.corners(new_aabb)
 			.map(([x, y]) => [x | 0, y | 0])
 			.reduce((bounds, [x, y]) => {
 				if (
-					this.world.isBlocked(x, y) || 
+					this.world.isBlocked(x, y) ||
 					(
-						!this.isIn(x, y) && 
+						!this.isIn(x, y) &&
 						this.world.hasBomb(x, y))
 				) {
 					bounds.push(this.aabb(x, y));
@@ -132,7 +132,7 @@ class Player {
 
 				return bounds;
 			}, []);
-	
+
 		rects.some(r => {
 			if (this.collision(new_aabb, r)) {
 				const diffX = Math.min(new_aabb[1]-r[0], r[1] - new_aabb[0]);
@@ -218,8 +218,34 @@ class Player {
 		this.targetBy(1, 0);
 	}
 
+	updateControls(up, down, left, right) {
+		this.controls = [up, down, left, right]
+	}
+
 	update(t) {
-		this.moveBy(t * this.SPEED * this.direction[0], t * this.SPEED * this.direction[1]);
+		if (this.controls) {
+			let [up, down, left, right] = this.controls;
+			if (up) {
+				console.log('up')
+				this.moveBy(0, t * this.SPEED * -1);
+			}
+			if (down) {
+				console.log('down')
+				this.moveBy(0, t * this.SPEED * 1);
+			}
+			if (left) {
+				console.log('left')
+				this.moveBy(t * this.SPEED * -1, 0);
+			}
+			if (right) {
+				console.log('right')
+				this.moveBy(t * this.SPEED * 1, 0);
+			}
+		} else {
+			this.moveBy(t * this.SPEED * this.direction[0], t * this.SPEED * this.direction[1]);
+		}
+
+
 	}
 
 	dropBomb() {
