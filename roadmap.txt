@@ -3,10 +3,10 @@ Bummerman Roadmap
 
 Code Organization
 -----------------
-[ ] ES6 modules (import/export)
+[x] ES6 modules (import/export)
 [ ] Separate game logic from rendering
 [ ] Event system for game state changes
-[ ] Config file for constants (grid size, speeds, timings)
+[x] Config file for constants (grid size, speeds, timings)
 [ ] Build system (bundler for production)
 
 Gameplay Improvements
