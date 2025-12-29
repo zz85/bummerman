@@ -59,6 +59,12 @@ describe('World', () => {
     expect(world.isBlocked(1, 1)).toBe(false);
   });
 
+  test('map must be set before querying', () => {
+    const world = new World();
+    expect(world.map).toBeNull();
+    expect(world.isBlocked(0, 0)).toBe(false);
+  });
+
   test('getAlivePlayers filters dead players', () => {
     const world = new World();
     const p1 = new Player(0, 0, 'P1');

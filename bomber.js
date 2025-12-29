@@ -6,7 +6,6 @@
 // Correct resizing
 // FPS View
 // VR View
-// Start / End Games.
 // Vozelization
 // Integrate Happy Fun Times
 
@@ -26,82 +25,64 @@
 // - Audio effects
 // - Colors for players
 // - Player AI
+// - Start / End Games
 
-const COLUMNS = 15;
-const ROWS = 15;
-
-let player1bot = !true;
-let player2bot = !true;
-let player3bot = true;
-let player4bot = true;
+// Game state manager (shared between 2D/3D)
+const game = new Game();
 
 let world, map;
+let players = [];
+let bots = [];
 
-let player1, player2, player3, player4;
+const PLAYER_STARTS = [
+	[5, 5],
+	[null, null], // calculated from grid
+	[null, 5],
+	[5, null],
+];
 
 function initGame() {
-	// Game World Starts
+	const { gridSize, players: numPlayers, bots: numBots } = game.config;
+	const COLUMNS = gridSize;
+	const ROWS = gridSize;
 
 	world = new World();
 	map = new Walls(COLUMNS, ROWS);
-
-	// PC1 = '#f00'
-	// PC2 = '#0f0'
-	// PC3 = '#00f'
-	// PC4 = '#f0f'
-	PC1 = COLORS[0]
-	PC2 = COLORS[1]
-	PC3 = COLORS[2]
-	PC4 = COLORS[3]
-
-
-	player1 = new Player(5, 5, 'Player 1', PC1[8], PC1[6]);
-	player2 = new Player(COLUMNS - 6, ROWS - 6, 'Player 2', PC2[8], PC2[6]);
-	player3 = new Player(COLUMNS - 6, 5, 'Player 3', PC3[8], PC3[6]);
-	player4 = new Player(5, ROWS - 6, 'Player 4', PC4[8], PC4[6]);
-
-	player1b = new Player(1, 1, 'Player 1', PC1[8], PC1[6]);
-	player2b = new Player(COLUMNS - 2, ROWS - 2, 'Player 2', PC2[8], PC2[6]);
-	player3b = new Player(COLUMNS - 2, 1, 'Player 3', PC3[8], PC3[6]);
-	player4b = new Player(1, ROWS - 2, 'Player 4', PC4[8], PC4[6]);
-
 	world.setMap(map);
-	world.addPlayer(player1);
-	world.addPlayer(player2);
-	world.addPlayer(player3);
-	world.addPlayer(player4);
-	// world.addPlayer(player1b);
-	// world.addPlayer(player2b);
-	// world.addPlayer(player3b);
-	// world.addPlayer(player4b);
+
+	players = [];
+	bots = [];
+
+	const totalPlayers = numPlayers + numBots;
+	const starts = [
+		[5, 5],
+		[COLUMNS - 6, ROWS - 6],
+		[COLUMNS - 6, 5],
+		[5, ROWS - 6],
+	];
+
+	for (let i = 0; i < totalPlayers && i < 4; i++) {
+		const color = COLORS[i];
+		const [x, y] = starts[i];
+		const player = new Player(x, y, `Player ${i + 1}`, color[8], color[6]);
+		players.push(player);
+		world.addPlayer(player);
+
+		if (i >= numPlayers) {
+			bots.push(new Bot(player, world));
+		}
+	}
 
 	map.defaultWalls();
-	// map.emptyWalls();
-
-	// bot1 = new Bot(player1, world);
-	// bot2 = new Bot(player2, world);
-	bot3 = new Bot(player3, world);
-	bot4 = new Bot(player4, world);
-
-	bots = [
-		bot3,
-		bot4,
-		// new Bot05(player1b, world),
-		// new Bot05(player2b, world),
-		// new Bot05(player3b, world),
-		// new Bot05(player4b, world)
-	];
 }
 
-let gameState = 'start'; // 'start', 'playing', 'gameover'
-
 function showStartScreen() {
-	gameState = 'start';
-	pre.innerHTML = 'BUMMERMAN\n\nPress SPACE to start\n\nControls:\nP1: Arrows + Enter\nP2: WASD + Shift';
+	game.restart();
+	pre.innerHTML = game.getStartScreenText();
 }
 
 function startGame() {
-	gameState = 'playing';
+	game.start();
 	pre.innerHTML = '';
 	initGame();
 }
@@ -122,7 +103,6 @@ init(); // init graphics unit
 let last = performance.now();
 
 const keydowns = {};
-const keymappings = {};
 
 function globalLoop() {
 	requestAnimationFrame(globalLoop);
@@ -138,7 +118,7 @@ function globalLoop() {
 globalLoop();
 
 function loop(dt) {
-	if (gameState === 'start') return;
+	if (game.state === Game.STATE.START) return;
 
 	let alive = [];
 	for (let player of world.players) {
@@ -146,50 +126,42 @@ function loop(dt) {
 	}
 
 	if (alive.length <= 1 && world.bombs.size === 0) {
-		gameState = 'gameover';
-		pre.innerHTML = 'Game over!\n';
-		if (alive.length === 1) {
-			pre.innerHTML += `${alive[0].name} won!\n`;
-		}
-		else {
-			pre.innerHTML += `It's a Draw!\n`;
-		}
-		pre.innerHTML += '\nPress SPACE to restart';
+		const winner = alive.length === 1 ? alive[0].name : null;
+		game.end(winner);
+		pre.innerHTML = game.getGameOverText();
 		return;
 	}
 
 	// Here is the game loop
 	const t = dt / 1000;
 
-	if (player1bot) bot1.update();
-	var up = keydowns[38];
-	var down = keydowns[40];
-	var left = keydowns[37];
-	var right = keydowns[39];
-	player1.updateControls(up, down, left, right);
-	if      (keydowns[13]) player1.dropBomb(); // return
+	// Player controls (only for human players)
+	const controls = [
+		{ up: 38, down: 40, left: 37, right: 39, bomb: 13 },  // P1: arrows + enter
+		{ up: 87, down: 83, left: 65, right: 68, bomb: 16 },  // P2: WASD + shift
+		{ up: 73, down: 75, left: 74, right: 76, bomb: 186 }, // P3: IJKL + ;
+		{ up: 104, down: 101, left: 100, right: 102, bomb: 96 }, // P4: numpad
+	];
 
-	if (player2bot) bot2.update();
-	if (keydowns[87]) player2.moveUp(); // W
-	if (keydowns[83]) player2.moveDown(); // S
-	if (keydowns[65]) player2.moveLeft(); // A
-	if (keydowns[68]) player2.moveRight(); // D
-	// else                   player2.moveStop();
-	if (keydowns[16]) player2.dropBomb(); // shift. 15 = caps
+	const numHumans = game.config.players;
+	players.forEach((player, i) => {
+		if (i < numHumans && controls[i]) {
+			const c = controls[i];
+			const up = keydowns[c.up];
+			const down = keydowns[c.down];
+			const left = keydowns[c.left];
+			const right = keydowns[c.right];
 
+			if (up) player.moveBy(0, -t * player.SPEED);
+			else if (down) player.moveBy(0, t * player.SPEED);
+			if (left) player.moveBy(-t * player.SPEED, 0);
+			else if (right) player.moveBy(t * player.SPEED, 0);
 
-	if (player3bot) bot3.update();
-	if (keydowns[73]) player3.moveUp(); // i
-	if (keydowns[75]) player3.moveDown(); // k
-	if (keydowns[74]) player3.moveLeft(); // j
-	if (keydowns[76]) player3.moveRight(); // l
-	// else                   player3.moveStop();
-	if      (keydowns[32]) player3.dropBomb(); // space
+			if (keydowns[c.bomb]) player.dropBomb();
+		}
+	});
 
 	bots.forEach(b => b.update());
-
-	// TODO
-	// Add Game Api Controllers
 
 	for (let player of world.players) {
 		player.update(t);
@@ -205,18 +177,30 @@ document.addEventListener( 'keydown', onDocumentKeyDown, false );
 document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
 function onDocumentKeyDown( event ) {
-	// console.log(event.keyCode);
 	keydowns[event.keyCode] = 1;
 
+	if (game.state === Game.STATE.START) {
+		// Config keys on start screen
+		if (event.keyCode === 49) { // 1
+			game.cycleOption('players', [1, 2, 3, 4]);
+			pre.innerHTML = game.getStartScreenText();
+		}
+		if (event.keyCode === 50) { // 2
+			game.cycleOption('bots', [0, 1, 2, 3]);
+			pre.innerHTML = game.getStartScreenText();
+		}
+		if (event.keyCode === 51) { // 3
+			game.cycleOption('gridSize', [11, 15, 19]);
+			pre.innerHTML = game.getStartScreenText();
+		}
+	}
+
 	// Space to start/restart
-	if (event.keyCode === 32 && gameState !== 'playing') {
+	if (event.keyCode === 32 && game.state !== Game.STATE.PLAYING) {
 		startGame();
 	}
 }
 
 function onDocumentKeyUp( event ) {
 	keydowns[event.keyCode] = 0;
-	switch( event.keyCode ) {
-
-	}
 }

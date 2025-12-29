@@ -3,9 +3,10 @@ const CELL_PIXELS = 45;
 let canvas, ctx;
 
 function init() {
+	const cols = map ? map.columns : 15;
 	canvas = document.createElement('canvas');
-	canvas.width = CELL_PIXELS * COLUMNS + 50;
-	canvas.height = CELL_PIXELS * COLUMNS + 50;
+	canvas.width = CELL_PIXELS * cols + 50;
+	canvas.height = CELL_PIXELS * cols + 50;
 	document.body.appendChild(canvas);
 
 	ctx = canvas.getContext('2d');

@@ -9,7 +9,8 @@ class Bot {
 		this.player = player;
 		this.world = world;
 
-		this.safeMap = new Walls(COLUMNS, ROWS);
+		const map = world.map;
+		this.safeMap = new Walls(map.columns, map.rows);
 
 		this.last = 0;
 		this.lastDecisionTime = 0;

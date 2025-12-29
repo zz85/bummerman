@@ -7,6 +7,7 @@ function require(src) {
 
 
 // <!-- Game -->
+require('game.js');
 require('world.js');
 require('item.js');
 require('flumes.js');

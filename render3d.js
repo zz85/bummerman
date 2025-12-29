@@ -150,8 +150,10 @@ function updateObjects() {
 var absPosition = new THREE.Vector3();
 
 function positionAt(x, y, item) {
-	const rx = (x - COLUMNS / 2) * UNITS;
-	const ry = (y - ROWS / 2) * UNITS;
+	const cols = map ? map.columns : 15;
+	const rows = map ? map.rows : 15;
+	const rx = (x - cols / 2) * UNITS;
+	const ry = (y - rows / 2) * UNITS;
 
 	item.position.x = rx;
 	item.position.z = ry;

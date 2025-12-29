@@ -12,7 +12,8 @@ Code Organization
 Gameplay Improvements
 ---------------------
 [x] Start/end game screens with restart
-[ ] Score tracking and win counters
+[x] Score tracking and win counters
+[ ] Pause screen
 [ ] Sudden death mode (shrinking arena)
 [ ] Kick/punch bombs
 [ ] Remote detonation powerup
