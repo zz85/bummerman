@@ -55,3 +55,7 @@ TODO (from source)
 - VR/FPS view modes
 - Better item distribution and graphics
 - More powerups and time elements
+
+Roadmap
+-------
+See roadmap.txt for planned features and progress.

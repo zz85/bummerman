@@ -18,6 +18,11 @@ Gameplay Improvements
 [ ] Kick/punch bombs
 [ ] Remote detonation powerup
 [ ] Poison/debuff powerups
+[ ] Roller skates powerup
+[ ] Ongoing score display during game
+[ ] Dead/ghost mode (spectate after death)
+[ ] Invisible mode powerup
+[ ] Drop powerups on death
 [ ] Time limit per round
 
 Bot AI Modes
@@ -34,9 +39,18 @@ Animation & Camera
 [ ] Bomb fuse particle effects
 [ ] Explosion particles and debris
 [ ] Death animation improvements
-[ ] FPS chase cam implementation
+[ ] FPS chase cam implementation (https://www.youtube.com/watch?v=5Xe0aPNz39Q)
 [ ] Smooth camera transitions between views
 [ ] Screen shake on explosions
+[ ] Dynamic camera zoom (track all players, zoom in/out based on spread)
+[ ] Split screen view for 2 players
+
+Maps & Scenes
+-------------
+[ ] Multiple themed maps/arenas
+[ ] Map editor or procedural generation options
+[ ] Different wall layouts and patterns
+[ ] Environmental hazards (lava, ice, conveyor belts)
 
 Three.js Upgrade
 ----------------
