@@ -13,6 +13,7 @@ Vision
 - Capture the Nintendo 64 3D Bomberman aesthetic
 - FPS chase cam view for immersive 3D gameplay
 - Fully procedural: graphics and sound generated at runtime (no external assets)
+- Low-poly aesthetic for the 3D visuals
 
 Features
 --------

@@ -1,0 +1,46 @@
+Bummerman Roadmap
+=================
+
+Code Organization
+-----------------
+[ ] ES6 modules (import/export)
+[ ] Separate game logic from rendering
+[ ] Event system for game state changes
+[ ] Config file for constants (grid size, speeds, timings)
+[ ] Build system (bundler for production)
+
+Gameplay Improvements
+---------------------
+[ ] Start/end game screens with restart
+[ ] Score tracking and win counters
+[ ] Sudden death mode (shrinking arena)
+[ ] Kick/punch bombs
+[ ] Remote detonation powerup
+[ ] Poison/debuff powerups
+[ ] Time limit per round
+
+Bot AI Modes
+------------
+[ ] Aggressive: prioritizes chasing players over breaking walls
+[ ] Defensive: stays near edges, waits for opportunities
+[ ] Chaotic: random bomb drops, unpredictable movement
+[ ] Classic: mimics original Bomberman AI patterns
+[ ] Difficulty levels (reaction time, perfect vs imperfect knowledge)
+
+Animation & Camera
+------------------
+[ ] Player walk/idle animations
+[ ] Bomb fuse particle effects
+[ ] Explosion particles and debris
+[ ] Death animation improvements
+[ ] FPS chase cam implementation
+[ ] Smooth camera transitions between views
+[ ] Screen shake on explosions
+
+Three.js Upgrade
+----------------
+[ ] Migrate from r79 (current) to latest Three.js
+[ ] Replace deprecated CubeGeometry with BoxGeometry
+[ ] Update material system (MeshToonMaterial changes)
+[ ] Replace vendor plugins with modern equivalents or npm packages
+[ ] Fix breaking changes in geometry/buffer geometry APIs
