@@ -93,6 +93,19 @@ function initGame() {
 	];
 }
 
+let gameState = 'start'; // 'start', 'playing', 'gameover'
+
+function showStartScreen() {
+	gameState = 'start';
+	pre.innerHTML = 'BUMMERMAN\n\nPress SPACE to start\n\nControls:\nP1: Arrows + Enter\nP2: WASD + Shift';
+}
+
+function startGame() {
+	gameState = 'playing';
+	pre.innerHTML = '';
+	initGame();
+}
+
 const pre = document.createElement('pre');
 pre.style.cssText = `font-family: monospace; font-size: 20px; margin: 20px;
 position: absolute; top: 10px; left: 10px;
@@ -102,7 +115,8 @@ text-shadow: black 2px 2px;
 
 document.body.appendChild(pre);
 
-initGame();
+initGame(); // init game first for 3D renderer
+showStartScreen();
 init(); // init graphics unit
 
 let last = performance.now();
@@ -124,19 +138,23 @@ function globalLoop() {
 globalLoop();
 
 function loop(dt) {
+	if (gameState === 'start') return;
+
 	let alive = [];
 	for (let player of world.players) {
 		if (!player.died) alive.push(player);
 	}
 
 	if (alive.length <= 1 && world.bombs.size === 0) {
+		gameState = 'gameover';
 		pre.innerHTML = 'Game over!\n';
 		if (alive.length === 1) {
-			pre.innerHTML += `${alive[0].name} won!`;
+			pre.innerHTML += `${alive[0].name} won!\n`;
 		}
 		else {
-			pre.innerHTML += `It's a Draw!`
+			pre.innerHTML += `It's a Draw!\n`;
 		}
+		pre.innerHTML += '\nPress SPACE to restart';
 		return;
 	}
 
@@ -189,11 +207,10 @@ document.addEventListener( 'keyup', onDocumentKeyUp, false );
 function onDocumentKeyDown( event ) {
 	// console.log(event.keyCode);
 	keydowns[event.keyCode] = 1;
-	// if (keymappings[event.keyCode]) keymappings[event.keyCode]();
 
-	switch( event.keyCode ) {
-
-
+	// Space to start/restart
+	if (event.keyCode === 32 && gameState !== 'playing') {
+		startGame();
 	}
 }
 

@@ -13,6 +13,8 @@ function init() {
 
 function render() {
 	// Here is the render Loop
+	if (!map) return;
+	
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	let now = Date.now();
