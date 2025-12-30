@@ -72,8 +72,8 @@ function render() {
 
 	for (let item of world.objects) {
 		if (item instanceof Bomb) {
-			const px = (item.x + 0.5) * CELL_PIXELS;
-			const py = (item.y + 0.5) * CELL_PIXELS;
+			const px = (item.rx + 0.5) * CELL_PIXELS;
+			const py = (item.ry + 0.5) * CELL_PIXELS;
 			const size = 1 - pulse(((now - item.planted) / 600) % 1) * 0.15;
 			const radius = CELL_PIXELS * 0.35 * size;
 
@@ -124,8 +124,8 @@ function render() {
 			ctx.fill();
 
 			// Item icon
-			const colors = ['#00ff88', '#ff6688', '#ffaa00'];
-			const icons = ['⚡', '💣', '🔥'];
+			const colors = ['#00ff88', '#ff6688', '#ffaa00', '#88ccff'];
+			const icons = ['⚡', '💣', '🔥', '👟'];
 			ctx.fillStyle = colors[item.type] || '#fff';
 			ctx.beginPath();
 			ctx.arc(px, py + bob, size, 0, Math.PI * 2);

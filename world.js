@@ -125,7 +125,7 @@ class World {
 		if (this.map.blow(x, y)) {
 			
 			if (Math.random() < 0.5) {
-				this.addItem(new Item(x, y, Math.random() * 3 | 0));
+				this.addItem(new Item(x, y, Math.random() * 4 | 0));
 			}
 		}
 

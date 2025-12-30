@@ -15,6 +15,7 @@ class Player {
 		this.SHRINK = 0.0;
 		this.color = color;
 		this.color2 = color2;
+		this.canKick = false;
 	}
 
 	aabb(x = this.x, y = this.y) {
@@ -121,15 +122,20 @@ class Player {
 		const rects = this.corners(new_aabb)
 			.map(([x, y]) => [x | 0, y | 0])
 			.reduce((bounds, [x, y]) => {
-				if (
-					this.world.isBlocked(x, y) ||
-					(
-						!this.isIn(x, y) &&
-						this.world.hasBomb(x, y))
-				) {
+				if (this.world.isBlocked(x, y)) {
 					bounds.push(this.aabb(x, y));
+				} else if (!this.isIn(x, y)) {
+					const bomb = this.world.hasBomb(x, y);
+					if (bomb) {
+						if (this.canKick && !bomb.isMoving()) {
+							const kdx = dx > 0 ? 1 : dx < 0 ? -1 : 0;
+							const kdy = dy > 0 ? 1 : dy < 0 ? -1 : 0;
+							bomb.kick(kdx, kdy);
+						} else {
+							bounds.push(this.aabb(x, y));
+						}
+					}
 				}
-
 				return bounds;
 			}, []);
 
@@ -181,6 +187,9 @@ class Player {
 						break;
 					case item.FIRE_UP:
 						this.bombStrength++;
+						break;
+					case item.KICK:
+						this.canKick = true;
 						break;
 				}
 				this.world.removeItem(item);

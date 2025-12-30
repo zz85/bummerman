@@ -163,6 +163,10 @@ function loop(dt) {
 
 	bots.forEach(b => b.update());
 
+	for (let bomb of world.bombs) {
+		bomb.update(t);
+	}
+
 	for (let player of world.players) {
 		player.update(t);
 	}

@@ -81,6 +81,10 @@ export class Player {
     return !this.died && this.bombsUsed < this.bombsLimit;
   }
 
+  hasKick() {
+    return this.canKick === true;
+  }
+
   die() {
     this.died = Date.now();
   }

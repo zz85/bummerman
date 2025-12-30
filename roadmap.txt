@@ -15,15 +15,33 @@ Gameplay Improvements
 [x] Score tracking and win counters
 [ ] Pause screen
 [ ] Sudden death mode (shrinking arena)
-[ ] Kick/punch bombs
-[ ] Remote detonation powerup
-[ ] Poison/debuff powerups
-[ ] Roller skates powerup
 [ ] Ongoing score display during game
 [ ] Dead/ghost mode (spectate after death)
-[ ] Invisible mode powerup
 [ ] Drop powerups on death
 [ ] Time limit per round
+
+Power-Ups (ref: https://bomberman.fandom.com/wiki/Power-Ups)
+------------------------------------------------------------
+[x] Fire Up - Increase bomb blast radius
+[x] Bomb Up - Increase number of bombs
+[x] Speed Up (Skate) - Increase movement speed
+[ ] Full Fire - Max bomb blast radius instantly
+[ ] Fire Down - Decrease bomb blast radius
+[ ] Bomb Down - Decrease number of bombs
+[ ] Speed Down (Geta) - Decrease movement speed
+[ ] Pierce Bomb - Blast passes through soft blocks
+[ ] Rubber Bomb - Bounces when kicked/punched/thrown
+[ ] Kick - Kick bombs away
+[ ] Boxing Glove (Punch) - Punch bombs away
+[ ] Power Glove - Lift and throw bombs
+[ ] Skull - Random disease effect
+[ ] Remote Control - Detonate bombs manually
+[ ] Power Bomb - Single bomb with max blast
+[ ] Soft Block Pass - Walk through soft blocks
+[ ] Bomb Pass - Walk through bombs
+[ ] Vest - Temporary invincibility
+[ ] Line Bomb - Deploy all bombs in a line
+[ ] Push - Push other players
 
 Bot AI Modes
 ------------

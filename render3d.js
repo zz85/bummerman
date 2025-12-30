@@ -104,7 +104,7 @@ function updateObjects() {
 			item.tag.rotation.x = t * 0.05;
 			item.tag.scale.setScalar(1 - t * 0.05);
 
-			positionAt(item.x, item.y, item.tag);
+			positionAt(item.rx, item.ry, item.tag);
 		}
 		else if (item instanceof Flumes) {
 			if (!item.tag) {

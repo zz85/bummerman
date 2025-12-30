@@ -1,11 +1,12 @@
 const BOMB_FUSE_TIME = 3000;
+const BOMB_KICK_SPEED = 8;
 
 class Bomb {
 	constructor(x, y, strength = 1, owner) {
-		this.rx = x;
-		this.ry = y;
-		this.x = this.rx + 0.5 | 0;
-		this.y = this.ry + 0.5 | 0;
+		this.x = (x + 0.5) | 0;
+		this.y = (y + 0.5) | 0;
+		this.rx = this.x;
+		this.ry = this.y;
 		this.strength = strength;
 
 		this.CREATED = 0; // Not exploded
@@ -15,6 +16,43 @@ class Bomb {
 
 		this.state = this.CREATED;
 		this.owner = owner;
+		this.vx = 0;
+		this.vy = 0;
+	}
+
+	kick(dx, dy, speed = BOMB_KICK_SPEED) {
+		this.vx = dx * speed;
+		this.vy = dy * speed;
+	}
+
+	stop() {
+		this.vx = 0;
+		this.vy = 0;
+		this.x = (this.rx + 0.5) | 0;
+		this.y = (this.ry + 0.5) | 0;
+		this.rx = this.x;
+		this.ry = this.y;
+	}
+
+	isMoving() {
+		return this.vx !== 0 || this.vy !== 0;
+	}
+
+	update(dt) {
+		if (!this.isMoving()) return;
+		const nx = this.rx + this.vx * dt;
+		const ny = this.ry + this.vy * dt;
+		const gx = (nx + 0.5) | 0;
+		const gy = (ny + 0.5) | 0;
+		const otherBomb = world.hasBomb(gx, gy);
+		if (world.isBlocked(gx, gy) || (otherBomb && otherBomb !== this) || world.hasItem(gx, gy) || world.hasPlayer(gx, gy)) {
+			this.stop();
+			return;
+		}
+		this.rx = nx;
+		this.ry = ny;
+		this.x = gx;
+		this.y = gy;
 	}
 
 	/*

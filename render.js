@@ -40,7 +40,7 @@ function render() {
 			let size = 1 - f(((now - item.planted) / 800) % 1) * 0.2;
 			ctx.fillStyle = 'red';
 			ctx.beginPath();
-			ctx.arc((item.x + 0.5) * CELL_PIXELS, (item.y + 0.5) * CELL_PIXELS, CELL_PIXELS / 3 * size, 0, Math.PI * 2);
+			ctx.arc((item.rx + 0.5) * CELL_PIXELS, (item.ry + 0.5) * CELL_PIXELS, CELL_PIXELS / 3 * size, 0, Math.PI * 2);
 			ctx.fill();
 		}
 		else if (item instanceof Flumes) {
