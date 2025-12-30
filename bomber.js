@@ -194,7 +194,7 @@ function onDocumentKeyDown( event ) {
 			pre.innerHTML = game.getStartScreenText();
 		}
 		if (event.keyCode === 51) { // 3
-			game.cycleOption('gridSize', [11, 15, 19]);
+			game.cycleOption('gridSize', [11, 13, 15, 19]);
 			pre.innerHTML = game.getStartScreenText();
 		}
 	}

@@ -4,8 +4,8 @@ class Game {
     this.state = Game.STATE.START;
     this.config = {
       players: 2,
-      bots: 2,
-      gridSize: 15,
+      bots: 0,
+      gridSize: 13,
     };
     this.scores = {};
     this.winner = null;
