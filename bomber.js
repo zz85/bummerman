@@ -35,10 +35,10 @@ let players = [];
 let bots = [];
 
 const PLAYER_STARTS = [
-	[5, 5],
+	[1, 1],
 	[null, null], // calculated from grid
-	[null, 5],
-	[5, null],
+	[null, 1],
+	[1, null],
 ];
 
 function initGame() {
@@ -55,10 +55,10 @@ function initGame() {
 
 	const totalPlayers = numPlayers + numBots;
 	const starts = [
-		[5, 5],
-		[COLUMNS - 6, ROWS - 6],
-		[COLUMNS - 6, 5],
-		[5, ROWS - 6],
+		[1, 1],
+		[COLUMNS - 2, ROWS - 2],
+		[COLUMNS - 2, 1],
+		[1, ROWS - 2],
 	];
 
 	for (let i = 0; i < totalPlayers && i < 4; i++) {
