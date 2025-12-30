@@ -70,6 +70,11 @@ Maps & Scenes
 [ ] Different wall layouts and patterns
 [ ] Environmental hazards (lava, ice, conveyor belts)
 
+Alternative Renderers
+---------------------
+[ ] TUI (terminal) renderer - play in console/terminal
+[ ] Hybrid view: 2D overview map with 3D battle rendering
+
 Three.js Upgrade
 ----------------
 [ ] Migrate from r79 (current) to latest Three.js

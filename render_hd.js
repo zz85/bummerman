@@ -26,6 +26,14 @@ function render() {
 	const cols = map.columns;
 	const rows = map.rows;
 
+	// Resize canvas if grid changed
+	const neededWidth = CELL_PIXELS * cols + PADDING * 2;
+	const neededHeight = CELL_PIXELS * rows + PADDING * 2;
+	if (canvas.width !== neededWidth || canvas.height !== neededHeight) {
+		canvas.width = neededWidth;
+		canvas.height = neededHeight;
+	}
+
 	// Background gradient
 	const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
 	grad.addColorStop(0, '#16213e');

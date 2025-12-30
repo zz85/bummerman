@@ -15,6 +15,14 @@ function init() {
 function render() {
 	// Here is the render Loop
 	if (!map) return;
+
+	// Resize canvas if grid changed
+	const neededWidth = CELL_PIXELS * map.columns + 50;
+	const neededHeight = CELL_PIXELS * map.rows + 50;
+	if (canvas.width !== neededWidth || canvas.height !== neededHeight) {
+		canvas.width = neededWidth;
+		canvas.height = neededHeight;
+	}
 	
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 

@@ -14,6 +14,7 @@ Vision
 - FPS chase cam view for immersive 3D gameplay
 - Fully procedural: graphics and sound generated at runtime (no external assets)
 - Low-poly aesthetic for the 3D visuals
+- Explore how much 3D graphics enhance the game experience vs 2D
 
 Features
 --------
