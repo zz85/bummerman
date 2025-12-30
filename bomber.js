@@ -139,7 +139,7 @@ function loop(dt) {
 	const controls = [
 		{ up: 38, down: 40, left: 37, right: 39, bomb: 13 },  // P1: arrows + enter
 		{ up: 87, down: 83, left: 65, right: 68, bomb: 16 },  // P2: WASD + shift
-		{ up: 73, down: 75, left: 74, right: 76, bomb: 186 }, // P3: IJKL + ;
+		{ up: 57, down: 79, left: 73, right: 80, bomb: 8 },   // P3: 9=up I=left O=down P=right + backspace
 		{ up: 104, down: 101, left: 100, right: 102, bomb: 96 }, // P4: numpad
 	];
 
