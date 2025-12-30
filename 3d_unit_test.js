@@ -29,6 +29,7 @@ items = [
     createFloor(),
     createGround(),
     createHardWall(),
+    createShoe(),
 ];
 
 index = 0;

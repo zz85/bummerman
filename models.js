@@ -69,6 +69,7 @@ function createItem(item=0) {
 		[0]: () => new THREE.Object3D(),
 		[1]: () => createBomb(),
 		[2]: () => createFlumes(),
+		[3]: () => createShoe(),
 	}
 	const b = factory[item]();
 	b.scale.multiplyScalar(0.5);
@@ -195,6 +196,50 @@ function createSoftWall() {
 	}
 
 	return wrap(hardWall);
+}
+
+function createShoe() {
+	const shoe = new THREE.Object3D();
+
+	const shoeMaterial = new THREE.MeshToonMaterial({
+		color: 0x4488ff,
+		shading: THREE.FlatShading,
+	});
+
+	const soleMaterial = new THREE.MeshToonMaterial({
+		color: 0x222222,
+		shading: THREE.FlatShading,
+	});
+
+	// Sole (flat bottom)
+	const soleGeo = new THREE.BoxBufferGeometry(5, 1, 9);
+	const sole = new THREE.Mesh(soleGeo, soleMaterial);
+	sole.position.set(0, 0.5, 0);
+	shoe.add(sole);
+
+	// Toe box (front)
+	const toeGeo = new THREE.BoxBufferGeometry(5, 2.5, 4);
+	const toe = new THREE.Mesh(toeGeo, shoeMaterial);
+	toe.position.set(0, 2, 2);
+	shoe.add(toe);
+
+	// Heel counter (back raised part)
+	const heelGeo = new THREE.BoxBufferGeometry(5, 4, 3);
+	const heel = new THREE.Mesh(heelGeo, shoeMaterial);
+	heel.position.set(0, 2.5, -3);
+	shoe.add(heel);
+
+	// Opening (dark hole at top)
+	const holeGeo = new THREE.BoxBufferGeometry(3, 1, 2);
+	const hole = new THREE.Mesh(holeGeo, soleMaterial);
+	hole.position.set(0, 4.5, -2.5);
+	shoe.add(hole);
+
+	shoe.position.y = UNITS / 4;
+	shoe.rotation.y = -Math.PI / 4;
+	shoe.scale.multiplyScalar(0.7);
+
+	return wrap(shoe);
 }
 
 function createBomb() {
