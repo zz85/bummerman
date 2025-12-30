@@ -102,28 +102,25 @@ describe('Bomb Kick', () => {
     const bomb = new Bomb(5, 5);
     const otherBomb = new Bomb(6, 5);
     bomb.kick(1, 0);
-    const world = { isBlocked: () => false, hasBomb: (x, y) => x === 6 && y === 5 ? otherBomb : false, hasItem: () => false };
-    // Move in small steps to reach grid 6
-    bomb.update(0.1, world);
-    bomb.update(0.1, world);
+    const world = { isBlocked: () => false, hasBomb: (x, y) => x === 6 && y === 5 ? otherBomb : null, hasItem: () => false, hasPlayer: () => false };
+    // Move until entering grid 6
+    for (let i = 0; i < 20; i++) bomb.update(0.02, world);
     expect(bomb.isMoving()).toBe(false);
   });
 
   test('update stops at item', () => {
     const bomb = new Bomb(5, 5);
     bomb.kick(1, 0);
-    const world = { isBlocked: () => false, hasBomb: () => false, hasItem: (x, y) => x === 6 && y === 5, hasPlayer: () => false };
-    bomb.update(0.1, world);
-    bomb.update(0.1, world);
+    const world = { isBlocked: () => false, hasBomb: () => null, hasItem: (x, y) => x === 6 && y === 5, hasPlayer: () => false };
+    for (let i = 0; i < 20; i++) bomb.update(0.02, world);
     expect(bomb.isMoving()).toBe(false);
   });
 
   test('update stops at player', () => {
     const bomb = new Bomb(5, 5);
     bomb.kick(1, 0);
-    const world = { isBlocked: () => false, hasBomb: () => false, hasItem: () => false, hasPlayer: (x, y) => x === 6 && y === 5 };
-    bomb.update(0.1, world);
-    bomb.update(0.1, world);
+    const world = { isBlocked: () => false, hasBomb: () => null, hasItem: () => false, hasPlayer: (x, y) => x === 6 && y === 5 };
+    for (let i = 0; i < 20; i++) bomb.update(0.02, world);
     expect(bomb.isMoving()).toBe(false);
   });
 });

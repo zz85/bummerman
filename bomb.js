@@ -44,10 +44,13 @@ class Bomb {
 		const ny = this.ry + this.vy * dt;
 		const gx = (nx + 0.5) | 0;
 		const gy = (ny + 0.5) | 0;
-		const otherBomb = world.hasBomb(gx, gy);
-		if (world.isBlocked(gx, gy) || (otherBomb && otherBomb !== this) || world.hasItem(gx, gy) || world.hasPlayer(gx, gy)) {
-			this.stop();
-			return;
+		// Only check collisions when entering a new grid cell
+		if (gx !== this.x || gy !== this.y) {
+			const otherBomb = world.hasBomb(gx, gy);
+			if (world.isBlocked(gx, gy) || otherBomb || world.hasItem(gx, gy) || world.hasPlayer(gx, gy)) {
+				this.stop();
+				return;
+			}
 		}
 		this.rx = nx;
 		this.ry = ny;
