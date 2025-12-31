@@ -79,6 +79,7 @@ class Game {
       `Bots: ${bots}  (press 2)`,
       `Grid: ${gridSize}x${gridSize}  (press 3)`,
       '',
+      'Press M to toggle music',
       'Press SPACE to start',
     ].join('\n');
   }

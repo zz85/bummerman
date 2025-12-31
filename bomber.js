@@ -191,6 +191,11 @@ document.addEventListener( 'keyup', onDocumentKeyUp, false );
 function onDocumentKeyDown( event ) {
 	keydowns[event.keyCode] = 1;
 
+	// M to toggle music
+	if (event.keyCode === 77) {
+		music.toggle();
+	}
+
 	if (game.state === Game.STATE.START) {
 		// Config keys on start screen
 		if (event.keyCode === 49) { // 1
