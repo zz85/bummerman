@@ -88,6 +88,7 @@ function startGame() {
 	}
 	game.start();
 	initGame();
+	music.play();
 }
 
 const pre = document.createElement('pre');

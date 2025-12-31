@@ -14,7 +14,7 @@ class Music {
 		if (this.ctx) return;
 		this.ctx = new (window.AudioContext || window.webkitAudioContext)();
 		this.masterGain = this.ctx.createGain();
-		this.masterGain.gain.value = 0.3;
+		this.masterGain.gain.value = 0.5;
 		this.masterGain.connect(this.ctx.destination);
 	}
 
@@ -24,17 +24,56 @@ class Music {
 		return scale[index % scale.length] * (index >= 8 ? 2 : 1);
 	}
 
-	// Bass pattern (root notes)
+	// Bass pattern - 16 bars = 256 steps, plays on quarter notes
 	getBass(step) {
-		const pattern = [0, 0, 3, 3, 4, 4, 3, 3];
-		const roots = [130.81, 146.83, 164.81, 174.61]; // C3, D3, E3, F3
-		return roots[pattern[step % 8] % 4];
+		// 64 quarter notes over 16 bars
+		const pattern = [
+			// Section A (bars 1-4): C-Am-F-G
+			0, 0, 0, 0, 5, 5, 5, 5,   // bars 1-2: C -> Am
+			3, 3, 3, 3, 4, 4, 4, 4,   // bars 3-4: F -> G
+			// Section B (bars 5-8): F-G-Em-Am (anime)
+			3, 3, 3, 3, 4, 4, 4, 4,   // bars 5-6: F -> G
+			2, 2, 2, 2, 5, 5, 5, 5,   // bars 7-8: Em -> Am
+			// Section C (bars 9-12): Am-F-C-G (variation)
+			5, 5, 5, 5, 3, 3, 3, 3,   // bars 9-10: Am -> F
+			0, 0, 0, 0, 4, 4, 4, 4,   // bars 11-12: C -> G
+			// Section D (bars 13-16): F-G-C (big finish)
+			3, 3, 3, 3, 4, 4, 4, 4,   // bars 13-14: F -> G
+			0, 0, 0, 0, 0, 0, 0, 0    // bars 15-16: C (resolve)
+		];
+		const roots = [130.81, 146.83, 164.81, 174.61, 196.00, 110.00]; // C3, D3, E3, F3, G3, A2
+		const idx = Math.floor(step / 4) % 64;
+		return roots[pattern[idx] % 6];
 	}
 
-	// Melody pattern
+	// Melody pattern - 16 bars = 256 steps, plays on 8th notes
 	getMelody(step) {
-		const pattern = [0, 2, 4, 5, 4, 2, 3, 1, 0, 4, 5, 7, 5, 4, 2, 0];
-		return this.getNote(pattern[step % 16]);
+		// 128 eighth notes over 16 bars
+		const pattern = [
+			// Section A (bars 1-4) - intro theme
+			0, 2, 4, 7, 5, 4, 2, 0,   // bar 1 (C)
+			2, 4, 5, 7, 8, 5, 4, 2,   // bar 2 (Am)
+			3, 5, 7, 10, 8, 7, 5, 3,  // bar 3 (F)
+			4, 7, 5, 8, 7, 5, 4, 2,   // bar 4 (G)
+			// Section B (bars 5-8) - anime climax
+			5, 7, 10, 12, 10, 8, 7, 5,// bar 5 (F) - soar
+			7, 10, 12, 10, 8, 10, 7, 5,// bar 6 (G) - peak
+			4, 7, 8, 7, 5, 4, 2, 4,   // bar 7 (Em) - descend
+			5, 7, 5, 4, 2, 0, 2, 4,   // bar 8 (Am) - land
+			// Section C (bars 9-12) - reflective
+			2, 5, 4, 7, 5, 8, 7, 5,   // bar 9 (Am)
+			3, 5, 8, 7, 5, 4, 2, 4,   // bar 10 (F)
+			0, 4, 5, 7, 8, 7, 5, 4,   // bar 11 (C)
+			5, 8, 10, 8, 7, 5, 7, 8,  // bar 12 (G)
+			// Section D (bars 13-16) - finale
+			5, 8, 7, 10, 8, 7, 5, 4,  // bar 13 (F)
+			7, 10, 12, 10, 8, 7, 5, 4,// bar 14 (G) - last climb
+			2, 5, 4, 7, 5, 4, 2, 0,   // bar 15 (C)
+			2, 4, 5, 4, 2, 0, -1, 0   // bar 16 (C) - end
+		];
+		const idx = Math.floor(step / 2) % 128;
+		const note = pattern[idx];
+		return note < 0 ? 0 : this.getNote(note);
 	}
 
 	// Create square wave oscillator
