@@ -1,7 +1,8 @@
 class Flumes {
-	constructor(x, y, ttl) {
+	constructor(x, y, owner = null) {
 		this.x = x;
 		this.y = y;
+		this.owner = owner;
 		this.seed1 = Math.random() * 2 - 1;
 		this.seed2 = Math.random() * 2 - 1;
 		this.seed3 = Math.random() * 2 - 1;
@@ -14,6 +15,6 @@ class Flumes {
 	}
 
 	blow() {
-		world.blow(this.x, this.y);
+		world.blow(this.x, this.y, this.owner);
 	}
 }

@@ -7,6 +7,12 @@ Overview
 --------
 This is a multiplayer arena game where players place bombs to destroy walls and eliminate opponents. Supports up to 4 players with AI bots.
 
+Try out
+-------
+Links
+- https://zz85.github.io/bummerman/bomberhd.html
+- https://zz85.github.io/bummerman/bomber3d.html
+
 Vision
 ------
 - Recreate the classic multiplayer arcade/console Bomberman feel

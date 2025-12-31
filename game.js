@@ -8,7 +8,21 @@ class Game {
       gridSize: 13,
     };
     this.scores = {};
+    this.stats = {};  // { playerName: { wins: 0, kills: 0, deaths: 0 } }
     this.winner = null;
+  }
+
+  initStats(playerNames) {
+    for (const name of playerNames) {
+      if (!this.stats[name]) {
+        this.stats[name] = { wins: 0, kills: 0, deaths: 0 };
+      }
+    }
+  }
+
+  recordKill(killer, victim) {
+    if (killer && killer !== victim && this.stats[killer]) this.stats[killer].kills++;
+    if (victim && this.stats[victim]) this.stats[victim].deaths++;
   }
 
   setOption(key, value) {
@@ -37,6 +51,7 @@ class Game {
     this.winner = winner;
     if (winner) {
       this.scores[winner] = (this.scores[winner] || 0) + 1;
+      if (this.stats[winner]) this.stats[winner].wins++;
     }
     return true;
   }
@@ -45,6 +60,14 @@ class Game {
     this.state = Game.STATE.START;
     this.winner = null;
     return true;
+  }
+
+  getStatsText() {
+    const lines = [];
+    for (const [name, s] of Object.entries(this.stats)) {
+      lines.push(`${name}: ${s.wins}W ${s.kills}K ${s.deaths}D`);
+    }
+    return lines.join('  |  ');
   }
 
   getStartScreenText() {

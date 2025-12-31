@@ -13,6 +13,20 @@ Code Organization
 [x] Config file for constants (grid size, speeds, timings)
 [ ] Build system (bundler for production)
 
+Audio
+-----
+[ ] Soundtrack / background music
+
+Network Multiplayer
+-------------------
+[ ] WebRTC peer-to-peer
+[ ] WebTransport
+[ ] WebSocket server
+
+Input
+-----
+[ ] Touchscreen controls for mobile
+
 Gameplay Improvements
 ---------------------
 [x] Start/end game screens with restart

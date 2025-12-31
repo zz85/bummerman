@@ -93,7 +93,7 @@ class Bomb {
 			if (m === HARD_WALL) {
 				return true;
 			}
-			world.addFlumes(new Flumes(tx, ty));
+			world.addFlumes(new Flumes(tx, ty, this.owner));
 			if (m === SOFT_WALL) {
 				return true;
 			}

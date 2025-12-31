@@ -100,16 +100,19 @@ class World {
 		this.add(map);
 	}
 
-	blow(x, y) {
+	blow(x, y, killer = null) {
 		// check for Players
 		for (let player of this.players) {
 			if (
 				player.collision(player.smallerAabb(), player.aabb(x, y))
 			) {
-				pre.innerHTML = `${player.name} died!`;
-				// TODO - credit killed by.
-				if (!player.died) player.die();
-				// TODO make this an event ?
+				if (!player.died) {
+					player.die();
+					const killerName = killer ? killer.name : null;
+					if (typeof game !== 'undefined') {
+						game.recordKill(killerName, player.name);
+					}
+				}
 			}
 		}
 
@@ -128,8 +131,5 @@ class World {
 				this.addItem(new Item(x, y, Item.randomType()));
 			}
 		}
-
-		// or should bomb going off be an event
-		// and all items listen for exploding event?
 	}
 }

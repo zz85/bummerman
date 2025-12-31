@@ -73,6 +73,7 @@ function initGame() {
 		}
 	}
 
+	game.initStats(players.map(p => p.name));
 	map.defaultWalls();
 }
 
@@ -82,8 +83,10 @@ function showStartScreen() {
 }
 
 function startGame() {
+	if (game.state === Game.STATE.GAMEOVER) {
+		game.restart();
+	}
 	game.start();
-	pre.innerHTML = '';
 	initGame();
 }
 
@@ -119,6 +122,11 @@ globalLoop();
 
 function loop(dt) {
 	if (game.state === Game.STATE.START) return;
+
+	// Update stats overlay during gameplay
+	if (game.state === Game.STATE.PLAYING) {
+		pre.innerHTML = game.getStatsText();
+	}
 
 	let alive = [];
 	for (let player of world.players) {
