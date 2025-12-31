@@ -131,9 +131,8 @@ class Player {
 							const kdx = dx > 0 ? 1 : dx < 0 ? -1 : 0;
 							const kdy = dy > 0 ? 1 : dy < 0 ? -1 : 0;
 							bomb.kick(kdx, kdy);
-						} else {
-							bounds.push(this.aabb(x, y));
 						}
+						bounds.push(this.aabb(x, y));
 					}
 				}
 				return bounds;

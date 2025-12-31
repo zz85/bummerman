@@ -62,4 +62,11 @@ describe('Player', () => {
     expect(player.collision([0, 1, 0, 1], [0.5, 1.5, 0.5, 1.5])).toBe(true);
     expect(player.collision([0, 1, 0, 1], [2, 3, 2, 3])).toBe(false);
   });
+
+  test('hasKick returns canKick state', () => {
+    const player = new Player(0, 0);
+    expect(player.hasKick()).toBe(false);
+    player.canKick = true;
+    expect(player.hasKick()).toBe(true);
+  });
 });

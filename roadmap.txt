@@ -1,6 +1,10 @@
 Bummerman Roadmap
 =================
 
+Known Bugs
+----------
+[x] Player can walk through bombs when kick powerup is obtained
+
 Code Organization
 -----------------
 [x] ES6 modules (import/export)
