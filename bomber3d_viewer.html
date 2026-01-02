@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<title>Bummerman 3D Viewer (Synced)</title>
+	<style>
+		body { margin: 0; overflow: hidden; }
+		canvas { width: 100%; height: 100% }
+		#status { position: absolute; top: 10px; left: 10px; color: white; font-family: monospace; background: rgba(0,0,0,0.5); padding: 5px; }
+	</style>
+</head>
+<body>
+	<div id="status">Waiting for game state...</div>
+	<button onclick="angle = 0;">Top</button>
+	<button onclick="angle = 0.5">Default</button>
+	<button onclick="angle = 1">Horizon</button>
+	<button onclick="dist = 15">Normal</button>
+	<button onclick="dist = 5">Near</button>
+	<button onclick="dist = 25">Far</button>
+
+	<script src="vendor/three.min.js"></script>
+	<script src="vendor/CubeGeometry.js"></script>
+	<script src="vendor/SimplifyModifier.js"></script>
+	<script src="vendor/SubdivisionModifier.js"></script>
+	<script src="vendor/ClarkSubdivisionModifier.js"></script>
+	<script src="vendor/ThreeCSG.js"></script>
+	<script src="colors.js"></script>
+	<script src="models.js"></script>
+	<script src="sync.js"></script>
+	<script src="render3d_viewer.js"></script>
+</body>
+</html>

@@ -25,3 +25,4 @@ require('jsfxr.js');
 require('sounds.js');
 
 require('colors.js');
+require('sync.js');

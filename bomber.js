@@ -30,6 +30,39 @@
 // Game state manager (shared between 2D/3D)
 const game = new Game();
 
+// State sync for viewers
+const gameSync = new GameSync();
+let objectIdCounter = 0;
+function getObjectId(obj) {
+	return obj._syncId || (obj._syncId = ++objectIdCounter);
+}
+
+function broadcastState() {
+	if (!world) return;
+	const state = {
+		gridSize: map.columns,
+		map: [],
+		players: [],
+		bombs: [],
+		flumes: [],
+		items: []
+	};
+	map.forEach((x, y, v) => state.map[y * map.columns + x] = v);
+	for (const p of world.players) {
+		state.players.push({ id: getObjectId(p), x: p.x, y: p.y, angle: p.lastAngle, color: p.color, color2: p.color2, died: p.died });
+	}
+	for (const b of world.bombs) {
+		state.bombs.push({ id: getObjectId(b), x: b.rx, y: b.ry });
+	}
+	for (const f of world.flumes) {
+		state.flumes.push({ id: getObjectId(f), x: f.x, y: f.y });
+	}
+	for (const i of world.items) {
+		state.items.push({ id: getObjectId(i), x: i.x, y: i.y, type: i.type });
+	}
+	gameSync.sendState(state);
+}
+
 let world, map;
 let players = [];
 let bots = [];
@@ -179,6 +212,8 @@ function loop(dt) {
 	for (let player of world.players) {
 		player.update(t);
 	}
+
+	broadcastState();
 
 	// TODO remove global timeouts?
 	// for (let flumes of world.flumes) {
