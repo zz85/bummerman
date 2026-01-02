@@ -7,12 +7,19 @@ const objects = new Map(); // id -> mesh
 let mapCache = {};
 let gridSize = 15;
 
+// Chase cam state
+let chaseCam = false;
+let chaseTarget = null;
+let camPos = { x: 0, y: 5, z: 5 };
+let camLook = { x: 0, y: 0, z: 0 };
+let debugCamMarker = null;
+let debugTargetMarker = null;
+
 const sync = new GameSync();
 
 function init() {
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-	camera.setFocalLength(35);
+	camera = new THREE.PerspectiveCamera(63, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 	scene.add(new THREE.PointLight(0xffffff).translateX(15).translateY(5).translateZ(15));
 	platform = new THREE.Object3D();
@@ -26,6 +33,21 @@ function init() {
 	ground.scale.multiplyScalar(15);
 	platform.add(ground);
 
+	// Debug markers - red sphere for camera target pos, blue for look-at
+	debugCamMarker = new THREE.Mesh(
+		new THREE.SphereGeometry(0.5),
+		new THREE.MeshBasicMaterial({ color: 0xff0000 })
+	);
+	debugTargetMarker = new THREE.Mesh(
+		new THREE.SphereGeometry(1),
+		new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+	);
+	debugCamMarker.position.set(0, 5, 0);
+	debugTargetMarker.position.set(0, 5, 0);
+	scene.add(debugCamMarker);
+	scene.add(debugTargetMarker);
+	console.log('Debug markers added', debugCamMarker, debugTargetMarker);
+
 	window.addEventListener('resize', () => {
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
@@ -37,7 +59,9 @@ function init() {
 }
 
 function applyState(state) {
-	document.getElementById('status').textContent = `Players: ${state.players?.length || 0} | Bombs: ${state.bombs?.length || 0}`;
+	const p0 = state.players?.[0];
+	const angleInfo = p0 ? ` | P1 angle: ${p0.angle?.toFixed(2) ?? 'undef'}` : '';
+	document.getElementById('status').textContent = `Players: ${state.players?.length || 0} | Bombs: ${state.bombs?.length || 0}${angleInfo}`;
 	
 	if (state.gridSize && state.gridSize !== gridSize) {
 		gridSize = state.gridSize;
@@ -60,7 +84,7 @@ function applyState(state) {
 	const seen = new Set();
 
 	// Players
-	(state.players || []).forEach(p => {
+	(state.players || []).forEach((p, i) => {
 		const id = 'player-' + p.id;
 		seen.add(id);
 		let mesh = objects.get(id);
@@ -72,6 +96,8 @@ function applyState(state) {
 		positionAt(p.x, p.y, mesh);
 		mesh.rotation.y = p.angle || 0;
 		mesh.scale.setScalar(p.died ? 0.2 : 1);
+		mesh._playerData = p;
+		if (i === 0) chaseTarget = mesh;
 	});
 
 	// Bombs
@@ -147,9 +173,52 @@ function positionAt(x, y, item) {
 
 function animate() {
 	requestAnimationFrame(animate);
-	camera.position.y = UNITS * dist;
-	camera.position.z = UNITS * dist * angle;
-	camera.lookAt(scene.position);
+	
+	// Update debug markers always (when target exists)
+	if (chaseTarget) {
+		const targetWorld = new THREE.Vector3();
+		chaseTarget.getWorldPosition(targetWorld);
+		console.log('targetWorld', targetWorld.x, targetWorld.z);
+		
+		const a = chaseTarget.rotation.y;
+		const behindDist = 36;
+		const height = 44;
+		const tx = targetWorld.x - Math.sin(a) * behindDist;
+		const tz = targetWorld.z - Math.cos(a) * behindDist;
+		
+		// Debug markers
+		debugCamMarker.position.set(tx, height, tz);
+		debugTargetMarker.position.set(targetWorld.x, 15, targetWorld.z);
+		console.log('green sphere at', debugTargetMarker.position.x, debugTargetMarker.position.z);
+		
+		// Debug
+		document.getElementById('status').textContent = 
+			`player(${targetWorld.x.toFixed(1)}, ${targetWorld.z.toFixed(1)}) | cam(${tx.toFixed(1)}, ${tz.toFixed(1)}) | sin:${Math.sin(a).toFixed(2)} cos:${Math.cos(a).toFixed(2)}`;
+		
+		if (chaseCam) {
+			// Use marker positions directly
+			const lerp = 0.15;
+			camPos.x += (debugCamMarker.position.x - camPos.x) * lerp;
+			camPos.y += (debugCamMarker.position.y - camPos.y) * lerp;
+			camPos.z += (debugCamMarker.position.z - camPos.z) * lerp;
+			
+			camera.position.set(camPos.x, camPos.y, camPos.z);
+			camera.lookAt(debugTargetMarker.position);
+		} else {
+			// Reset camPos when not in chase mode
+			camPos.x = debugCamMarker.position.x;
+			camPos.y = debugCamMarker.position.y;
+			camPos.z = debugCamMarker.position.z;
+		}
+	}
+	
+	if (!chaseCam) {
+		camera.position.y = UNITS * dist;
+		camera.position.z = UNITS * dist * angle;
+		camera.position.x = 0;
+		camera.lookAt(scene.position);
+	}
+	
 	renderer.render(scene, camera);
 }
 

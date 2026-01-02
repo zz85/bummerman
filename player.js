@@ -112,6 +112,8 @@ class Player {
 
 		if (dx === 0 && dy === 0) return;
 
+		this.lastAngle = Math.atan2(dx, dy);
+
 		let tx = dx + this.x;
 		let ty = dy + this.y;
 
