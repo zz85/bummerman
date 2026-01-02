@@ -19,6 +19,9 @@
 	<button onclick="dist = 5">Near</button>
 	<button onclick="dist = 25">Far</button>
 	<button onclick="chaseCam = !chaseCam">Chase Cam</button>
+	<button onclick="chasePlayerIndex = (chasePlayerIndex + 1) % Math.max(1, playerMeshes.length)">Next Player</button>
+	<button onclick="debugCamMarker.visible = debugTargetMarker.visible = !debugCamMarker.visible">Debug</button>
+	<label>Stiffness: <input type="range" id="stiffness" min="0.001" max="0.1" step="0.001" value="0.005"></label>
 
 	<script src="vendor/three.min.js"></script>
 	<script src="vendor/CubeGeometry.js"></script>

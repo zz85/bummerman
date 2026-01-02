@@ -10,10 +10,13 @@ let gridSize = 15;
 // Chase cam state
 let chaseCam = false;
 let chaseTarget = null;
+let chasePlayerIndex = 0;
 let camPos = { x: 0, y: 5, z: 5 };
+let camVel = { x: 0, y: 0, z: 0 };
 let camLook = { x: 0, y: 0, z: 0 };
 let debugCamMarker = null;
 let debugTargetMarker = null;
+let playerMeshes = [];
 
 const sync = new GameSync();
 
@@ -44,6 +47,8 @@ function init() {
 	);
 	debugCamMarker.position.set(0, 5, 0);
 	debugTargetMarker.position.set(0, 5, 0);
+	debugCamMarker.visible = false;
+	debugTargetMarker.visible = false;
 	scene.add(debugCamMarker);
 	scene.add(debugTargetMarker);
 	console.log('Debug markers added', debugCamMarker, debugTargetMarker);
@@ -84,6 +89,7 @@ function applyState(state) {
 	const seen = new Set();
 
 	// Players
+	playerMeshes = [];
 	(state.players || []).forEach((p, i) => {
 		const id = 'player-' + p.id;
 		seen.add(id);
@@ -97,8 +103,9 @@ function applyState(state) {
 		mesh.rotation.y = p.angle || 0;
 		mesh.scale.setScalar(p.died ? 0.2 : 1);
 		mesh._playerData = p;
-		if (i === 0) chaseTarget = mesh;
+		playerMeshes.push(mesh);
 	});
+	chaseTarget = playerMeshes[chasePlayerIndex] || playerMeshes[0];
 
 	// Bombs
 	(state.bombs || []).forEach(b => {
@@ -178,7 +185,6 @@ function animate() {
 	if (chaseTarget) {
 		const targetWorld = new THREE.Vector3();
 		chaseTarget.getWorldPosition(targetWorld);
-		console.log('targetWorld', targetWorld.x, targetWorld.z);
 		
 		const a = chaseTarget.rotation.y;
 		const behindDist = 36;
@@ -188,27 +194,43 @@ function animate() {
 		
 		// Debug markers
 		debugCamMarker.position.set(tx, height, tz);
-		debugTargetMarker.position.set(targetWorld.x, 15, targetWorld.z);
-		console.log('green sphere at', debugTargetMarker.position.x, debugTargetMarker.position.z);
+		const aheadDist = 16;
+		const targetX = targetWorld.x + Math.sin(a) * aheadDist;
+		const targetZ = targetWorld.z + Math.cos(a) * aheadDist;
+		debugTargetMarker.position.set(targetX, 15, targetZ);
 		
 		// Debug
 		document.getElementById('status').textContent = 
 			`player(${targetWorld.x.toFixed(1)}, ${targetWorld.z.toFixed(1)}) | cam(${tx.toFixed(1)}, ${tz.toFixed(1)}) | sin:${Math.sin(a).toFixed(2)} cos:${Math.cos(a).toFixed(2)}`;
 		
 		if (chaseCam) {
-			// Use marker positions directly
-			const lerp = 0.15;
-			camPos.x += (debugCamMarker.position.x - camPos.x) * lerp;
-			camPos.y += (debugCamMarker.position.y - camPos.y) * lerp;
-			camPos.z += (debugCamMarker.position.z - camPos.z) * lerp;
+			// Spring physics
+			const stiffness = parseFloat(document.getElementById('stiffness').value);
+			const damping = 0.85;
+			
+			// Calculate spring force toward target
+			camVel.x += (debugCamMarker.position.x - camPos.x) * stiffness;
+			camVel.y += (debugCamMarker.position.y - camPos.y) * stiffness;
+			camVel.z += (debugCamMarker.position.z - camPos.z) * stiffness;
+			
+			// Apply damping
+			camVel.x *= damping;
+			camVel.y *= damping;
+			camVel.z *= damping;
+			
+			// Update position
+			camPos.x += camVel.x;
+			camPos.y += camVel.y;
+			camPos.z += camVel.z;
 			
 			camera.position.set(camPos.x, camPos.y, camPos.z);
 			camera.lookAt(debugTargetMarker.position);
 		} else {
-			// Reset camPos when not in chase mode
+			// Reset when not in chase mode
 			camPos.x = debugCamMarker.position.x;
 			camPos.y = debugCamMarker.position.y;
 			camPos.z = debugCamMarker.position.z;
+			camVel.x = camVel.y = camVel.z = 0;
 		}
 	}
 	
