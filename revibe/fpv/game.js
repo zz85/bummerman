@@ -10,6 +10,9 @@ let keys = {}, bombCount = 3, blastRange = 3, speed = 5, score = 0, locked = fal
 let minimap, minimapCtx, shakeIntensity = 0, slowMo = 1;
 let roundTime = 180, isDying = false;
 let aiBombers = [];
+let cameraMode = 0; // 0=FPV, 1=third-person, 2=over-shoulder, 3=top-down, 4=cinematic
+let playerMesh = null;
+let camPos = { x: 0, y: 0, z: 0 }; // For smooth camera
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -90,11 +93,44 @@ function init() {
 
   player = { x: CELL, z: CELL, yaw: 0, pitch: 0 };
   camera.position.set(player.x, 1.6, player.z);
+  
+  // Player mesh for third-person view
+  playerMesh = new THREE.Group();
+  const pBody = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.3, 0.5, 8, 16),
+    new THREE.MeshStandardMaterial({ color: 0x44ff66, roughness: 0.4, metalness: 0.3 })
+  );
+  pBody.castShadow = true;
+  playerMesh.add(pBody);
+  const pHead = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2),
+    new THREE.MeshStandardMaterial({ color: 0xffddbb, roughness: 0.6 })
+  );
+  pHead.position.y = 0.5;
+  pHead.castShadow = true;
+  playerMesh.add(pHead);
+  playerMesh.position.set(player.x, 0.55, player.z);
+  playerMesh.visible = false;
+  scene.add(playerMesh);
 
   minimap = document.getElementById('minimap');
   minimapCtx = minimap.getContext('2d');
 
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') e.preventDefault(); });
+  document.addEventListener('keydown', e => { 
+    keys[e.code] = true; 
+    if (e.code === 'Space') e.preventDefault();
+    if (e.code === 'KeyV' && locked) {
+      cameraMode = (cameraMode + 1) % 5;
+      playerMesh.visible = cameraMode !== 0;
+      // Initialize spring camera position
+      if (cameraMode >= 1 && cameraMode <= 3) {
+        camPos.x = camera.position.x;
+        camPos.y = camera.position.y;
+        camPos.z = camera.position.z;
+      }
+      updateCameraModeUI();
+    }
+  });
   document.addEventListener('keyup', e => keys[e.code] = false);
   document.addEventListener('mousemove', e => {
     if (!locked) return;
@@ -919,6 +955,14 @@ function playSound(type) {
   }
 }
 
+function updateCameraModeUI() {
+  const modes = ['FPV', 'THIRD PERSON', 'OVER SHOULDER', 'TOP DOWN', 'CINEMATIC'];
+  const el = document.getElementById('camera-mode');
+  el.textContent = modes[cameraMode];
+  el.style.opacity = 1;
+  setTimeout(() => el.style.opacity = 0, 1500);
+}
+
 function flashDamage(intensity) {
   const overlay = document.getElementById('damage-overlay');
   overlay.style.opacity = intensity;
@@ -1029,17 +1073,70 @@ function update(dt) {
 
   if (keys['Space']) { keys['Space'] = false; dropBomb(player.x, player.z); }
 
+  // Update player mesh position
+  playerMesh.position.set(player.x, 0.55, player.z);
+  playerMesh.rotation.y = player.yaw + Math.PI;
+
   // Camera with shake
   shakeIntensity *= 0.9;
   const shake = shakeIntensity * (Math.random() - 0.5);
-  camera.position.set(player.x + shake, 1.6 + shake * 0.5, player.z + shake);
-  camera.rotation.order = 'YXZ';
-  camera.rotation.y = player.yaw;
-  camera.rotation.x = player.pitch;
-
-  // Head bob while moving
-  if (dx || dz) {
-    camera.position.y += Math.sin(Date.now() * 0.01) * 0.03;
+  
+  if (cameraMode === 0) {
+    // First-person view
+    camera.position.set(player.x + shake, 1.6 + shake * 0.5, player.z + shake);
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = player.yaw;
+    camera.rotation.x = player.pitch;
+    if (dx || dz) camera.position.y += Math.sin(Date.now() * 0.01) * 0.03;
+  } else if (cameraMode === 1) {
+    // Third-person view (behind)
+    const dist = 6, height = 4;
+    const targetX = player.x + Math.sin(player.yaw) * dist;
+    const targetZ = player.z + Math.cos(player.yaw) * dist;
+    
+    const spring = 1 - Math.pow(0.01, dt);
+    camPos.x += (targetX - camPos.x) * spring;
+    camPos.y += (height - camPos.y) * spring;
+    camPos.z += (targetZ - camPos.z) * spring;
+    
+    camera.position.set(camPos.x + shake, camPos.y + shake * 0.5, camPos.z + shake);
+    const lookX = player.x - Math.sin(player.yaw) * 3;
+    const lookZ = player.z - Math.cos(player.yaw) * 3;
+    camera.lookAt(lookX, 0.5, lookZ);
+  } else if (cameraMode === 2) {
+    // Over-the-shoulder (offset to right)
+    const dist = 3, height = 2.2, offsetRight = 1;
+    const targetX = player.x + Math.sin(player.yaw) * dist + Math.cos(player.yaw) * offsetRight;
+    const targetZ = player.z + Math.cos(player.yaw) * dist - Math.sin(player.yaw) * offsetRight;
+    
+    const spring = 1 - Math.pow(0.005, dt);
+    camPos.x += (targetX - camPos.x) * spring;
+    camPos.y += (height - camPos.y) * spring;
+    camPos.z += (targetZ - camPos.z) * spring;
+    
+    camera.position.set(camPos.x + shake, camPos.y + shake * 0.5, camPos.z + shake);
+    const lookX = player.x - Math.sin(player.yaw) * 8;
+    const lookZ = player.z - Math.cos(player.yaw) * 8;
+    camera.lookAt(lookX, 1.5, lookZ);
+  } else if (cameraMode === 3) {
+    // Top-down view
+    const height = 14;
+    const spring = 1 - Math.pow(0.02, dt);
+    camPos.x += (player.x - camPos.x) * spring;
+    camPos.y += (height - camPos.y) * spring;
+    camPos.z += (player.z + 2 - camPos.z) * spring;
+    
+    camera.position.set(camPos.x + shake, camPos.y, camPos.z + shake);
+    camera.lookAt(player.x, 0, player.z);
+  } else {
+    // Cinematic orbit view
+    const time = Date.now() * 0.0003;
+    const dist = 12;
+    const height = 8;
+    const camX = player.x + Math.sin(time) * dist;
+    const camZ = player.z + Math.cos(time) * dist;
+    camera.position.set(camX + shake, height + shake * 0.5, camZ + shake);
+    camera.lookAt(player.x, 0.5, player.z);
   }
 
   updateBombs(dt);

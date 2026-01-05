@@ -51,6 +51,22 @@
     #crosshair::before { width: 20px; height: 2px; left: -10px; top: -1px; }
     #crosshair::after { width: 2px; height: 20px; left: -1px; top: -10px; }
     
+    #camera-mode {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    
     #minimap {
       position: fixed;
       top: 20px;
@@ -180,6 +196,7 @@
   </div>
   
   <div id="crosshair"></div>
+  <div id="camera-mode">FPV</div>
   <canvas id="minimap" width="150" height="150"></canvas>
   
   <div id="instructions">
@@ -187,7 +204,7 @@
       <h1>BOMBERMAN</h1>
       <div class="subtitle">First Person</div>
       <div class="controls">
-        <span>WASD</span> Move &nbsp;&nbsp; <span>MOUSE</span> Look &nbsp;&nbsp; <span>SPACE</span> Bomb
+        <span>WASD</span> Move &nbsp;&nbsp; <span>MOUSE</span> Look &nbsp;&nbsp; <span>SPACE</span> Bomb &nbsp;&nbsp; <span>V</span> Camera
       </div>
       <div class="start">CLICK TO PLAY</div>
     </div>
