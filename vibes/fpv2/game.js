@@ -137,6 +137,12 @@ function init() {
       }
       updateCameraModeUI();
     }
+    if (e.code === 'KeyV' && splitScreen && players[0]) {
+      players[0].cameraMode = (players[0].cameraMode + 1) % 2;
+    }
+    if (e.code === 'Slash' && splitScreen && players[1]) {
+      players[1].cameraMode = (players[1].cameraMode + 1) % 2;
+    }
   });
   document.addEventListener('keyup', e => keys[e.code] = false);
   document.addEventListener('mousemove', e => {
@@ -1289,8 +1295,8 @@ function startSplitScreen() {
   
   // Setup players
   players = [
-    { x: CELL, z: CELL, yaw: 0, bombs: 3, blast: 3, speed: 5, dead: false, camPos: {x:0,y:0,z:0} },
-    { x: (GRID-2)*CELL, z: (GRID-2)*CELL, yaw: Math.PI, bombs: 3, blast: 3, speed: 5, dead: false, camPos: {x:0,y:0,z:0} }
+    { x: CELL, z: CELL, yaw: 0, bombs: 3, blast: 3, speed: 5, dead: false, camPos: {x:0,y:0,z:0}, cameraMode: 1 },
+    { x: (GRID-2)*CELL, z: (GRID-2)*CELL, yaw: Math.PI, bombs: 3, blast: 3, speed: 5, dead: false, camPos: {x:0,y:0,z:0}, cameraMode: 1 }
   ];
   
   // Create cameras
@@ -1339,13 +1345,15 @@ function updateSplitScreen(dt) {
     if (keys['KeyD']) { dx += Math.cos(p1.yaw); dz -= Math.sin(p1.yaw); }
     if (keys['KeyQ']) p1.yaw += 3 * dt;
     if (keys['KeyE']) p1.yaw -= 3 * dt;
+    const p1Bomb = bombs.find(b => b.owner === p1 && b.passable && Math.abs(b.group.position.x - p1.x) < CELL * 0.8 && Math.abs(b.group.position.z - p1.z) < CELL * 0.8);
     if (dx || dz) {
       const len = Math.sqrt(dx*dx + dz*dz);
       dx = dx/len * p1.speed * dt;
       dz = dz/len * p1.speed * dt;
-      if (!collides(p1.x + dx, p1.z)) p1.x += dx;
-      if (!collides(p1.x, p1.z + dz)) p1.z += dz;
+      if (!collides(p1.x + dx, p1.z, p1Bomb?.group.position)) p1.x += dx;
+      if (!collides(p1.x, p1.z + dz, p1Bomb?.group.position)) p1.z += dz;
     }
+    if (p1Bomb && (Math.abs(p1Bomb.group.position.x - p1.x) >= CELL * 0.8 || Math.abs(p1Bomb.group.position.z - p1.z) >= CELL * 0.8)) p1Bomb.passable = false;
     if (keys['Space']) { keys['Space'] = false; dropBombSplit(0); }
     playerMeshes[0].position.set(p1.x, 0.55, p1.z);
     playerMeshes[0].rotation.y = p1.yaw + Math.PI;
@@ -1361,30 +1369,50 @@ function updateSplitScreen(dt) {
     if (keys['ArrowRight']) { dx += Math.cos(p2.yaw); dz -= Math.sin(p2.yaw); }
     if (keys['Comma']) p2.yaw += 3 * dt;
     if (keys['Period']) p2.yaw -= 3 * dt;
+    const p2Bomb = bombs.find(b => b.owner === p2 && b.passable && Math.abs(b.group.position.x - p2.x) < CELL * 0.8 && Math.abs(b.group.position.z - p2.z) < CELL * 0.8);
     if (dx || dz) {
       const len = Math.sqrt(dx*dx + dz*dz);
       dx = dx/len * p2.speed * dt;
       dz = dz/len * p2.speed * dt;
-      if (!collides(p2.x + dx, p2.z)) p2.x += dx;
-      if (!collides(p2.x, p2.z + dz)) p2.z += dz;
+      if (!collides(p2.x + dx, p2.z, p2Bomb?.group.position)) p2.x += dx;
+      if (!collides(p2.x, p2.z + dz, p2Bomb?.group.position)) p2.z += dz;
     }
+    if (p2Bomb && (Math.abs(p2Bomb.group.position.x - p2.x) >= CELL * 0.8 || Math.abs(p2Bomb.group.position.z - p2.z) >= CELL * 0.8)) p2Bomb.passable = false;
     if (keys['Enter']) { keys['Enter'] = false; dropBombSplit(1); }
     playerMeshes[1].position.set(p2.x, 0.55, p2.z);
     playerMeshes[1].rotation.y = p2.yaw + Math.PI;
   }
   
-  // Update cameras (third-person behind)
+  // Update cameras based on each player's cameraMode
   players.forEach((p, i) => {
     if (p.dead) return;
-    const dist = 5, height = 3.5;
-    const targetX = p.x + Math.sin(p.yaw) * dist;
-    const targetZ = p.z + Math.cos(p.yaw) * dist;
-    const spring = 1 - Math.pow(0.01, dt);
-    p.camPos.x += (targetX - p.camPos.x) * spring;
-    p.camPos.y += (height - p.camPos.y) * spring;
-    p.camPos.z += (targetZ - p.camPos.z) * spring;
-    cameras[i].position.set(p.camPos.x, p.camPos.y, p.camPos.z);
-    cameras[i].lookAt(p.x, 1, p.z);
+    const cam = cameras[i];
+    if (p.cameraMode === 0) {
+      cam.position.set(p.x, 1.6, p.z);
+      cam.rotation.order = 'YXZ';
+      cam.rotation.y = p.yaw;
+      cam.rotation.x = 0;
+      playerMeshes[i].visible = false;
+    } else {
+      playerMeshes[i].visible = true;
+      const dist = 5, height = 3.5;
+      const targetX = p.x + Math.sin(p.yaw) * dist;
+      const targetZ = p.z + Math.cos(p.yaw) * dist;
+      const spring = 1 - Math.pow(0.01, dt);
+      p.camPos.x += (targetX - p.camPos.x) * spring;
+      p.camPos.y += (height - p.camPos.y) * spring;
+      p.camPos.z += (targetZ - p.camPos.z) * spring;
+      
+      const playerPos = { x: p.x, y: 1.6, z: p.z };
+      const actualDist = getCameraCollisionDist(playerPos, p.camPos, dist);
+      const ratio = actualDist / dist;
+      const finalX = p.x + (p.camPos.x - p.x) * ratio;
+      const finalZ = p.z + (p.camPos.z - p.z) * ratio;
+      const finalY = 1.6 + (p.camPos.y - 1.6) * ratio;
+      
+      cam.position.set(finalX, finalY, finalZ);
+      cam.lookAt(p.x, 1, p.z);
+    }
   });
   
   updateBombs(dt);
