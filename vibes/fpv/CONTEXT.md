@@ -1,4 +1,4 @@
-# Bomberman FPV - Session Context
+# Bummerman FPV - Session Context
 
 ## Project Location
 `fpv`
@@ -17,7 +17,7 @@
 ## Current Game Features
 
 ### Core Gameplay
-- First-person Bomberman with WASD + mouse controls
+- First-person Bummerman with WASD + mouse controls
 - 15x15 grid arena with destructible brown blocks and indestructible gray walls
 - Drop bombs with Space (3 bomb limit, 3-second fuse, regenerates after explosion)
 - 3-minute round timer

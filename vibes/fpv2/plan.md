@@ -1,4 +1,4 @@
-# Bomberman FPV Improvements
+# Bummerman FPV Improvements
 
 ## 1. Add AI Enemies
 - Simple enemies that patrol and drop bombs
