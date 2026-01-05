@@ -985,6 +985,11 @@ function flashDamage(intensity) {
   setTimeout(() => overlay.style.opacity = 0, 100);
 }
 
+function updateDangerIndicator() {
+  const inDanger = isInDanger(player.x, player.z);
+  document.getElementById('danger-overlay').classList.toggle('active', inDanger);
+}
+
 function gameOver() {
   if (isDying) return;
   isDying = true;
@@ -1181,6 +1186,7 @@ function update(dt) {
   updateAIBombers(dt);
   updatePowerups(dt);
   updateTimer(dt);
+  updateDangerIndicator();
   drawMinimap();
 }
 
