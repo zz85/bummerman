@@ -11,6 +11,7 @@ let minimap, minimapCtx, shakeIntensity = 0, slowMo = 1;
 let roundTime = 180, isDying = false;
 let aiBombers = [];
 let blastIndicators = [];
+let playerTile = null;
 let cameraMode = 0; // 0=FPV, 1=third-person, 2=over-shoulder, 3=top-down, 4=cinematic
 let playerMesh = null;
 let camPos = { x: 0, y: 0, z: 0 }; // For smooth camera
@@ -114,6 +115,20 @@ function init() {
   playerMesh.position.set(player.x, 0.55, player.z);
   playerMesh.visible = false;
   scene.add(playerMesh);
+  
+  // Player position tile indicator - subtle corners
+  playerTile = new THREE.Group();
+  const cornerGeo = new THREE.PlaneGeometry(0.15, 0.15);
+  const cornerMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05 });
+  const offsets = [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]];
+  for (const [ox, oz] of offsets) {
+    const corner = new THREE.Mesh(cornerGeo, cornerMat);
+    corner.rotation.x = -Math.PI / 2;
+    corner.position.set(ox, 0, oz);
+    playerTile.add(corner);
+  }
+  playerTile.position.y = 0.02;
+  scene.add(playerTile);
 
   minimap = document.getElementById('minimap');
   minimapCtx = minimap.getContext('2d');
@@ -546,9 +561,10 @@ function createDebris(x, z, color = 0x5a3a2a) {
 function isInDanger(x, z) {
   for (const b of bombs) {
     const bx = b.group.position.x, bz = b.group.position.z;
-    const range = (b.range || 3) * CELL;
-    if ((Math.abs(x - bx) < CELL * 0.5 && Math.abs(z - bz) < range) ||
-        (Math.abs(z - bz) < CELL * 0.5 && Math.abs(x - bx) < range)) {
+    const range = (b.range || 3) * CELL + CELL; // Include the cell player is standing in
+    // Match explosion damage check: < CELL for both axes
+    if ((Math.abs(x - bx) < CELL && Math.abs(z - bz) <= range) ||
+        (Math.abs(z - bz) < CELL && Math.abs(x - bx) <= range)) {
       return true;
     }
   }
@@ -857,6 +873,9 @@ function updateBombs(dt) {
 }
 
 function updateBlastIndicators() {
+  // Disabled - can be enabled via options
+  return;
+  
   // Remove old indicators
   for (const ind of blastIndicators) scene.remove(ind);
   blastIndicators = [];
@@ -1135,9 +1154,14 @@ function update(dt) {
 
   if (keys['Space']) { keys['Space'] = false; dropBomb(player.x, player.z); }
 
-  // Update player mesh position
+  // Update player mesh and tile indicator
   playerMesh.position.set(player.x, 0.55, player.z);
   playerMesh.rotation.y = player.yaw + Math.PI;
+  
+  // Snap tile to grid, subtle pulse
+  const gridX = Math.round(player.x / CELL) * CELL;
+  const gridZ = Math.round(player.z / CELL) * CELL;
+  playerTile.position.set(gridX, 0.02, gridZ);
 
   // Camera with shake
   shakeIntensity *= 0.9;

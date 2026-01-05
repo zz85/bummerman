@@ -96,20 +96,14 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
-      border: 8px solid transparent;
+      border: 3px solid transparent;
       box-sizing: border-box;
       opacity: 0;
       transition: opacity 0.15s;
     }
     #danger-overlay.active {
-      border-color: rgba(255, 60, 60, 0.7);
-      box-shadow: inset 0 0 60px rgba(255, 0, 0, 0.4);
+      border-color: rgba(255, 80, 80, 0.35);
       opacity: 1;
-      animation: danger-pulse 0.5s infinite;
-    }
-    @keyframes danger-pulse {
-      0%, 100% { border-color: rgba(255, 60, 60, 0.7); }
-      50% { border-color: rgba(255, 60, 60, 0.3); }
     }
     
     #instructions {
