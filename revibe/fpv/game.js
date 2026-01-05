@@ -8,13 +8,15 @@ let scene, camera, renderer, composer, player;
 let walls = [], breakables = [], bombs = [], explosions = [], enemies = [], powerups = [], lights = [];
 let keys = {}, bombCount = 3, blastRange = 3, speed = 5, score = 0, locked = false;
 let minimap, minimapCtx, shakeIntensity = 0, slowMo = 1;
+let roundTime = 180, isDying = false;
+let aiBombers = [];
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0a12);
-  scene.fog = new THREE.FogExp2(0x0a0a12, 0.04);
+  scene.fog = new THREE.FogExp2(0x0a0a12, 0.025);
 
   camera = new THREE.PerspectiveCamera(80, innerWidth / innerHeight, 0.1, 100);
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -23,19 +25,19 @@ function init() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.8;
   document.body.prepend(renderer.domElement);
 
   // Post-processing
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.4, 0.85);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.4, 0.85);
   composer.addPass(bloom);
 
   // Lighting
-  scene.add(new THREE.AmbientLight(0x404060, 0.3));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
   
-  const mainLight = new THREE.DirectionalLight(0xffeedd, 1);
+  const mainLight = new THREE.DirectionalLight(0xffeedd, 1.2);
   mainLight.position.set(20, 30, 20);
   mainLight.castShadow = true;
   mainLight.shadow.mapSize.set(2048, 2048);
@@ -46,6 +48,23 @@ function init() {
   mainLight.shadow.camera.top = 30;
   mainLight.shadow.camera.bottom = -30;
   scene.add(mainLight);
+
+  // Additional fill lights
+  const fillLight1 = new THREE.DirectionalLight(0x8888ff, 0.4);
+  fillLight1.position.set(-20, 15, -20);
+  scene.add(fillLight1);
+
+  const fillLight2 = new THREE.DirectionalLight(0xffaa88, 0.3);
+  fillLight2.position.set(20, 10, -20);
+  scene.add(fillLight2);
+
+  // Corner point lights for atmosphere
+  const cornerPositions = [[2, 2], [2, GRID-3], [GRID-3, 2], [GRID-3, GRID-3]];
+  for (const [cx, cz] of cornerPositions) {
+    const pl = new THREE.PointLight(0x4488ff, 0.6, 10);
+    pl.position.set(cx * CELL, 2, cz * CELL);
+    scene.add(pl);
+  }
 
   // Floor
   const floorMat = new THREE.MeshStandardMaterial({ 
@@ -65,7 +84,9 @@ function init() {
   scene.add(gridHelper);
 
   buildLevel();
-  spawnEnemies(3);
+  spawnEnemies(5);
+  spawnHunter();
+  spawnAIBombers(2);
 
   player = { x: CELL, z: CELL, yaw: 0, pitch: 0 };
   camera.position.set(player.x, 1.6, player.z);
@@ -175,6 +196,102 @@ function spawnEnemies(count) {
   document.getElementById('enemies').textContent = enemies.length;
 }
 
+let hunter = null;
+function spawnHunter() {
+  const hx = (GRID - 2) * CELL, hz = (GRID - 2) * CELL;
+  
+  const group = new THREE.Group();
+  
+  // Larger, more menacing body
+  const body = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.45, 0.7, 8, 16),
+    new THREE.MeshStandardMaterial({ color: 0x9922ff, roughness: 0.3, metalness: 0.7, emissive: 0x440088, emissiveIntensity: 0.5 })
+  );
+  body.castShadow = true;
+  group.add(body);
+
+  // Glowing eye
+  const eye = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  );
+  eye.position.set(0, 0.25, 0.4);
+  group.add(eye);
+
+  // Strong glow
+  const glow = new THREE.PointLight(0x9922ff, 1.5, 8);
+  glow.position.y = 0.5;
+  group.add(glow);
+
+  group.position.set(hx, 0.7, hz);
+  scene.add(group);
+  
+  hunter = {
+    mesh: group,
+    bombTimer: 4,
+    pathTimer: 0,
+    target: null
+  };
+  
+  enemies.push({
+    mesh: group,
+    isHunter: true,
+    dir: 0,
+    moveTimer: 0,
+    bombTimer: 4,
+    bobPhase: 0
+  });
+  document.getElementById('enemies').textContent = enemies.length;
+}
+
+function spawnAIBombers(count) {
+  const colors = [0x00aaff, 0x00ff88];
+  const spawnPoints = [[CELL, (GRID - 2) * CELL], [(GRID - 2) * CELL, CELL]];
+  
+  for (let i = 0; i < count; i++) {
+    const [sx, sz] = spawnPoints[i % spawnPoints.length];
+    const color = colors[i % colors.length];
+    
+    const group = new THREE.Group();
+    
+    // Body (humanoid bomber)
+    const body = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.3, 0.5, 8, 16),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.3 })
+    );
+    body.castShadow = true;
+    group.add(body);
+    
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2),
+      new THREE.MeshStandardMaterial({ color: 0xffddbb, roughness: 0.6 })
+    );
+    head.position.y = 0.5;
+    head.castShadow = true;
+    group.add(head);
+    
+    // Glow
+    const glow = new THREE.PointLight(color, 0.5, 5);
+    glow.position.y = 0.5;
+    group.add(glow);
+    
+    group.position.set(sx, 0.55, sz);
+    scene.add(group);
+    
+    aiBombers.push({
+      mesh: group,
+      color,
+      dir: Math.floor(Math.random() * 4),
+      moveTimer: 0,
+      bombTimer: 2 + Math.random() * 2,
+      bombCount: 3,
+      blastRange: 3,
+      alive: true
+    });
+  }
+}
+
 function spawnPowerup(x, z) {
   if (Math.random() > 0.5) return;
   
@@ -263,15 +380,19 @@ function explode(bomb) {
   scene.remove(bomb.group);
   bombs = bombs.filter(b => b !== bomb);
   
-  if (!bomb.isEnemy) {
+  if (bomb.owner) {
+    bomb.owner.bombCount++;
+  } else if (!bomb.isEnemy) {
     bombCount++;
     document.getElementById('bombs').textContent = bombCount;
   }
 
   playSound('explode');
-  shakeIntensity = 0.4;
-  slowMo = 0.3;
-  setTimeout(() => slowMo = 1, 150);
+  if (!isDying) {
+    shakeIntensity = 0.4;
+    slowMo = 0.3;
+    setTimeout(() => { if (!isDying) slowMo = 1; }, 150);
+  }
   flashDamage(0.3);
 
   const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -312,7 +433,17 @@ function explode(bomb) {
         score += 100;
         document.getElementById('score').textContent = score;
         document.getElementById('enemies').textContent = enemies.length;
-        if (enemies.length === 0) setTimeout(win, 500);
+        checkWin();
+      }
+
+      // Kill AI bombers
+      const bomberHit = aiBombers.find(b => b.alive && Math.abs(b.mesh.position.x - ex) < CELL && Math.abs(b.mesh.position.z - ez) < CELL);
+      if (bomberHit) {
+        bomberHit.alive = false;
+        createDebris(bomberHit.mesh.position.x, bomberHit.mesh.position.z, bomberHit.color);
+        scene.remove(bomberHit.mesh);
+        score += 50;
+        document.getElementById('score').textContent = score;
       }
 
       // Player damage
@@ -374,6 +505,18 @@ function createDebris(x, z, color = 0x5a3a2a) {
   }
 }
 
+function isInDanger(x, z) {
+  for (const b of bombs) {
+    const bx = b.group.position.x, bz = b.group.position.z;
+    const range = (b.range || 3) * CELL;
+    if ((Math.abs(x - bx) < CELL * 0.5 && Math.abs(z - bz) < range) ||
+        (Math.abs(z - bz) < CELL * 0.5 && Math.abs(x - bx) < range)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function updateEnemies(dt) {
   const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
   
@@ -383,16 +526,56 @@ function updateEnemies(dt) {
     enemy.bobPhase += dt * 5;
     
     // Bobbing animation
-    enemy.mesh.position.y = 0.6 + Math.sin(enemy.bobPhase) * 0.05;
-    enemy.mesh.children[0].rotation.y += dt * 2;
+    const baseY = enemy.isHunter ? 0.7 : 0.6;
+    enemy.mesh.position.y = baseY + Math.sin(enemy.bobPhase) * 0.05;
+    enemy.mesh.children[0].rotation.y += dt * (enemy.isHunter ? 3 : 2);
+
+    const ex = enemy.mesh.position.x, ez = enemy.mesh.position.z;
+    const inDanger = isInDanger(ex, ez);
 
     if (enemy.moveTimer <= 0) {
-      enemy.moveTimer = 0.4;
-      if (Math.random() < 0.25) enemy.dir = Math.floor(Math.random() * 4);
+      enemy.moveTimer = enemy.isHunter ? 0.25 : 0.4;
+      
+      // If in danger, prioritize escaping
+      if (inDanger) {
+        let bestDir = enemy.dir;
+        for (let d = 0; d < 4; d++) {
+          const [mx, mz] = dirs[d];
+          const nx = ex + mx * CELL;
+          const nz = ez + mz * CELL;
+          if (!collides(nx, nz) && !isInDanger(nx, nz)) {
+            bestDir = d;
+            break;
+          }
+        }
+        enemy.dir = bestDir;
+      } else if (enemy.isHunter) {
+        // Hunter AI: pathfind toward player
+        let bestDir = enemy.dir;
+        let bestDist = Infinity;
+        
+        for (let d = 0; d < 4; d++) {
+          const [mx, mz] = dirs[d];
+          const nx = ex + mx * CELL;
+          const nz = ez + mz * CELL;
+          
+          if (!collides(nx, nz) && !isInDanger(nx, nz)) {
+            const dist = Math.abs(player.x - nx) + Math.abs(player.z - nz);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestDir = d;
+            }
+          }
+        }
+        enemy.dir = bestDir;
+      } else {
+        // Regular enemy: random movement, avoid danger
+        if (Math.random() < 0.25) enemy.dir = Math.floor(Math.random() * 4);
+      }
       
       const [dx, dz] = dirs[enemy.dir];
-      const nx = enemy.mesh.position.x + dx * CELL;
-      const nz = enemy.mesh.position.z + dz * CELL;
+      const nx = ex + dx * CELL;
+      const nz = ez + dz * CELL;
       
       if (!collides(nx, nz)) {
         enemy.mesh.position.x = nx;
@@ -403,15 +586,147 @@ function updateEnemies(dt) {
       }
     }
 
-    if (enemy.bombTimer <= 0) {
-      enemy.bombTimer = 7 + Math.random() * 5;
-      dropBomb(enemy.mesh.position.x, enemy.mesh.position.z, true);
+    // Only drop bombs if not in danger and not too close to own bombs
+    const distToPlayer = Math.abs(ex - player.x) + Math.abs(ez - player.z);
+    const bombCooldown = enemy.isHunter ? (distToPlayer < CELL * 4 ? 4 : 8) : 12 + Math.random() * 8;
+    
+    if (enemy.bombTimer <= 0 && !inDanger && distToPlayer < CELL * 6) {
+      enemy.bombTimer = bombCooldown;
+      dropBomb(ex, ez, true);
     }
 
-    if (Math.abs(enemy.mesh.position.x - player.x) < CELL * 0.5 && Math.abs(enemy.mesh.position.z - player.z) < CELL * 0.5) {
+    if (Math.abs(ex - player.x) < CELL * 0.5 && Math.abs(ez - player.z) < CELL * 0.5) {
       gameOver();
     }
   }
+}
+
+function updateAIBombers(dt) {
+  const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+  
+  for (const bomber of aiBombers) {
+    if (!bomber.alive) continue;
+    
+    bomber.moveTimer -= dt;
+    bomber.bombTimer -= dt;
+    
+    // Movement
+    if (bomber.moveTimer <= 0) {
+      bomber.moveTimer = 0.35;
+      
+      // Smart movement: avoid bombs, seek enemies or breakables
+      let bestDir = bomber.dir;
+      let bestScore = -Infinity;
+      
+      for (let d = 0; d < 4; d++) {
+        const [mx, mz] = dirs[d];
+        const nx = bomber.mesh.position.x + mx * CELL;
+        const nz = bomber.mesh.position.z + mz * CELL;
+        
+        if (collides(nx, nz)) continue;
+        
+        // Avoid bomb blast zones
+        let inDanger = bombs.some(b => {
+          const bx = b.group.position.x, bz = b.group.position.z;
+          return (Math.abs(nx - bx) < CELL * 0.5 && Math.abs(nz - bz) < CELL * 4) ||
+                 (Math.abs(nz - bz) < CELL * 0.5 && Math.abs(nx - bx) < CELL * 4);
+        });
+        
+        let score = inDanger ? -100 : 0;
+        
+        // Move toward nearest enemy
+        for (const e of enemies) {
+          const dist = Math.abs(e.mesh.position.x - nx) + Math.abs(e.mesh.position.z - nz);
+          score -= dist * 0.1;
+        }
+        
+        // Some randomness
+        score += Math.random() * 2;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestDir = d;
+        }
+      }
+      
+      bomber.dir = bestDir;
+      const [dx, dz] = dirs[bomber.dir];
+      const nx = bomber.mesh.position.x + dx * CELL;
+      const nz = bomber.mesh.position.z + dz * CELL;
+      
+      if (!collides(nx, nz)) {
+        bomber.mesh.position.x = nx;
+        bomber.mesh.position.z = nz;
+        bomber.mesh.rotation.y = Math.atan2(dx, dz);
+      }
+    }
+    
+    // Drop bombs near enemies or breakables
+    if (bomber.bombTimer <= 0 && bomber.bombCount > 0) {
+      const nearEnemy = enemies.some(e => 
+        Math.abs(e.mesh.position.x - bomber.mesh.position.x) < CELL * 3 &&
+        Math.abs(e.mesh.position.z - bomber.mesh.position.z) < CELL * 3
+      );
+      const nearBreakable = breakables.some(b =>
+        Math.abs(b.position.x - bomber.mesh.position.x) < CELL * 2 &&
+        Math.abs(b.position.z - bomber.mesh.position.z) < CELL * 2
+      );
+      
+      if (nearEnemy || nearBreakable) {
+        bomber.bombTimer = 3 + Math.random() * 2;
+        dropAIBomb(bomber);
+      }
+    }
+    
+    // Check if killed by explosion (handled in explode function)
+  }
+}
+
+function dropAIBomb(bomber) {
+  const gx = Math.round(bomber.mesh.position.x / CELL) * CELL;
+  const gz = Math.round(bomber.mesh.position.z / CELL) * CELL;
+  
+  if (bombs.some(b => b.group.position.x === gx && b.group.position.z === gz)) return;
+  
+  bomber.bombCount--;
+  
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 32, 32),
+    new THREE.MeshStandardMaterial({ color: bomber.color, roughness: 0.3, metalness: 0.8 })
+  );
+  body.castShadow = true;
+  group.add(body);
+
+  const fuse = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 0.25),
+    new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff3300, emissiveIntensity: 1 })
+  );
+  fuse.position.y = 0.45;
+  group.add(fuse);
+
+  const sparkGeo = new THREE.BufferGeometry();
+  const sparkPositions = new Float32Array(30 * 3);
+  sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+  const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({ color: 0xffaa00, size: 0.08, transparent: true }));
+  sparks.position.y = 0.55;
+  group.add(sparks);
+
+  const glow = new THREE.PointLight(bomber.color, 0, 5);
+  glow.position.y = 0.3;
+  group.add(glow);
+
+  group.position.set(gx, 0.4, gz);
+  scene.add(group);
+
+  bombs.push({ 
+    group, fuse, sparks, glow, 
+    time: 3, 
+    passable: false, 
+    isEnemy: false, 
+    range: bomber.blastRange,
+    owner: bomber
+  });
 }
 
 function updatePowerups(dt) {
@@ -526,6 +841,15 @@ function drawMinimap() {
     minimapCtx.fill();
   }
 
+  // AI Bombers
+  for (const b of aiBombers) {
+    if (!b.alive) continue;
+    minimapCtx.fillStyle = '#' + b.color.toString(16).padStart(6, '0');
+    minimapCtx.beginPath();
+    minimapCtx.arc(b.mesh.position.x / CELL * s + s/2, b.mesh.position.z / CELL * s + s/2, 4, 0, Math.PI * 2);
+    minimapCtx.fill();
+  }
+
   // Player
   const px = player.x / CELL * s + s/2, pz = player.z / CELL * s + s/2;
   minimapCtx.fillStyle = '#44ff66';
@@ -584,6 +908,14 @@ function playSound(type) {
     gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
     osc.start(t);
     osc.stop(t + 0.1);
+  } else if (type === 'death') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.exponentialRampToValueAtTime(50, t + 0.8);
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.8);
+    osc.start(t);
+    osc.stop(t + 0.8);
   }
 }
 
@@ -594,9 +926,52 @@ function flashDamage(intensity) {
 }
 
 function gameOver() {
+  if (isDying) return;
+  isDying = true;
+  
+  // Death VFX
+  shakeIntensity = 1.5;
+  slowMo = 0.15;
+  flashDamage(0.8);
+  playSound('death');
+  
+  // Create death particles at player position
+  for (let i = 0; i < 30; i++) {
+    const particle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1 + Math.random() * 0.15),
+      new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xff0000 : 0xff6600, transparent: true })
+    );
+    particle.position.set(player.x, 1 + Math.random(), player.z);
+    scene.add(particle);
+    explosions.push({
+      mesh: particle,
+      time: 1.5,
+      vel: new THREE.Vector3((Math.random() - 0.5) * 8, Math.random() * 6, (Math.random() - 0.5) * 8),
+      isParticle: true
+    });
+  }
+  
+  // Delay showing game over screen
+  setTimeout(() => {
+    slowMo = 1;
+    locked = false;
+    document.exitPointerLock();
+    document.getElementById('final-score-go').textContent = score;
+    document.getElementById('game-over').style.display = 'flex';
+  }, 2000);
+}
+
+function checkWin() {
+  if (enemies.length === 0) {
+    setTimeout(win, 500);
+  }
+}
+
+function timeUp() {
   locked = false;
   document.exitPointerLock();
   document.getElementById('final-score-go').textContent = score;
+  document.querySelector('#game-over h1').textContent = 'TIME UP';
   document.getElementById('game-over').style.display = 'flex';
 }
 
@@ -605,6 +980,24 @@ function win() {
   document.exitPointerLock();
   document.getElementById('final-score-win').textContent = score;
   document.getElementById('win-screen').style.display = 'flex';
+}
+
+function updateTimer(dt) {
+  roundTime -= dt;
+  if (roundTime <= 0) {
+    roundTime = 0;
+    timeUp();
+    return;
+  }
+  
+  const mins = Math.floor(roundTime / 60);
+  const secs = Math.floor(roundTime % 60);
+  document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+  
+  const timerEl = document.getElementById('timer').parentElement;
+  timerEl.classList.remove('warning', 'danger');
+  if (roundTime <= 30) timerEl.classList.add('danger');
+  else if (roundTime <= 60) timerEl.classList.add('warning');
 }
 
 function update(dt) {
@@ -652,7 +1045,9 @@ function update(dt) {
   updateBombs(dt);
   updateExplosions(dt);
   updateEnemies(dt);
+  updateAIBombers(dt);
   updatePowerups(dt);
+  updateTimer(dt);
   drawMinimap();
 }
 

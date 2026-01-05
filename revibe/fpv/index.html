@@ -30,6 +30,10 @@
     .stat-blast .stat-value { color: #f7c948; }
     .stat-enemies .stat-value { color: #e84855; }
     .stat-score .stat-value { color: #3dd6d0; }
+    .stat-time .stat-value { color: #fff; }
+    .stat-time.warning .stat-value { color: #f7c948; }
+    .stat-time.danger .stat-value { color: #e84855; animation: blink 0.5s infinite; }
+    @keyframes blink { 50% { opacity: 0.5; } }
     
     #crosshair {
       position: fixed;
@@ -168,6 +172,10 @@
     <div class="stat stat-score">
       <div class="stat-label">Score</div>
       <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat stat-time">
+      <div class="stat-label">Time</div>
+      <div class="stat-value" id="timer">3:00</div>
     </div>
   </div>
   
