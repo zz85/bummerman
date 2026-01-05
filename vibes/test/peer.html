@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PeerJS Test</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #log { background: #111; color: #0f0; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; }
+    input, button { padding: 8px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h3>Your ID: <span id="my-id">connecting...</span></h3>
+  <div>
+    <input id="peer-id" placeholder="Enter peer ID to connect">
+    <button onclick="connect()">Connect</button>
+  </div>
+  <div>
+    <input id="msg" placeholder="Message">
+    <button onclick="send()">Send</button>
+  </div>
+  <div id="log"></div>
+
+  <script>
+    // Persist ID across refreshes
+    let myId = localStorage.getItem('peerId');
+    const peer = myId ? new Peer(myId) : new Peer();
+    let conn = null;
+    let lastReceived = Date.now();
+
+    peer.on('open', id => {
+      localStorage.setItem('peerId', id);
+      document.getElementById('my-id').textContent = id;
+      log('Ready. Share your ID with peer.');
+    });
+
+    peer.on('error', err => {
+      if (err.type === 'unavailable-id') {
+        localStorage.removeItem('peerId');
+        log('ID taken, refresh for new one');
+      } else {
+        log('Peer error: ' + err);
+      }
+    });
+
+    peer.on('connection', c => {
+      conn = c;
+      setupConn();
+      log('Incoming connection from: ' + c.peer);
+    });
+
+    function connect() {
+      const id = document.getElementById('peer-id').value;
+      conn = peer.connect(id);
+      setupConn();
+    }
+
+    function setupConn() {
+      conn.on('open', () => {
+        log('Connected!');
+        showConnectionInfo();
+        startHeartbeat();
+      });
+      conn.on('data', data => {
+        lastReceived = Date.now();
+        if (data !== 'ping') log('Received: ' + data);
+      });
+      conn.on('close', () => log('Peer disconnected'));
+      conn.on('error', err => log('Connection error: ' + err));
+    }
+
+    function startHeartbeat() {
+      setInterval(() => conn?.send('ping'), 2000);
+      setInterval(() => {
+        if (conn && Date.now() - lastReceived > 6000) {
+          log('Peer unresponsive!');
+        }
+      }, 2000);
+    }
+
+    function showConnectionInfo() {
+      const pc = conn.peerConnection;
+      pc.getStats().then(stats => {
+        stats.forEach(report => {
+          if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+            const local = stats.get(report.localCandidateId);
+            const remote = stats.get(report.remoteCandidateId);
+            log('--- Connection Info ---');
+            log(`Local: ${local.address}:${local.port} (${local.protocol}, ${local.candidateType})`);
+            log(`Remote: ${remote.address}:${remote.port} (${remote.protocol}, ${remote.candidateType})`);
+          }
+        });
+      });
+    }
+
+    function send() {
+      const msg = document.getElementById('msg').value;
+      if (conn) { conn.send(msg); log('Sent: ' + msg); }
+    }
+
+    function log(msg) {
+      document.getElementById('log').innerHTML += msg + '<br>';
+    }
+  </script>
+</body>
+</html>

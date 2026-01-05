@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BUMMERMAN FPV</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+    canvas { display: block; }
+    
+    #ui {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: white;
+      font-size: 14px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+      display: flex;
+      gap: 20px;
+    }
+    .stat {
+      background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 24px; font-weight: bold; }
+    .stat-bombs .stat-value { color: #ff6b35; }
+    .stat-blast .stat-value { color: #f7c948; }
+    .stat-enemies .stat-value { color: #e84855; }
+    .stat-score .stat-value { color: #3dd6d0; }
+    .stat-time .stat-value { color: #fff; }
+    .stat-time.warning .stat-value { color: #f7c948; }
+    .stat-time.danger .stat-value { color: #e84855; animation: blink 0.5s infinite; }
+    @keyframes blink { 50% { opacity: 0.5; } }
+    
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    #crosshair::before, #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    #crosshair::before { width: 20px; height: 2px; left: -10px; top: -1px; }
+    #crosshair::after { width: 2px; height: 20px; left: -1px; top: -10px; }
+    
+    #camera-mode {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    
+    #minimap {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    
+    #vignette {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+    }
+    
+    #damage-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 30%, rgba(255,0,0,0.3) 100%);
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+    
+    #danger-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      border: 3px solid transparent;
+      box-sizing: border-box;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    #danger-overlay.active {
+      border-color: rgba(255, 80, 80, 0.35);
+      opacity: 1;
+    }
+    
+    #instructions {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .menu {
+      text-align: center;
+      color: white;
+    }
+    .menu h1 {
+      font-size: 72px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff6b35, #f7c948);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: none;
+      margin-bottom: 10px;
+    }
+    .menu .subtitle {
+      font-size: 18px;
+      color: #666;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+    .menu .controls {
+      color: #888;
+      line-height: 2;
+      margin-bottom: 40px;
+    }
+    .menu .controls span { color: #fff; font-weight: bold; }
+    .menu .start {
+      display: inline-block;
+      padding: 15px 50px;
+      background: linear-gradient(135deg, #ff6b35, #e84855);
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255,107,53,0.5); }
+      50% { box-shadow: 0 0 40px rgba(255,107,53,0.8); }
+    }
+    
+    #game-over, #win-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: white;
+    }
+    #game-over h1 { font-size: 80px; color: #e84855; }
+    #win-screen h1 { font-size: 80px; color: #3dd6d0; }
+    .final-score { font-size: 32px; margin: 20px 0; color: #888; }
+    .restart-btn {
+      margin-top: 30px;
+      padding: 15px 40px;
+      background: #333;
+      border: none;
+      color: white;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .restart-btn:hover { background: #444; }
+  </style>
+</head>
+<body>
+  <div id="vignette"></div>
+  <div id="damage-overlay"></div>
+  <div id="danger-overlay"></div>
+  
+  <div id="ui">
+    <div class="stat stat-bombs">
+      <div class="stat-label">Bombs</div>
+      <div class="stat-value" id="bombs">3</div>
+    </div>
+    <div class="stat stat-blast">
+      <div class="stat-label">Blast</div>
+      <div class="stat-value" id="blast">3</div>
+    </div>
+    <div class="stat stat-enemies">
+      <div class="stat-label">Enemies</div>
+      <div class="stat-value" id="enemies">3</div>
+    </div>
+    <div class="stat stat-score">
+      <div class="stat-label">Score</div>
+      <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat stat-time">
+      <div class="stat-label">Time</div>
+      <div class="stat-value" id="timer">3:00</div>
+    </div>
+  </div>
+  
+  <div id="crosshair"></div>
+  <div id="camera-mode">FPV</div>
+  <canvas id="minimap" width="150" height="150"></canvas>
+  
+  <div id="instructions">
+    <div class="menu">
+      <h1>BUMMERMAN</h1>
+      <div class="subtitle">First Person</div>
+      <div class="controls">
+        <span>WASD</span> Move &nbsp;&nbsp; <span>MOUSE</span> Look &nbsp;&nbsp; <span>SPACE</span> Bomb &nbsp;&nbsp; <span>V</span> Camera
+      </div>
+      <div class="start">CLICK TO PLAY</div>
+    </div>
+  </div>
+  
+  <div id="game-over">
+    <h1>WASTED</h1>
+    <div class="final-score">Score: <span id="final-score-go">0</span></div>
+    <button class="restart-btn" onclick="location.reload()">TRY AGAIN</button>
+  </div>
+  
+  <div id="win-screen">
+    <h1>VICTORY</h1>
+    <div class="final-score">Score: <span id="final-score-win">0</span></div>
+    <button class="restart-btn" onclick="location.reload()">PLAY AGAIN</button>
+  </div>
+  
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
