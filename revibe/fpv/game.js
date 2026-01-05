@@ -10,6 +10,7 @@ let keys = {}, bombCount = 3, blastRange = 3, speed = 5, score = 0, locked = fal
 let minimap, minimapCtx, shakeIntensity = 0, slowMo = 1;
 let roundTime = 180, isDying = false;
 let aiBombers = [];
+let blastIndicators = [];
 let cameraMode = 0; // 0=FPV, 1=third-person, 2=over-shoulder, 3=top-down, 4=cinematic
 let playerMesh = null;
 let camPos = { x: 0, y: 0, z: 0 }; // For smooth camera
@@ -850,6 +851,46 @@ function updateBombs(dt) {
     }
 
     if (bomb.time <= 0) explode(bomb);
+  }
+  
+  updateBlastIndicators();
+}
+
+function updateBlastIndicators() {
+  // Remove old indicators
+  for (const ind of blastIndicators) scene.remove(ind);
+  blastIndicators = [];
+  
+  const indicatorMat = new THREE.MeshBasicMaterial({ 
+    color: 0xff3300, 
+    transparent: true, 
+    opacity: 0.25 + Math.sin(Date.now() * 0.008) * 0.15
+  });
+  const tileGeo = new THREE.PlaneGeometry(CELL * 0.9, CELL * 0.9);
+  
+  for (const bomb of bombs) {
+    const bx = bomb.group.position.x, bz = bomb.group.position.z;
+    const range = bomb.range || 3;
+    const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+    
+    for (const [dx, dz] of dirs) {
+      for (let i = 0; i <= (dx === 0 && dz === 0 ? 0 : range); i++) {
+        const tx = bx + dx * i * CELL;
+        const tz = bz + dz * i * CELL;
+        
+        // Stop at walls
+        if (walls.some(w => Math.abs(w.position.x - tx) < 0.5 && Math.abs(w.position.z - tz) < 0.5)) break;
+        
+        const tile = new THREE.Mesh(tileGeo, indicatorMat);
+        tile.rotation.x = -Math.PI / 2;
+        tile.position.set(tx, 0.02, tz);
+        scene.add(tile);
+        blastIndicators.push(tile);
+        
+        // Stop at breakables (but show the tile)
+        if (breakables.some(b => Math.abs(b.position.x - tx) < 0.5 && Math.abs(b.position.z - tz) < 0.5)) break;
+      }
+    }
   }
 }
 
