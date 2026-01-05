@@ -4,7 +4,7 @@
   <title>Bomberman FPV</title>
   <style>
     * { margin: 0; padding: 0; }
-    body { overflow: hidden; }
+    body { overflow: hidden; background: #000; }
     canvas { display: block; }
     #ui {
       position: fixed;
@@ -15,6 +15,7 @@
       font-size: 16px;
       text-shadow: 1px 1px 2px black;
     }
+    #ui div { margin: 4px 0; }
     #crosshair {
       position: fixed;
       top: 50%;
@@ -24,32 +25,47 @@
       font-size: 24px;
       pointer-events: none;
     }
+    #minimap {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      border: 2px solid #333;
+      border-radius: 4px;
+    }
     #instructions {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.9);
       color: white;
-      padding: 30px;
+      padding: 40px;
       font-family: monospace;
       text-align: center;
       cursor: pointer;
+      border: 2px solid #ff6600;
+      border-radius: 8px;
     }
+    #instructions h2 { color: #ff6600; margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <div id="ui">
-    <div>Bombs: <span id="bombs">3</span></div>
-    <div>Score: <span id="score">0</span></div>
+    <div>💣 Bombs: <span id="bombs">3</span></div>
+    <div>💥 Blast: <span id="blast">3</span></div>
+    <div>👾 Enemies: <span id="enemies">3</span></div>
+    <div>🏆 Score: <span id="score">0</span></div>
   </div>
   <div id="crosshair">+</div>
+  <canvas id="minimap" width="150" height="150"></canvas>
   <div id="instructions">
-    <h2>BOMBERMAN FPV</h2><br>
+    <h2>💣 BOMBERMAN FPV 💣</h2>
     WASD - Move<br>
     Mouse - Look<br>
     Space - Drop Bomb<br><br>
-    Click to Start
+    <span style="color:#0f0">● Kill all enemies to win!</span><br>
+    <span style="color:#ff9900">● Collect powerups from blocks</span><br><br>
+    <strong>Click to Start</strong>
   </div>
   <script type="module" src="game.js"></script>
 </body>
