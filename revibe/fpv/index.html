@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bomberman FPV</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { overflow: hidden; }
+    canvas { display: block; }
+    #ui {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-family: monospace;
+      font-size: 16px;
+      text-shadow: 1px 1px 2px black;
+    }
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 24px;
+      pointer-events: none;
+    }
+    #instructions {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 30px;
+      font-family: monospace;
+      text-align: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div>Bombs: <span id="bombs">3</span></div>
+    <div>Score: <span id="score">0</span></div>
+  </div>
+  <div id="crosshair">+</div>
+  <div id="instructions">
+    <h2>BOMBERMAN FPV</h2><br>
+    WASD - Move<br>
+    Mouse - Look<br>
+    Space - Drop Bomb<br><br>
+    Click to Start
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
