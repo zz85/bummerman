@@ -13,6 +13,7 @@ let aiBombers = [];
 let cameraMode = 0; // 0=FPV, 1=third-person, 2=over-shoulder, 3=top-down, 4=cinematic
 let playerMesh = null;
 let camPos = { x: 0, y: 0, z: 0 }; // For smooth camera
+let raycaster = new THREE.Raycaster();
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -955,6 +956,21 @@ function playSound(type) {
   }
 }
 
+function getCameraCollisionDist(playerPos, camTarget, maxDist) {
+  const dir = new THREE.Vector3(camTarget.x - playerPos.x, camTarget.y - playerPos.y, camTarget.z - playerPos.z);
+  const dist = dir.length();
+  dir.normalize();
+  
+  raycaster.set(new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z), dir);
+  raycaster.far = maxDist;
+  
+  const hits = raycaster.intersectObjects([...walls, ...breakables], false);
+  if (hits.length > 0 && hits[0].distance < dist) {
+    return Math.max(hits[0].distance - 0.5, 1); // Keep 0.5 buffer, min 1 unit
+  }
+  return dist;
+}
+
 function updateCameraModeUI() {
   const modes = ['FPV', 'THIRD PERSON', 'OVER SHOULDER', 'TOP DOWN', 'CINEMATIC'];
   const el = document.getElementById('camera-mode');
@@ -1090,14 +1106,24 @@ function update(dt) {
     if (dx || dz) camera.position.y += Math.sin(Date.now() * 0.01) * 0.03;
   } else if (cameraMode === 1) {
     // Third-person view (behind)
-    const dist = 6, height = 4;
-    const targetX = player.x + Math.sin(player.yaw) * dist;
-    const targetZ = player.z + Math.cos(player.yaw) * dist;
+    const maxDist = 6, height = 4;
+    const targetX = player.x + Math.sin(player.yaw) * maxDist;
+    const targetZ = player.z + Math.cos(player.yaw) * maxDist;
+    
+    // Check for obstruction
+    const playerPos = { x: player.x, y: 1.5, z: player.z };
+    const camTarget = { x: targetX, y: height, z: targetZ };
+    const actualDist = getCameraCollisionDist(playerPos, camTarget, maxDist + 2);
+    const ratio = Math.min(actualDist / maxDist, 1);
+    
+    const adjX = player.x + Math.sin(player.yaw) * maxDist * ratio;
+    const adjZ = player.z + Math.cos(player.yaw) * maxDist * ratio;
+    const adjY = height * ratio + 1.5 * (1 - ratio);
     
     const spring = 1 - Math.pow(0.01, dt);
-    camPos.x += (targetX - camPos.x) * spring;
-    camPos.y += (height - camPos.y) * spring;
-    camPos.z += (targetZ - camPos.z) * spring;
+    camPos.x += (adjX - camPos.x) * spring;
+    camPos.y += (adjY - camPos.y) * spring;
+    camPos.z += (adjZ - camPos.z) * spring;
     
     camera.position.set(camPos.x + shake, camPos.y + shake * 0.5, camPos.z + shake);
     const lookX = player.x - Math.sin(player.yaw) * 3;
@@ -1105,14 +1131,24 @@ function update(dt) {
     camera.lookAt(lookX, 0.5, lookZ);
   } else if (cameraMode === 2) {
     // Over-the-shoulder (offset to right)
-    const dist = 3, height = 2.2, offsetRight = 1;
-    const targetX = player.x + Math.sin(player.yaw) * dist + Math.cos(player.yaw) * offsetRight;
-    const targetZ = player.z + Math.cos(player.yaw) * dist - Math.sin(player.yaw) * offsetRight;
+    const maxDist = 3, height = 2.2, offsetRight = 1;
+    const targetX = player.x + Math.sin(player.yaw) * maxDist + Math.cos(player.yaw) * offsetRight;
+    const targetZ = player.z + Math.cos(player.yaw) * maxDist - Math.sin(player.yaw) * offsetRight;
+    
+    // Check for obstruction
+    const playerPos = { x: player.x, y: 1.5, z: player.z };
+    const camTarget = { x: targetX, y: height, z: targetZ };
+    const actualDist = getCameraCollisionDist(playerPos, camTarget, maxDist + 2);
+    const ratio = Math.min(actualDist / maxDist, 1);
+    
+    const adjX = player.x + (Math.sin(player.yaw) * maxDist + Math.cos(player.yaw) * offsetRight) * ratio;
+    const adjZ = player.z + (Math.cos(player.yaw) * maxDist - Math.sin(player.yaw) * offsetRight) * ratio;
+    const adjY = height * ratio + 1.6 * (1 - ratio);
     
     const spring = 1 - Math.pow(0.005, dt);
-    camPos.x += (targetX - camPos.x) * spring;
-    camPos.y += (height - camPos.y) * spring;
-    camPos.z += (targetZ - camPos.z) * spring;
+    camPos.x += (adjX - camPos.x) * spring;
+    camPos.y += (adjY - camPos.y) * spring;
+    camPos.z += (adjZ - camPos.z) * spring;
     
     camera.position.set(camPos.x + shake, camPos.y + shake * 0.5, camPos.z + shake);
     const lookX = player.x - Math.sin(player.yaw) * 8;
