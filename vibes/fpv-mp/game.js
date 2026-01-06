@@ -7,7 +7,7 @@ import * as Net from './network.js';
 const GRID = 15, CELL = 2;
 let scene, camera, renderer, composer, player;
 let walls = [], breakables = [], bombs = [], explosions = [], enemies = [], powerups = [], lights = [];
-let keys = {}, bombCount = 3, blastRange = 3, speed = 5, score = 0, locked = false;
+let keys = {}, bombCount = 3, blastRange = 3, speed = 5, locked = false;
 let minimap, minimapCtx, shakeIntensity = 0, slowMo = 1;
 let roundTime = 180, isDying = false;
 let aiBombers = [];
@@ -21,8 +21,11 @@ let raycaster = new THREE.Raycaster();
 // Multiplayer state
 let isMultiplayer = false, remotePlayers = {}, remotePlayerMeshes = {};
 let levelSeed = 0;
+let kills = 0, wins = 0;
 
 // Lobby functions (exposed to window)
+let gameInitialized = false;
+
 window.hostGame = async function() {
   document.getElementById('host-section').classList.add('active');
   document.getElementById('join-section').classList.remove('active');
@@ -35,7 +38,8 @@ window.hostGame = async function() {
       document.getElementById('host-status').className = 'status connected';
       setTimeout(() => startMultiplayerGame(true), 1000);
     },
-    onData: handleNetworkData
+    onData: handleNetworkData,
+    onRoundStart: data => { levelSeed = data.seed; resetRound(); }
   });
 };
 
@@ -55,25 +59,114 @@ window.connectToPeer = function() {
       document.getElementById('join-status').textContent = 'Connected! Waiting for host...';
       document.getElementById('join-status').className = 'status connected';
     },
-    onData: handleNetworkData
+    onData: handleNetworkData,
+    onRoundStart: data => {
+      levelSeed = data.seed;
+      if (!gameInitialized) {
+        startMultiplayerGame(false);
+      } else {
+        resetRound();
+      }
+    }
   });
 };
 
 function handleNetworkData(data) {
-  if (data.type === 'start') {
-    levelSeed = data.seed;
-    startMultiplayerGame(false);
-  } else if (data.type === 'pos') {
+  if (data.type === 'pos') {
     if (!remotePlayers[data.id]) createRemotePlayer(data.id, data.color);
     remotePlayers[data.id] = { x: data.x, z: data.z, yaw: data.yaw };
   } else if (data.type === 'bomb') {
     dropBombAt(data.x, data.z, data.range, true);
   } else if (data.type === 'death') {
+    remotePlayerDead = true;
     if (remotePlayerMeshes[data.id]) {
+      createDebris(remotePlayerMeshes[data.id].position.x, remotePlayerMeshes[data.id].position.z, 0xff6666);
       scene.remove(remotePlayerMeshes[data.id]);
       delete remotePlayerMeshes[data.id];
     }
+    checkRoundEnd();
+  } else if (data.type === 'ready') {
+    remoteReady = true;
+    if (localReady && Net.getIsHost()) startNewRound();
   }
+}
+
+let remotePlayerDead = false, localReady = false, remoteReady = false;
+
+function checkRoundEnd() {
+  // Both dead = draw, one dead = other wins
+  if (isDying && remotePlayerDead) {
+    showRoundEnd('DRAW');
+  } else if (isDying) {
+    showRoundEnd('YOU LOSE');
+  } else if (remotePlayerDead) {
+    kills++;
+    wins++;
+    document.getElementById('kills').textContent = kills;
+    document.getElementById('wins').textContent = wins;
+    showRoundEnd('YOU WIN');
+  }
+}
+
+function showRoundEnd(msg) {
+  document.getElementById('game-over').style.display = 'flex';
+  document.querySelector('#game-over h1').textContent = msg;
+  document.getElementById('final-score-go').textContent = `${wins} wins, ${kills} kills`;
+  document.querySelector('#game-over .restart-btn').textContent = 'NEXT ROUND';
+  document.querySelector('#game-over .restart-btn').onclick = requestNextRound;
+}
+
+function requestNextRound() {
+  localReady = true;
+  Net.send({ type: 'ready' });
+  document.querySelector('#game-over .restart-btn').textContent = 'WAITING...';
+  if (remoteReady && Net.getIsHost()) startNewRound();
+}
+
+function startNewRound() {
+  levelSeed = Date.now();
+  Net.send({ type: 'start', seed: levelSeed });
+  resetRound();
+}
+
+function resetRound() {
+  // Hide end screen
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('win-screen').style.display = 'none';
+  
+  // Reset state
+  isDying = false;
+  remotePlayerDead = false;
+  localReady = false;
+  remoteReady = false;
+  bombCount = 3;
+  blastRange = 3;
+  speed = 5;
+  roundTime = 180;
+  
+  // Clear scene objects
+  [...walls, ...breakables, ...bombs, ...explosions, ...powerups].forEach(o => scene.remove(o.mesh || o.group || o));
+  walls = []; breakables = []; bombs = []; explosions = []; powerups = []; lights = [];
+  Object.values(remotePlayerMeshes).forEach(m => scene.remove(m));
+  remotePlayers = {}; remotePlayerMeshes = {};
+  
+  // Rebuild level
+  buildLevel();
+  
+  // Reset player position
+  player.x = CELL; player.z = CELL; player.yaw = 0; player.pitch = 0;
+  if (!Net.getIsHost()) {
+    player.x = (GRID - 2) * CELL;
+    player.z = (GRID - 2) * CELL;
+    player.yaw = Math.PI;
+  }
+  camera.position.set(player.x, 1.6, player.z);
+  
+  // Update UI
+  document.getElementById('bombs').textContent = bombCount;
+  document.getElementById('blast').textContent = blastRange;
+  
+  document.body.requestPointerLock();
 }
 
 function createRemotePlayer(id, color) {
@@ -97,6 +190,7 @@ function createRemotePlayer(id, color) {
 
 function startMultiplayerGame(asHost) {
   isMultiplayer = true;
+  gameInitialized = true;
   if (asHost) {
     levelSeed = Date.now();
     Net.send({ type: 'start', seed: levelSeed });
@@ -1197,13 +1291,17 @@ function gameOver() {
     });
   }
   
-  // Delay showing game over screen
+  // Delay then check round end
   setTimeout(() => {
     slowMo = 1;
     locked = false;
     document.exitPointerLock();
-    document.getElementById('final-score-go').textContent = score;
-    document.getElementById('game-over').style.display = 'flex';
+    if (isMultiplayer) {
+      checkRoundEnd();
+    } else {
+      document.getElementById('final-score-go').textContent = score;
+      document.getElementById('game-over').style.display = 'flex';
+    }
   }, 2000);
 }
 
@@ -1392,6 +1490,9 @@ function update(dt) {
   updateTimer(dt);
   updateDangerIndicator();
   drawMinimap();
+  
+  // Update ping display
+  if (isMultiplayer) document.getElementById('ping').textContent = Net.getPing() + 'ms';
 }
 
 let lastTime = 0;
