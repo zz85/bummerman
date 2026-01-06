@@ -25,22 +25,45 @@ let kills = 0, wins = 0;
 
 // Lobby functions (exposed to window)
 let gameInitialized = false;
+let myPlayerIndex = 0;
+const PLAYER_COLORS = [0x44ff66, 0xff6666, 0x6666ff, 0xffff66]; // green, red, blue, yellow
+const SPAWN_POINTS = [
+  { x: 1, z: 1, yaw: 0 },           // top-left
+  { x: GRID - 2, z: GRID - 2, yaw: Math.PI }, // bottom-right
+  { x: GRID - 2, z: 1, yaw: Math.PI / 2 },    // top-right
+  { x: 1, z: GRID - 2, yaw: -Math.PI / 2 }    // bottom-left
+];
 
 window.hostGame = async function() {
   document.getElementById('host-section').classList.add('active');
   document.getElementById('join-section').classList.remove('active');
   const id = await Net.initPeer();
   document.getElementById('my-peer-id').textContent = id;
+  myPlayerIndex = 0; // Host is always player 0
   
   Net.hostGame({
-    onConnected: () => {
-      document.getElementById('host-status').textContent = 'Player connected!';
+    onConnected: (peerId, playerCount) => {
+      document.getElementById('host-status').textContent = `${playerCount} player(s) connected`;
       document.getElementById('host-status').className = 'status connected';
-      setTimeout(() => startMultiplayerGame(true), 1000);
     },
     onData: handleNetworkData,
-    onRoundStart: data => { levelSeed = data.seed; resetRound(); }
+    onRoundStart: data => { levelSeed = data.seed; resetRound(); },
+    onPlayerLeft: peerId => {
+      if (remotePlayerMeshes[peerId]) {
+        scene.remove(remotePlayerMeshes[peerId]);
+        delete remotePlayerMeshes[peerId];
+        delete remotePlayers[peerId];
+      }
+    }
   });
+};
+
+window.startGame = function() {
+  if (Net.getPlayerCount() < 2) {
+    alert('Need at least 2 players to start');
+    return;
+  }
+  startMultiplayerGame(true);
 };
 
 window.joinGame = async function() {
@@ -56,55 +79,65 @@ window.connectToPeer = function() {
   document.getElementById('join-status').textContent = 'Connecting...';
   Net.joinGame(hostId, {
     onConnected: () => {
-      document.getElementById('join-status').textContent = 'Connected! Waiting for host...';
+      document.getElementById('join-status').textContent = 'Connected! Waiting for host to start...';
       document.getElementById('join-status').className = 'status connected';
     },
     onData: handleNetworkData,
     onRoundStart: data => {
       levelSeed = data.seed;
+      myPlayerIndex = data.playerIndex || 1;
       if (!gameInitialized) {
         startMultiplayerGame(false);
       } else {
         resetRound();
+      }
+    },
+    onPlayerLeft: peerId => {
+      if (remotePlayerMeshes[peerId]) {
+        scene.remove(remotePlayerMeshes[peerId]);
+        delete remotePlayerMeshes[peerId];
+        delete remotePlayers[peerId];
       }
     }
   });
 };
 
 function handleNetworkData(data) {
+  const senderId = data._from || data.id;
   if (data.type === 'pos') {
-    if (!remotePlayers[data.id]) createRemotePlayer(data.id, data.color);
-    remotePlayers[data.id] = { x: data.x, z: data.z, yaw: data.yaw };
+    if (!remotePlayers[senderId]) createRemotePlayer(senderId, data.color);
+    remotePlayers[senderId] = { x: data.x, z: data.z, yaw: data.yaw, color: data.color };
   } else if (data.type === 'bomb') {
     dropBombAt(data.x, data.z, data.range, true);
   } else if (data.type === 'death') {
-    remotePlayerDead = true;
-    if (remotePlayerMeshes[data.id]) {
-      createDebris(remotePlayerMeshes[data.id].position.x, remotePlayerMeshes[data.id].position.z, 0xff6666);
-      scene.remove(remotePlayerMeshes[data.id]);
-      delete remotePlayerMeshes[data.id];
+    deadPlayers.add(senderId);
+    if (remotePlayerMeshes[senderId]) {
+      createDebris(remotePlayerMeshes[senderId].position.x, remotePlayerMeshes[senderId].position.z, data.color || 0xff6666);
+      scene.remove(remotePlayerMeshes[senderId]);
+      delete remotePlayerMeshes[senderId];
     }
     checkRoundEnd();
   } else if (data.type === 'ready') {
-    remoteReady = true;
-    if (localReady && Net.getIsHost()) startNewRound();
+    readyPlayers.add(senderId);
+    if (Net.getIsHost() && readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
   }
 }
 
-let remotePlayerDead = false, localReady = false, remoteReady = false;
+let deadPlayers = new Set(), readyPlayers = new Set(), localReady = false;
 
 function checkRoundEnd() {
-  // Both dead = draw, one dead = other wins
-  if (isDying && remotePlayerDead) {
-    showRoundEnd('DRAW');
-  } else if (isDying) {
-    showRoundEnd('YOU LOSE');
-  } else if (remotePlayerDead) {
-    kills++;
-    wins++;
-    document.getElementById('kills').textContent = kills;
-    document.getElementById('wins').textContent = wins;
-    showRoundEnd('YOU WIN');
+  const alivePlayers = Net.getPlayerCount() - deadPlayers.size - (isDying ? 1 : 0);
+  
+  if (alivePlayers <= 1) {
+    if (isDying) {
+      showRoundEnd('YOU LOSE');
+    } else {
+      kills += deadPlayers.size;
+      wins++;
+      document.getElementById('kills').textContent = kills;
+      document.getElementById('wins').textContent = wins;
+      showRoundEnd('YOU WIN');
+    }
   }
 }
 
@@ -120,12 +153,13 @@ function requestNextRound() {
   localReady = true;
   Net.send({ type: 'ready' });
   document.querySelector('#game-over .restart-btn').textContent = 'WAITING...';
-  if (remoteReady && Net.getIsHost()) startNewRound();
+  if (Net.getIsHost() && readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
 }
 
 function startNewRound() {
   levelSeed = Date.now();
-  Net.send({ type: 'start', seed: levelSeed });
+  // Send start with unique player indices to each client
+  Net.sendToEach((peerId, idx) => ({ type: 'start', seed: levelSeed, playerIndex: idx + 1 }));
   resetRound();
 }
 
@@ -136,9 +170,9 @@ function resetRound() {
   
   // Reset state
   isDying = false;
-  remotePlayerDead = false;
+  deadPlayers.clear();
+  readyPlayers.clear();
   localReady = false;
-  remoteReady = false;
   bombCount = 3;
   blastRange = 3;
   speed = 5;
@@ -153,20 +187,18 @@ function resetRound() {
   // Rebuild level
   buildLevel();
   
-  // Reset player position
-  player.x = CELL; player.z = CELL; player.yaw = 0; player.pitch = 0;
-  if (!Net.getIsHost()) {
-    player.x = (GRID - 2) * CELL;
-    player.z = (GRID - 2) * CELL;
-    player.yaw = Math.PI;
-  }
+  // Reset player position based on player index
+  const spawn = SPAWN_POINTS[myPlayerIndex % SPAWN_POINTS.length];
+  player.x = spawn.x * CELL;
+  player.z = spawn.z * CELL;
+  player.yaw = spawn.yaw;
+  player.pitch = 0;
   camera.position.set(player.x, 1.6, player.z);
   
   // Update UI
   document.getElementById('bombs').textContent = bombCount;
   document.getElementById('blast').textContent = blastRange;
-  
-  document.body.requestPointerLock();
+  // User must click to regain pointer lock
 }
 
 function createRemotePlayer(id, color) {
@@ -193,13 +225,13 @@ function startMultiplayerGame(asHost) {
   gameInitialized = true;
   if (asHost) {
     levelSeed = Date.now();
-    Net.send({ type: 'start', seed: levelSeed });
+    Net.sendToEach((peerId, idx) => ({ type: 'start', seed: levelSeed, playerIndex: idx + 1 }));
   }
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('ui').style.display = 'flex';
   init();
   audioCtx.resume();
-  setTimeout(() => document.body.requestPointerLock(), 100);
+  // Don't auto-request pointer lock - user must click canvas
 }
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -276,18 +308,14 @@ function init() {
 
   buildLevel();
 
-  player = { x: CELL, z: CELL, yaw: 0, pitch: 0 };
-  // Different spawn for client in multiplayer
-  if (isMultiplayer && !Net.getIsHost()) {
-    player.x = (GRID - 2) * CELL;
-    player.z = (GRID - 2) * CELL;
-    player.yaw = Math.PI;
-  }
+  // Spawn based on player index
+  const spawn = SPAWN_POINTS[myPlayerIndex % SPAWN_POINTS.length];
+  player = { x: spawn.x * CELL, z: spawn.z * CELL, yaw: spawn.yaw, pitch: 0 };
   camera.position.set(player.x, 1.6, player.z);
   
   // Player mesh for third-person view
   playerMesh = new THREE.Group();
-  const playerColor = isMultiplayer && !Net.getIsHost() ? 0xff6666 : 0x44ff66;
+  const playerColor = PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length];
   const pBody = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.3, 0.5, 8, 16),
     new THREE.MeshStandardMaterial({ color: playerColor, roughness: 0.4, metalness: 0.3 })
@@ -340,8 +368,11 @@ function init() {
   document.addEventListener('keyup', e => keys[e.code] = false);
   document.addEventListener('mousemove', e => {
     if (!locked) return;
-    player.yaw -= e.movementX * 0.002;
-    player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch - e.movementY * 0.002));
+    // Clamp movement to avoid Firefox pointer lock spikes
+    const mx = Math.max(-100, Math.min(100, e.movementX));
+    const my = Math.max(-100, Math.min(100, e.movementY));
+    player.yaw -= mx * 0.002;
+    player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch - my * 0.002));
   });
 
   document.addEventListener('pointerlockchange', () => {
@@ -1151,13 +1182,14 @@ function drawMinimap() {
   }
 
   // Player
+  const myColor = '#' + PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length].toString(16).padStart(6, '0');
   const px = player.x / CELL * s + s/2, pz = player.z / CELL * s + s/2;
-  minimapCtx.fillStyle = Net.getIsHost() ? '#44ff66' : '#ff6666';
+  minimapCtx.fillStyle = myColor;
   minimapCtx.beginPath();
   minimapCtx.arc(px, pz, 5, 0, Math.PI * 2);
   minimapCtx.fill();
 
-  minimapCtx.strokeStyle = Net.getIsHost() ? '#44ff66' : '#ff6666';
+  minimapCtx.strokeStyle = myColor;
   minimapCtx.lineWidth = 2;
   minimapCtx.beginPath();
   minimapCtx.moveTo(px, pz);
@@ -1167,7 +1199,7 @@ function drawMinimap() {
   // Remote players
   for (const [id, pos] of Object.entries(remotePlayers)) {
     const rpx = pos.x / CELL * s + s/2, rpz = pos.z / CELL * s + s/2;
-    minimapCtx.fillStyle = Net.getIsHost() ? '#ff6666' : '#44ff66';
+    minimapCtx.fillStyle = '#' + (pos.color || 0xff6666).toString(16).padStart(6, '0');
     minimapCtx.beginPath();
     minimapCtx.arc(rpx, rpz, 5, 0, Math.PI * 2);
     minimapCtx.fill();
@@ -1314,7 +1346,7 @@ function checkWin() {
 function timeUp() {
   locked = false;
   document.exitPointerLock();
-  document.getElementById('final-score-go').textContent = score;
+  document.getElementById('final-score-go').textContent = `${wins} wins, ${kills} kills`;
   document.querySelector('#game-over h1').textContent = 'TIME UP';
   document.getElementById('game-over').style.display = 'flex';
 }
@@ -1378,7 +1410,7 @@ function update(dt) {
 
   // Network sync - send position
   if (isMultiplayer && Net.isConnected()) {
-    Net.send({ type: 'pos', id: 'local', x: player.x, z: player.z, yaw: player.yaw, color: Net.getIsHost() ? 0x44ff66 : 0xff6666 });
+    Net.send({ type: 'pos', id: Net.getMyId(), x: player.x, z: player.z, yaw: player.yaw, color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length] });
   }
   
   // Update remote players
