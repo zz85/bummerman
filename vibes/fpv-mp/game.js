@@ -28,7 +28,7 @@ let raycaster = new THREE.Raycaster();
 // Multiplayer state
 let isMultiplayer = false, remotePlayers = {}, remotePlayerMeshes = {};
 let levelSeed = 0;
-let kills = 0, wins = 0;
+let kills = 0, wins = 0, score = 0;
 
 // Lobby functions (exposed to window)
 let gameInitialized = false;

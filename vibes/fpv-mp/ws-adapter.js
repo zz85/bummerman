@@ -3,7 +3,7 @@ let ws = null, myId = null, roomId = null, playerCount = 1, isRoomCreator = fals
 let onConnected = null, onData = null, onRoundStart = null, onPlayerLeft = null;
 let ping = 0, pingInterval = null;
 
-const WS_URL = window.WS_SERVER_URL || 'ws://localhost:8080';
+const WS_URL = new URLSearchParams(location.search).get('server') || window.WS_SERVER_URL || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
 const words = ['red','blue','green','gold','fire','ice','sun','moon','star','rock','tree','wave','wind','storm','cloud','rain','snow','leaf','bird','fish','wolf','bear','lion','hawk','frog','deer','fox','owl','cat','dog','ant','bee'];
 
 function toWords(uuid) {
