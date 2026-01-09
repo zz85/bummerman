@@ -3,6 +3,13 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import * as Net from './network.js';
+import * as PeerAdapter from './peer-adapter.js';
+import * as WsAdapter from './ws-adapter.js';
+
+// Select adapter: ?ws in URL uses WebSocket, otherwise PeerJS
+const useWs = new URLSearchParams(location.search).has('ws');
+Net.setAdapter(useWs ? WsAdapter : PeerAdapter);
+console.log('[NET] Using', useWs ? 'WebSocket' : 'PeerJS', 'adapter');
 
 const GRID = 15, CELL = 2;
 let scene, camera, renderer, composer, player;
