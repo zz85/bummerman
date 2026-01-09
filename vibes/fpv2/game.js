@@ -508,7 +508,7 @@ function explode(bomb) {
       }
 
       // Player damage
-      if (Math.abs(player.x - ex) < CELL && Math.abs(player.z - ez) < CELL) {
+      if (Math.abs(player.x - ex) < CELL * 0.5 && Math.abs(player.z - ez) < CELL * 0.5) {
         gameOver();
         return;
       }
@@ -670,8 +670,6 @@ function updateEnemies(dt) {
           if (alive.length <= 1) setTimeout(() => splitWin(alive.length === 1 ? players.indexOf(alive[0]) : -1), 1000);
         }
       }
-    } else if (Math.abs(ex - player.x) < CELL * 0.5 && Math.abs(ez - player.z) < CELL * 0.5) {
-      gameOver();
     }
   }
 }
@@ -1478,21 +1476,6 @@ function checkSplitPlayerHits() {
         playerMeshes[i].visible = false;
         playSound('death');
         // Check win
-        const alive = players.filter(pl => !pl.dead);
-        if (alive.length <= 1) {
-          setTimeout(() => splitWin(alive.length === 1 ? players.indexOf(alive[0]) : -1), 1000);
-        }
-      }
-    });
-  }
-  // Enemy collision
-  for (const e of enemies) {
-    players.forEach((p, i) => {
-      if (p.dead) return;
-      if (Math.abs(e.mesh.position.x - p.x) < CELL*0.5 && Math.abs(e.mesh.position.z - p.z) < CELL*0.5) {
-        p.dead = true;
-        playerMeshes[i].visible = false;
-        playSound('death');
         const alive = players.filter(pl => !pl.dead);
         if (alive.length <= 1) {
           setTimeout(() => splitWin(alive.length === 1 ? players.indexOf(alive[0]) : -1), 1000);
