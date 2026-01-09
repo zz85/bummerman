@@ -1,15 +1,9 @@
 // PeerJS (WebRTC P2P) adapter
+import { uuid, toWords } from './id-utils.js';
+
 let peer = null, conns = new Map(), isHost = false;
 let onConnected = null, onData = null, onRoundStart = null, onPlayerLeft = null;
 let ping = 0, myId = null;
-
-const words = ['red','blue','green','gold','fire','ice','sun','moon','star','rock','tree','wave','wind','storm','cloud','rain','snow','leaf','bird','fish','wolf','bear','lion','hawk','frog','deer','fox','owl','cat','dog','ant','bee'];
-
-function toWords(uuid) {
-  const hex = uuid.replace(/-/g, '').slice(0, 8);
-  const num = parseInt(hex, 16);
-  return [words[(num >> 20) & 31], words[(num >> 15) & 31], words[(num >> 10) & 31], words[(num >> 5) & 31]].join('-');
-}
 
 function setupConnection(conn) {
   conn.on('open', () => {
@@ -32,12 +26,12 @@ function setupConnection(conn) {
 
 export function init() {
   return new Promise(resolve => {
-    const wordId = toWords(crypto.randomUUID());
+    const wordId = toWords(uuid());
     peer = new Peer(wordId);
     peer.on('open', id => { myId = id; resolve(id); });
     peer.on('error', err => {
       if (err.type === 'unavailable-id') {
-        peer = new Peer(toWords(crypto.randomUUID()));
+        peer = new Peer(toWords(uuid()));
         peer.on('open', id => { myId = id; resolve(id); });
       }
     });

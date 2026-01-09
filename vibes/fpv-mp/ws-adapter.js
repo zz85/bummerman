@@ -1,16 +1,11 @@
 // WebSocket (centralized server) adapter
+import { uuid, toWords } from './id-utils.js';
+
 let ws = null, myId = null, roomId = null, playerCount = 1, isRoomCreator = false;
 let onConnected = null, onData = null, onRoundStart = null, onPlayerLeft = null;
 let ping = 0, pingInterval = null;
 
 const WS_URL = new URLSearchParams(location.search).get('server') || window.WS_SERVER_URL || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
-const words = ['red','blue','green','gold','fire','ice','sun','moon','star','rock','tree','wave','wind','storm','cloud','rain','snow','leaf','bird','fish','wolf','bear','lion','hawk','frog','deer','fox','owl','cat','dog','ant','bee'];
-
-function toWords(uuid) {
-  const hex = uuid.replace(/-/g, '').slice(0, 8);
-  const num = parseInt(hex, 16);
-  return [words[(num >> 20) & 31], words[(num >> 15) & 31], words[(num >> 10) & 31], words[(num >> 5) & 31]].join('-');
-}
 
 function connect(room, asCreator) {
   return new Promise((resolve, reject) => {
@@ -40,8 +35,8 @@ function connect(room, asCreator) {
 
 // init() creates room ID for host, returns it to display
 export async function init() {
-  myId = toWords(crypto.randomUUID());
-  roomId = toWords(crypto.randomUUID());
+  myId = toWords(uuid());
+  roomId = toWords(uuid());
   return roomId; // This is what gets displayed for others to join
 }
 
@@ -52,7 +47,7 @@ export async function host(callbacks) {
 
 export async function join(hostRoomId, callbacks) {
   ({ onConnected, onData, onRoundStart, onPlayerLeft } = callbacks);
-  myId = toWords(crypto.randomUUID());
+  myId = toWords(uuid());
   await connect(hostRoomId, false);
 }
 
