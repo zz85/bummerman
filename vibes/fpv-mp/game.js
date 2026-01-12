@@ -126,7 +126,8 @@ function handleNetworkData(data) {
     checkRoundEnd();
   } else if (data.type === 'ready') {
     readyPlayers.add(senderId);
-    if (Net.getIsHost() && readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
+    // Host starts when all others ready AND host is ready
+    if (Net.getIsHost() && localReady && readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
   }
 }
 
@@ -149,6 +150,8 @@ function checkRoundEnd() {
 }
 
 function showRoundEnd(msg) {
+  locked = false;
+  document.exitPointerLock();
   document.getElementById('game-over').style.display = 'flex';
   document.querySelector('#game-over h1').textContent = msg;
   document.getElementById('final-score-go').textContent = `${wins} wins, ${kills} kills`;
@@ -159,8 +162,11 @@ function showRoundEnd(msg) {
 function requestNextRound() {
   localReady = true;
   Net.send({ type: 'ready' });
-  document.querySelector('#game-over .restart-btn').textContent = 'WAITING...';
-  if (Net.getIsHost() && readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
+  document.querySelector('#game-over .restart-btn').textContent = Net.getIsHost() ? 'WAITING FOR PLAYERS...' : 'WAITING FOR HOST...';
+  // Host starts when all others are ready, or if host is the only one left
+  if (Net.getIsHost()) {
+    if (readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
+  }
 }
 
 function startNewRound() {
@@ -386,8 +392,14 @@ function init() {
     locked = !!document.pointerLockElement;
   });
 
-  // Click anywhere to get pointer lock
-  renderer.domElement.onclick = () => document.body.requestPointerLock();
+  // Click anywhere to get pointer lock (but not during end screens)
+  renderer.domElement.onclick = () => {
+    const goDisplay = getComputedStyle(document.getElementById('game-over')).display;
+    const winDisplay = getComputedStyle(document.getElementById('win-screen')).display;
+    if (goDisplay === 'none' && winDisplay === 'none') {
+      document.body.requestPointerLock();
+    }
+  };
 
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
@@ -424,7 +436,11 @@ function buildLevel() {
         wall.receiveShadow = true;
         scene.add(wall);
         walls.push(wall);
-      } else if (seededRandom() > 0.35 && !(x < 3 && z < 3) && !(x > GRID - 4 && z > GRID - 4)) {
+      } else if (seededRandom() > 0.35 && 
+        !(x < 3 && z < 3) &&                     // top-left spawn
+        !(x > GRID - 4 && z > GRID - 4) &&       // bottom-right spawn
+        !(x > GRID - 4 && z < 3) &&              // top-right spawn
+        !(x < 3 && z > GRID - 4)) {              // bottom-left spawn
         const block = new THREE.Mesh(breakGeo, breakMat.clone());
         block.position.set(px, CELL * 0.475, pz);
         block.castShadow = true;
@@ -1351,11 +1367,15 @@ function checkWin() {
 }
 
 function timeUp() {
-  locked = false;
-  document.exitPointerLock();
-  document.getElementById('final-score-go').textContent = `${wins} wins, ${kills} kills`;
-  document.querySelector('#game-over h1').textContent = 'TIME UP';
-  document.getElementById('game-over').style.display = 'flex';
+  if (isMultiplayer) {
+    showRoundEnd('TIME UP');
+  } else {
+    locked = false;
+    document.exitPointerLock();
+    document.getElementById('final-score-go').textContent = `${wins} wins, ${kills} kills`;
+    document.querySelector('#game-over h1').textContent = 'TIME UP';
+    document.getElementById('game-over').style.display = 'flex';
+  }
 }
 
 function win() {
