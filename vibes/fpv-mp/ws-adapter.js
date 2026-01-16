@@ -6,6 +6,17 @@ let onConnected = null, onData = null, onRoundStart = null, onPlayerLeft = null;
 let ping = 0, pingInterval = null;
 
 const WS_URL = new URLSearchParams(location.search).get('server') || window.WS_SERVER_URL || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
+const SESSION_KEY = 'bummerman_session';
+
+function saveSession() {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ room: roomId, id: myId, creator: isRoomCreator }));
+}
+
+export function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+}
+
+export function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
 
 function connect(room, asCreator) {
   return new Promise((resolve, reject) => {
@@ -14,6 +25,7 @@ function connect(room, asCreator) {
     ws = new WebSocket(`${WS_URL}?room=${room}&id=${myId}&creator=${asCreator}`);
     
     ws.onopen = () => {
+      saveSession();
       pingInterval = setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping', t: Date.now() })); }, 2000);
       resolve();
     };
@@ -49,6 +61,12 @@ export async function join(hostRoomId, callbacks) {
   ({ onConnected, onData, onRoundStart, onPlayerLeft } = callbacks);
   myId = toWords(uuid());
   await connect(hostRoomId, false);
+}
+
+export async function rejoin(session, callbacks) {
+  ({ onConnected, onData, onRoundStart, onPlayerLeft } = callbacks);
+  myId = session.id;
+  await connect(session.room, session.creator);
 }
 
 // Server handles broadcast - just send to server

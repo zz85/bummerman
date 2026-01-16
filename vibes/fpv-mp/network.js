@@ -5,6 +5,9 @@ export function setAdapter(a) { adapter = a; }
 export const initPeer = () => adapter.init();
 export const hostGame = (cb) => adapter.host(cb);
 export const joinGame = (id, cb) => adapter.join(id, cb);
+export const rejoinGame = (session, cb) => adapter.rejoin(session, cb);
+export const getSession = () => adapter.getSession();
+export const clearSession = () => adapter.clearSession();
 export const send = (d) => adapter.send(d);
 export const sendTo = (id, d) => adapter.sendTo(id, d);
 export const sendToEach = (fn) => adapter.sendToEach(fn);

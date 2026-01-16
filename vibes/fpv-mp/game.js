@@ -11,6 +11,41 @@ const useWs = new URLSearchParams(location.search).has('ws');
 Net.setAdapter(useWs ? WsAdapter : PeerAdapter);
 console.log('[NET] Using', useWs ? 'WebSocket' : 'PeerJS', 'adapter');
 
+// Check for existing session to rejoin
+(async function checkRejoin() {
+  const session = Net.getSession();
+  if (!session) return;
+  
+  if (!confirm(`Rejoin room "${session.room}"?`)) {
+    Net.clearSession();
+    return;
+  }
+  
+  try {
+    await Net.rejoinGame(session, {
+      onConnected: () => {},
+      onData: handleNetworkData,
+      onRoundStart: data => {
+        levelSeed = data.seed;
+        myPlayerIndex = data.playerIndex || 0;
+        if (!gameInitialized) startMultiplayerGame(session.creator);
+        else resetRound();
+      },
+      onPlayerLeft: peerId => {
+        if (remotePlayerMeshes[peerId]) {
+          scene.remove(remotePlayerMeshes[peerId]);
+          delete remotePlayerMeshes[peerId];
+          delete remotePlayers[peerId];
+        }
+      }
+    });
+    document.getElementById('lobby').style.display = 'none';
+    startMultiplayerGame(session.creator);
+  } catch (e) {
+    Net.clearSession();
+  }
+})();
+
 const GRID = 15, CELL = 2;
 let scene, camera, renderer, composer, player;
 let walls = [], breakables = [], bombs = [], explosions = [], enemies = [], powerups = [], lights = [];
@@ -77,6 +112,20 @@ window.joinGame = async function() {
   document.getElementById('join-section').classList.add('active');
   document.getElementById('host-section').classList.remove('active');
   await Net.initPeer();
+  
+  // Fetch rooms and auto-fill if only one exists
+  try {
+    const res = await fetch('/rooms');
+    const rooms = await res.json();
+    if (rooms.length === 1) {
+      document.getElementById('peer-id-input').value = rooms[0].id;
+      document.getElementById('join-status').textContent = `Found room: ${rooms[0].id} (${rooms[0].players} player${rooms[0].players > 1 ? 's' : ''})`;
+    } else if (rooms.length > 1) {
+      document.getElementById('room-list').innerHTML = rooms.map(r => 
+        `<div style="cursor:pointer;padding:5px;color:#3dd6d0" onclick="document.getElementById('peer-id-input').value='${r.id}'">${r.id} (${r.players})</div>`
+      ).join('');
+    }
+  } catch(e) {}
 };
 
 window.connectToPeer = function() {
@@ -111,6 +160,16 @@ window.connectToPeer = function() {
 
 function handleNetworkData(data) {
   const senderId = data._from || data.id;
+  if (data.type === 'restore_state') {
+    // Resume position from server-saved state
+    if (data.state && player) {
+      player.x = data.state.x;
+      player.z = data.state.z;
+      player.yaw = data.state.yaw;
+      myPlayerIndex = data.state.playerIndex || 0;
+    }
+    return;
+  }
   if (data.type === 'pos') {
     if (!remotePlayers[senderId]) createRemotePlayer(senderId, data.color);
     remotePlayers[senderId] = { x: data.x, z: data.z, yaw: data.yaw, color: data.color };
@@ -1437,7 +1496,7 @@ function update(dt) {
 
   // Network sync - send position
   if (isMultiplayer && Net.isConnected()) {
-    Net.send({ type: 'pos', id: Net.getMyId(), x: player.x, z: player.z, yaw: player.yaw, color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length] });
+    Net.send({ type: 'pos', id: Net.getMyId(), x: player.x, z: player.z, yaw: player.yaw, color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length], playerIndex: myPlayerIndex });
   }
   
   // Update remote players
