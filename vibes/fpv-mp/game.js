@@ -394,6 +394,9 @@ function handleNetworkData(data) {
 let deadPlayers = new Set(), readyPlayers = new Set(), localReady = false;
 
 function checkRoundEnd() {
+  // Spectators don't participate in round end logic
+  if (isSpectating) return;
+  
   const alivePlayers = Net.getPlayerCount() - deadPlayers.size - (isDying ? 1 : 0);
   
   if (alivePlayers <= 1) {
@@ -410,6 +413,9 @@ function checkRoundEnd() {
 }
 
 function showRoundEnd(msg) {
+  // Spectators don't see round end screens
+  if (isSpectating) return;
+  
   locked = false;
   document.exitPointerLock();
   document.getElementById('game-over').style.display = 'flex';
@@ -420,6 +426,9 @@ function showRoundEnd(msg) {
 }
 
 function requestNextRound() {
+  // Spectators don't participate in ready system
+  if (isSpectating) return;
+  
   localReady = true;
   Net.send({ type: 'ready' });
   document.querySelector('#game-over .restart-btn').textContent = Net.getIsHost() ? 'WAITING FOR PLAYERS...' : 'WAITING FOR HOST...';
@@ -2198,6 +2207,8 @@ function updateDangerIndicator() {
 }
 
 function gameOver() {
+  // Spectators can't die
+  if (isSpectating) return;
   if (isDying) return;
   isDying = true;
   
@@ -2247,6 +2258,9 @@ function checkWin() {
 }
 
 function timeUp() {
+  // Spectators just keep watching
+  if (isSpectating) return;
+  
   if (isMultiplayer) {
     showRoundEnd('TIME UP');
   } else {
@@ -2259,6 +2273,9 @@ function timeUp() {
 }
 
 function win() {
+  // Spectators just keep watching
+  if (isSpectating) return;
+  
   locked = false;
   document.exitPointerLock();
   document.getElementById('final-score-win').textContent = score;
