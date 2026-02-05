@@ -374,29 +374,119 @@ function createTextSprite(text, color = '#ffffff') {
   return sprite;
 }
 
-function createRemotePlayer(id, color, name) {
+// Create Bomberman-style character mesh
+function createBombermanMesh(bodyColor) {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.3, 0.5, 8, 16),
-    new THREE.MeshStandardMaterial({ color: color || 0xff6666, roughness: 0.4, metalness: 0.3 })
-  );
+  
+  // Materials
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.3, metalness: 0.1 });
+  const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.4, metalness: 0.1 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3, metalness: 0.2 });
+  const visorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.2, metalness: 0.5 });
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.5, metalness: 0.3 });
+  
+  // Head (white sphere)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), whiteMat);
+  head.position.y = 0.65;
+  head.castShadow = true;
+  group.add(head);
+  
+  // Visor (dark curved strip on face)
+  const visorGeo = new THREE.SphereGeometry(0.28, 16, 8, 0, Math.PI * 2, 0.3, 0.6);
+  const visor = new THREE.Mesh(visorGeo, visorMat);
+  visor.position.y = 0.68;
+  visor.position.z = 0.1;
+  visor.rotation.x = 0.2;
+  group.add(visor);
+  
+  // Antenna bobbles (pink spheres on top)
+  const antennaL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), pinkMat);
+  antennaL.position.set(-0.15, 1.0, 0);
+  group.add(antennaL);
+  
+  const antennaR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), pinkMat);
+  antennaR.position.set(0.15, 1.0, 0);
+  group.add(antennaR);
+  
+  // Antenna stems
+  const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 6);
+  const stemL = new THREE.Mesh(stemGeo, whiteMat);
+  stemL.position.set(-0.15, 0.9, 0);
+  group.add(stemL);
+  
+  const stemR = new THREE.Mesh(stemGeo, whiteMat);
+  stemR.position.set(0.15, 0.9, 0);
+  group.add(stemR);
+  
+  // Body (rounded torso)
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.7), bodyMat);
+  body.position.y = 0.22;
+  body.scale.y = 1.1;
   body.castShadow = true;
   group.add(body);
-  const head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2),
-    new THREE.MeshStandardMaterial({ color: 0xffddbb, roughness: 0.6 })
-  );
-  head.position.y = 0.5;
-  group.add(head);
+  
+  // Belt
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.04, 8, 16), beltMat);
+  belt.position.y = 0.18;
+  belt.rotation.x = Math.PI / 2;
+  group.add(belt);
+  
+  // Arms (thin white cylinders)
+  const armGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.25, 6);
+  const armL = new THREE.Mesh(armGeo, whiteMat);
+  armL.position.set(-0.35, 0.35, 0);
+  armL.rotation.z = Math.PI / 4;
+  group.add(armL);
+  
+  const armR = new THREE.Mesh(armGeo, whiteMat);
+  armR.position.set(0.35, 0.35, 0);
+  armR.rotation.z = -Math.PI / 4;
+  group.add(armR);
+  
+  // Hands (pink spheres)
+  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), pinkMat);
+  handL.position.set(-0.45, 0.22, 0);
+  group.add(handL);
+  
+  const handR = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), pinkMat);
+  handR.position.set(0.45, 0.22, 0);
+  group.add(handR);
+  
+  // Legs (thin white cylinders)
+  const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.2, 6);
+  const legL = new THREE.Mesh(legGeo, whiteMat);
+  legL.position.set(-0.12, -0.1, 0);
+  group.add(legL);
+  
+  const legR = new THREE.Mesh(legGeo, whiteMat);
+  legR.position.set(0.12, -0.1, 0);
+  group.add(legR);
+  
+  // Feet (pink spheres)
+  const footL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), pinkMat);
+  footL.position.set(-0.12, -0.25, 0.03);
+  footL.scale.set(1, 0.6, 1.3);
+  group.add(footL);
+  
+  const footR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), pinkMat);
+  footR.position.set(0.12, -0.25, 0.03);
+  footR.scale.set(1, 0.6, 1.3);
+  group.add(footR);
+  
+  return group;
+}
+
+function createRemotePlayer(id, color, name) {
+  const group = createBombermanMesh(color || 0x00a5a5);
   
   // Name label
   const colorHex = '#' + (color || 0xff6666).toString(16).padStart(6, '0');
   const nameSprite = createTextSprite(name || 'Player', colorHex);
-  nameSprite.position.y = 1.3;
+  nameSprite.position.y = 1.4;
   group.add(nameSprite);
   group.nameSprite = nameSprite;
   
-  group.position.y = 0.55;
+  group.position.y = 0.25;
   scene.add(group);
   remotePlayerMeshes[id] = group;
 }
@@ -495,23 +585,10 @@ function init() {
   player = { x: spawn.x * CELL, z: spawn.z * CELL, yaw: spawn.yaw, pitch: 0 };
   camera.position.set(player.x, 1.6, player.z);
   
-  // Player mesh for third-person view
-  playerMesh = new THREE.Group();
+  // Player mesh for third-person view (Bomberman style)
   const playerColor = PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length];
-  const pBody = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.3, 0.5, 8, 16),
-    new THREE.MeshStandardMaterial({ color: playerColor, roughness: 0.4, metalness: 0.3 })
-  );
-  pBody.castShadow = true;
-  playerMesh.add(pBody);
-  const pHead = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2),
-    new THREE.MeshStandardMaterial({ color: 0xffddbb, roughness: 0.6 })
-  );
-  pHead.position.y = 0.5;
-  pHead.castShadow = true;
-  playerMesh.add(pHead);
-  playerMesh.position.set(player.x, 0.55, player.z);
+  playerMesh = createBombermanMesh(playerColor);
+  playerMesh.position.set(player.x, 0.25, player.z);
   playerMesh.visible = false;
   scene.add(playerMesh);
   
@@ -1645,7 +1722,7 @@ function update(dt) {
   }
 
   // Update player mesh and tile indicator
-  playerMesh.position.set(player.x, 0.55, player.z);
+  playerMesh.position.set(player.x, 0.25, player.z);
   playerMesh.rotation.y = player.yaw + Math.PI;
   
   // Snap tile to grid, subtle pulse
