@@ -120,7 +120,12 @@ export function sendTo(peerId, data) {
 }
 export function sendToEach(dataFn) { 
   let i = 0; 
+  // Send to players with their index
   conns.forEach((c, id) => { if (c.open) c.send(dataFn(id, i++)); }); 
+  // Also notify spectators (they get the start event but no playerIndex)
+  const spectatorData = dataFn('spectator', -1);
+  delete spectatorData.playerIndex; // Spectators don't have a player index
+  spectatorConns.forEach((c) => { if (c.open) c.send(spectatorData); });
 }
 export function broadcast(data, exclude = null) { 
   conns.forEach((c, id) => { if (c.open && id !== exclude) c.send(data); }); 

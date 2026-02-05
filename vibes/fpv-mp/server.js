@@ -8,7 +8,11 @@ const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 't
 
 const server = http.createServer((req, res) => {
   if (req.url === '/rooms') {
-    const list = [...rooms.entries()].map(([id, players]) => ({ id, players: players.size }));
+    const list = [...rooms.entries()].map(([id, room]) => ({ 
+      id, 
+      players: room.players.size,
+      spectators: room.spectators.size 
+    }));
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(list));
     return;
@@ -26,86 +30,167 @@ const server = http.createServer((req, res) => {
 });
 
 const wss = new WebSocket.Server({ server });
-const rooms = new Map(); // roomId -> Map(playerId -> ws)
-const playerStates = new Map(); // roomId -> Map(playerId -> {x, z, yaw, ...})
+const rooms = new Map(); // roomId -> { players: Map, spectators: Map, states: Map }
+
+function getOrCreateRoom(roomId) {
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, {
+      players: new Map(),    // playerId -> ws
+      spectators: new Map(), // spectatorId -> ws
+      states: new Map()      // playerId -> {x, z, yaw, ...}
+    });
+  }
+  return rooms.get(roomId);
+}
 
 wss.on('connection', (ws, req) => {
-  console.log('--- WS Connection ---');
-  console.log('Socket:', req.socket.remoteAddress, req.socket.remotePort);
-  console.log('Headers:', req.headers);
-  
   const params = new URLSearchParams(req.url.slice(2));
-  const room = params.get('room'), id = params.get('id'), creator = params.get('creator') === 'true';
+  const roomId = params.get('room');
+  const id = params.get('id');
+  const creator = params.get('creator') === 'true';
+  const isSpectator = params.get('spectator') === 'true';
   
-  if (!rooms.has(room)) rooms.set(room, new Map());
-  if (!playerStates.has(room)) playerStates.set(room, new Map());
-  const players = rooms.get(room);
-  const states = playerStates.get(room);
-  const isRejoin = states.has(id);
-  players.set(id, ws);
-  ws.room = room; ws.id = id; ws.creator = creator;
-  ws.ip = req.socket.remoteAddress; ws.connectedAt = Date.now();
+  const room = getOrCreateRoom(roomId);
+  const isRejoin = room.states.has(id);
   
-  // Send saved state on rejoin
-  if (isRejoin) {
-    ws.send(JSON.stringify({ type: 'restore_state', state: states.get(id) }));
+  // Store connection info
+  ws.room = roomId;
+  ws.id = id;
+  ws.creator = creator;
+  ws.isSpectator = isSpectator;
+  ws.ip = req.socket.remoteAddress;
+  ws.connectedAt = Date.now();
+  
+  if (isSpectator) {
+    // Add to spectators, not players
+    room.spectators.set(id, ws);
+    console.log(`[${roomId}] Spectator ${id} joined (${room.players.size} players, ${room.spectators.size} spectators)`);
+    
+    // Send current counts to spectator
+    ws.send(JSON.stringify({ 
+      type: 'player_count', 
+      count: room.players.size,
+      spectators: room.spectators.size
+    }));
+    
+    // Notify players (especially host) that a spectator joined
+    broadcastToPlayers(roomId, { 
+      type: 'spectator_joined', 
+      spectatorId: id, 
+      count: room.spectators.size 
+    });
+  } else {
+    // Add to players
+    room.players.set(id, ws);
+    console.log(`[${roomId}] Player ${id} joined (${room.players.size} players, ${room.spectators.size} spectators)`);
+    
+    // Send saved state on rejoin
+    if (isRejoin) {
+      ws.send(JSON.stringify({ type: 'restore_state', state: room.states.get(id) }));
+    }
+    
+    // Send current player count
+    ws.send(JSON.stringify({ 
+      type: 'player_count', 
+      count: room.players.size,
+      spectators: room.spectators.size
+    }));
+    
+    // Notify other players
+    broadcastToPlayers(roomId, { 
+      type: 'player_joined', 
+      playerId: id, 
+      count: room.players.size, 
+      isRejoin 
+    }, id);
   }
-  
-  // Notify joining player of current count (so they can track isConnected)
-  ws.send(JSON.stringify({ type: 'player_count', count: players.size }));
-  
-  // Notify others
-  broadcast(room, { type: 'player_joined', playerId: id, count: players.size, isRejoin }, id);
-  console.log(`[${room}] ${id} joined (${players.size} players)`);
   
   ws.on('message', (msg) => {
     const data = JSON.parse(msg);
     if (data.type === 'ping') { ws.send(JSON.stringify({ type: 'pong', t: data.t })); return; }
     if (data.type === 'pong') return;
     
+    // Spectators can only receive, not affect game state
+    if (ws.isSpectator) {
+      // Spectators don't send game data, but we still relay any messages they might send
+      return;
+    }
+    
     // Save player position state
     if (data.type === 'pos') {
-      states.set(id, { x: data.x, z: data.z, yaw: data.yaw, color: data.color, playerIndex: data.playerIndex });
+      room.states.set(id, { x: data.x, z: data.z, yaw: data.yaw, color: data.color, playerIndex: data.playerIndex });
     }
     
     if (data.type === 'start_game') {
-      // Server assigns player indices and sends start to each
+      // Server assigns player indices and sends start to each PLAYER (not spectators)
       const seed = Date.now();
       const gridSize = data.gridSize || 15;
       let idx = 0;
-      players.forEach((client, pid) => {
+      room.players.forEach((client, pid) => {
         if (client.readyState === 1) {
           client.send(JSON.stringify({ type: 'start', seed, playerIndex: idx++, gridSize }));
+        }
+      });
+      // Also notify spectators that game started (so they can start watching)
+      room.spectators.forEach((client) => {
+        if (client.readyState === 1) {
+          client.send(JSON.stringify({ type: 'start', seed, gridSize }));
         }
       });
       return;
     }
     
-    // Relay to others (or specific target)
+    // Relay to specific target or broadcast
     if (data._to) {
-      const target = players.get(data._to);
+      // Check both players and spectators for target
+      const target = room.players.get(data._to) || room.spectators.get(data._to);
       if (target?.readyState === 1) target.send(JSON.stringify(data));
     } else {
-      broadcast(room, data, data._exclude || id);
+      // Broadcast to all (players + spectators)
+      broadcastToAll(roomId, data, data._exclude || id);
     }
   });
   
   ws.on('close', () => {
     const duration = ((Date.now() - ws.connectedAt) / 1000).toFixed(1);
-    console.log(`--- WS Disconnect ---`);
-    console.log(`[${room}] ${id} left | IP: ${ws.ip} | Duration: ${duration}s`);
-    players.delete(id);
-    broadcast(room, { type: 'player_left', playerId: id, count: players.size });
-    if (players.size === 0) rooms.delete(room);
+    
+    if (ws.isSpectator) {
+      room.spectators.delete(id);
+      console.log(`[${roomId}] Spectator ${id} left | Duration: ${duration}s (${room.spectators.size} spectators remaining)`);
+      // Don't notify about spectator leaving - they don't affect gameplay
+    } else {
+      room.players.delete(id);
+      console.log(`[${roomId}] Player ${id} left | Duration: ${duration}s (${room.players.size} players remaining)`);
+      broadcastToAll(roomId, { type: 'player_left', playerId: id, count: room.players.size });
+    }
+    
+    // Clean up empty rooms
+    if (room.players.size === 0 && room.spectators.size === 0) {
+      rooms.delete(roomId);
+    }
   });
 });
 
-function broadcast(room, data, exclude = null) {
-  const players = rooms.get(room);
-  if (!players) return;
+function broadcastToPlayers(roomId, data, exclude = null) {
+  const room = rooms.get(roomId);
+  if (!room) return;
   const msg = JSON.stringify(data);
-  players.forEach((client, pid) => {
+  room.players.forEach((client, pid) => {
     if (client.readyState === 1 && pid !== exclude) client.send(msg);
+  });
+}
+
+function broadcastToAll(roomId, data, exclude = null) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  const msg = JSON.stringify(data);
+  // Send to players
+  room.players.forEach((client, pid) => {
+    if (client.readyState === 1 && pid !== exclude) client.send(msg);
+  });
+  // Send to spectators
+  room.spectators.forEach((client, sid) => {
+    if (client.readyState === 1 && sid !== exclude) client.send(msg);
   });
 }
 
