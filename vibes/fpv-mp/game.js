@@ -64,6 +64,7 @@ let raycaster = new THREE.Raycaster();
 let isMultiplayer = false, remotePlayers = {}, remotePlayerMeshes = {};
 let levelSeed = 0;
 let kills = 0, wins = 0, score = 0;
+let isConnecting = false;
 
 // Lobby functions (exposed to window)
 let gameInitialized = false;
@@ -77,6 +78,9 @@ const SPAWN_POINTS = [
 ];
 
 window.hostGame = async function() {
+  if (isConnecting) return;
+  isConnecting = true;
+  
   document.getElementById('host-section').classList.add('active');
   document.getElementById('join-section').classList.remove('active');
   const id = await Net.initPeer();
@@ -130,7 +134,12 @@ window.joinGame = async function() {
 
 window.connectToPeer = function() {
   const hostId = document.getElementById('peer-id-input').value.trim().toLowerCase().replace(/\s+/g, '-');
-  if (!hostId) return;
+  if (!hostId || isConnecting) return;
+  
+  // Prevent multiple clicks
+  isConnecting = true;
+  const btn = document.querySelector('.connect-btn');
+  btn.disabled = true;
   
   document.getElementById('join-status').textContent = 'Connecting...';
   Net.joinGame(hostId, {
