@@ -71,7 +71,7 @@ let isConnecting = false;
 let gameInitialized = false;
 let myPlayerIndex = 0;
 let myPlayerName = '';
-const PLAYER_COLORS = [0x44ff66, 0xff6666, 0x6666ff, 0xffff66]; // green, red, blue, yellow
+const PLAYER_COLORS = [0x2a3a6e, 0xc62828, 0x2e7d32, 0xf9a825]; // navy blue, red, green, yellow (classic Bomberman)
 
 // Funny name generator
 const NAME_ADJECTIVES = [
@@ -379,98 +379,120 @@ function createBombermanMesh(bodyColor) {
   const group = new THREE.Group();
   
   // Materials
-  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.3, metalness: 0.1 });
-  const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.4, metalness: 0.1 });
-  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3, metalness: 0.2 });
-  const visorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.2, metalness: 0.5 });
-  const beltMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.5, metalness: 0.3 });
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.25, metalness: 0.05 });
+  const pinkMat = new THREE.MeshStandardMaterial({ color: 0xe91e8c, roughness: 0.35, metalness: 0.1 });
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xf5dcc8, roughness: 0.6, metalness: 0.0 }); // Beige face
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.2 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3, metalness: 0.15 });
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.4, metalness: 0.2 });
+  const buckleMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, roughness: 0.3, metalness: 0.6 }); // Gold buckle
   
-  // Head (white sphere)
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), whiteMat);
-  head.position.y = 0.65;
+  // Head (white egg shape - wider at bottom)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 16), whiteMat);
+  head.scale.set(1, 1.1, 0.95);
+  head.position.y = 0.72;
   head.castShadow = true;
   group.add(head);
   
-  // Visor (dark curved strip on face)
-  const visorGeo = new THREE.SphereGeometry(0.28, 16, 8, 0, Math.PI * 2, 0.3, 0.6);
-  const visor = new THREE.Mesh(visorGeo, visorMat);
-  visor.position.y = 0.68;
-  visor.position.z = 0.1;
-  visor.rotation.x = 0.2;
-  group.add(visor);
+  // Face (beige oval inset)
+  const faceGeo = new THREE.SphereGeometry(0.26, 16, 12);
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.scale.set(0.75, 0.85, 0.3);
+  face.position.set(0, 0.7, 0.22);
+  group.add(face);
   
-  // Antenna bobbles (pink spheres on top)
-  const antennaL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), pinkMat);
-  antennaL.position.set(-0.15, 1.0, 0);
-  group.add(antennaL);
+  // Eyes (two vertical black lines)
+  const eyeGeo = new THREE.CapsuleGeometry(0.018, 0.1, 4, 8);
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeL.position.set(-0.06, 0.7, 0.32);
+  group.add(eyeL);
   
-  const antennaR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), pinkMat);
-  antennaR.position.set(0.15, 1.0, 0);
-  group.add(antennaR);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeR.position.set(0.06, 0.7, 0.32);
+  group.add(eyeR);
   
-  // Antenna stems
-  const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 6);
-  const stemL = new THREE.Mesh(stemGeo, whiteMat);
-  stemL.position.set(-0.15, 0.9, 0);
-  group.add(stemL);
+  // Single antenna on top (pink ball with stem)
+  const antenna = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), pinkMat);
+  antenna.position.set(0, 1.15, -0.05);
+  group.add(antenna);
   
-  const stemR = new THREE.Mesh(stemGeo, whiteMat);
-  stemR.position.set(0.15, 0.9, 0);
-  group.add(stemR);
+  const stemGeo = new THREE.CylinderGeometry(0.025, 0.03, 0.12, 8);
+  const stem = new THREE.Mesh(stemGeo, whiteMat);
+  stem.position.set(0, 1.02, -0.05);
+  group.add(stem);
   
-  // Body (rounded torso)
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.7), bodyMat);
-  body.position.y = 0.22;
-  body.scale.y = 1.1;
+  // Body (dark blue sphere)
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 14), bodyMat);
+  body.position.y = 0.26;
+  body.scale.set(1, 1.05, 0.95);
   body.castShadow = true;
   group.add(body);
   
-  // Belt
-  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.04, 8, 16), beltMat);
-  belt.position.y = 0.18;
+  // Belt (black ring around body)
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.045, 10, 20), beltMat);
+  belt.position.y = 0.2;
   belt.rotation.x = Math.PI / 2;
   group.add(belt);
   
-  // Arms (thin white cylinders)
-  const armGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.25, 6);
+  // Belt buckle (gold square)
+  const buckleGeo = new THREE.BoxGeometry(0.08, 0.07, 0.03);
+  const buckle = new THREE.Mesh(buckleGeo, buckleMat);
+  buckle.position.set(0, 0.2, 0.26);
+  group.add(buckle);
+  
+  // Arms (curved white tubes using TorusGeometry segments)
+  const armGeo = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.12, -0.05, 0.02),
+      new THREE.Vector3(0.2, -0.12, 0.05)
+    ]), 8, 0.035, 8, false
+  );
+  
   const armL = new THREE.Mesh(armGeo, whiteMat);
-  armL.position.set(-0.35, 0.35, 0);
-  armL.rotation.z = Math.PI / 4;
+  armL.position.set(-0.25, 0.38, 0);
   group.add(armL);
   
   const armR = new THREE.Mesh(armGeo, whiteMat);
-  armR.position.set(0.35, 0.35, 0);
-  armR.rotation.z = -Math.PI / 4;
+  armR.position.set(0.25, 0.38, 0);
+  armR.scale.x = -1;
   group.add(armR);
   
   // Hands (pink spheres)
-  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), pinkMat);
-  handL.position.set(-0.45, 0.22, 0);
+  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
+  handL.position.set(-0.45, 0.26, 0.05);
   group.add(handL);
   
-  const handR = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), pinkMat);
-  handR.position.set(0.45, 0.22, 0);
+  const handR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
+  handR.position.set(0.45, 0.26, 0.05);
   group.add(handR);
   
-  // Legs (thin white cylinders)
-  const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.2, 6);
+  // Legs (curved white tubes)
+  const legGeo = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, -0.12, 0.02),
+      new THREE.Vector3(0.02, -0.22, 0.05)
+    ]), 8, 0.04, 8, false
+  );
+  
   const legL = new THREE.Mesh(legGeo, whiteMat);
-  legL.position.set(-0.12, -0.1, 0);
+  legL.position.set(-0.13, 0.05, 0);
   group.add(legL);
   
   const legR = new THREE.Mesh(legGeo, whiteMat);
-  legR.position.set(0.12, -0.1, 0);
+  legR.position.set(0.13, 0.05, 0);
   group.add(legR);
   
-  // Feet (pink spheres)
-  const footL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), pinkMat);
-  footL.position.set(-0.12, -0.25, 0.03);
-  footL.scale.set(1, 0.6, 1.3);
+  // Feet (large pink ovals)
+  const footL = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pinkMat);
+  footL.position.set(-0.13, -0.2, 0.08);
+  footL.scale.set(0.85, 0.5, 1.4);
   group.add(footL);
   
-  const footR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), pinkMat);
-  footR.position.set(0.12, -0.25, 0.03);
-  footR.scale.set(1, 0.6, 1.3);
+  const footR = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pinkMat);
+  footR.position.set(0.13, -0.2, 0.08);
+  footR.scale.set(0.85, 0.5, 1.4);
   group.add(footR);
   
   return group;
