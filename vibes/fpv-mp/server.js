@@ -37,7 +37,8 @@ function getOrCreateRoom(roomId) {
     rooms.set(roomId, {
       players: new Map(),    // playerId -> ws
       spectators: new Map(), // spectatorId -> ws
-      states: new Map()      // playerId -> {x, z, yaw, ...}
+      states: new Map(),     // playerId -> {x, z, yaw, ...}
+      gameState: null        // { gridSize, seed, inProgress } - set when game starts
     });
   }
   return rooms.get(roomId);
@@ -72,6 +73,16 @@ wss.on('connection', (ws, req) => {
       count: room.players.size,
       spectators: room.spectators.size
     }));
+    
+    // If game is in progress, send game state to spectator so they can start watching
+    if (room.gameState) {
+      ws.send(JSON.stringify({ 
+        type: 'game_state', 
+        gridSize: room.gameState.gridSize, 
+        seed: room.gameState.seed, 
+        inProgress: true 
+      }));
+    }
     
     // Notify players (especially host) that a spectator joined
     broadcastToPlayers(roomId, { 
@@ -125,6 +136,10 @@ wss.on('connection', (ws, req) => {
       // Server assigns player indices and sends start to each PLAYER (not spectators)
       const seed = Date.now();
       const gridSize = data.gridSize || 15;
+      
+      // Save game state for spectators who join later
+      room.gameState = { seed, gridSize, inProgress: true };
+      
       let idx = 0;
       room.players.forEach((client, pid) => {
         if (client.readyState === 1) {
