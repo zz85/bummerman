@@ -374,132 +374,315 @@ function createTextSprite(text, color = '#ffffff') {
   return sprite;
 }
 
-// Create Bomberman-style character mesh
+// Create Bomberman-style character mesh with rigging
 function createBombermanMesh(bodyColor) {
   const group = new THREE.Group();
   
   // Materials
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.25, metalness: 0.05 });
   const pinkMat = new THREE.MeshStandardMaterial({ color: 0xe91e8c, roughness: 0.35, metalness: 0.1 });
-  const faceMat = new THREE.MeshStandardMaterial({ color: 0xf5dcc8, roughness: 0.6, metalness: 0.0 }); // Beige face
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xf5dcc8, roughness: 0.6, metalness: 0.0 });
   const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.2 });
   const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3, metalness: 0.15 });
   const beltMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.4, metalness: 0.2 });
-  const buckleMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, roughness: 0.3, metalness: 0.6 }); // Gold buckle
+  const buckleMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, roughness: 0.3, metalness: 0.6 });
   
-  // Head (white egg shape - wider at bottom)
+  // === SKELETON HIERARCHY ===
+  // Root (hips/center of gravity)
+  const root = new THREE.Group();
+  root.position.y = 0.26;
+  group.add(root);
+  
+  // Torso (body + belt)
+  const torso = new THREE.Group();
+  root.add(torso);
+  
+  const bodyMesh = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 14), bodyMat);
+  bodyMesh.scale.set(1, 1.05, 0.95);
+  bodyMesh.castShadow = true;
+  torso.add(bodyMesh);
+  
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.045, 10, 20), beltMat);
+  belt.position.y = -0.06;
+  belt.rotation.x = Math.PI / 2;
+  torso.add(belt);
+  
+  const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.07, 0.03), buckleMat);
+  buckle.position.set(0, -0.06, 0.26);
+  torso.add(buckle);
+  
+  // Head group (can rotate independently)
+  const headGroup = new THREE.Group();
+  headGroup.position.y = 0.46;
+  torso.add(headGroup);
+  
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 16), whiteMat);
   head.scale.set(1, 1.1, 0.95);
-  head.position.y = 0.72;
   head.castShadow = true;
-  group.add(head);
+  headGroup.add(head);
   
-  // Face (beige oval inset)
-  const faceGeo = new THREE.SphereGeometry(0.26, 16, 12);
-  const face = new THREE.Mesh(faceGeo, faceMat);
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), faceMat);
   face.scale.set(0.75, 0.85, 0.3);
-  face.position.set(0, 0.7, 0.22);
-  group.add(face);
+  face.position.set(0, -0.02, 0.22);
+  headGroup.add(face);
   
-  // Eyes (two vertical black lines)
   const eyeGeo = new THREE.CapsuleGeometry(0.018, 0.1, 4, 8);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.06, 0.7, 0.32);
-  group.add(eyeL);
+  eyeL.position.set(-0.06, -0.02, 0.32);
+  headGroup.add(eyeL);
   
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.06, 0.7, 0.32);
-  group.add(eyeR);
+  eyeR.position.set(0.06, -0.02, 0.32);
+  headGroup.add(eyeR);
   
-  // Single antenna on top (pink ball with stem)
+  // Antenna
   const antenna = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), pinkMat);
-  antenna.position.set(0, 1.15, -0.05);
-  group.add(antenna);
+  antenna.position.set(0, 0.43, -0.05);
+  headGroup.add(antenna);
   
-  const stemGeo = new THREE.CylinderGeometry(0.025, 0.03, 0.12, 8);
-  const stem = new THREE.Mesh(stemGeo, whiteMat);
-  stem.position.set(0, 1.02, -0.05);
-  group.add(stem);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.12, 8), whiteMat);
+  stem.position.set(0, 0.3, -0.05);
+  headGroup.add(stem);
   
-  // Body (dark blue sphere)
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 14), bodyMat);
-  body.position.y = 0.26;
-  body.scale.set(1, 1.05, 0.95);
-  body.castShadow = true;
-  group.add(body);
+  // Left arm group
+  const armLGroup = new THREE.Group();
+  armLGroup.position.set(-0.25, 0.12, 0);
+  torso.add(armLGroup);
   
-  // Belt (black ring around body)
-  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.045, 10, 20), beltMat);
-  belt.position.y = 0.2;
-  belt.rotation.x = Math.PI / 2;
-  group.add(belt);
+  const armLGeo = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(-0.12, -0.05, 0.02),
+      new THREE.Vector3(-0.2, -0.12, 0.05)
+    ]), 8, 0.035, 8, false
+  );
+  const armL = new THREE.Mesh(armLGeo, whiteMat);
+  armLGroup.add(armL);
   
-  // Belt buckle (gold square)
-  const buckleGeo = new THREE.BoxGeometry(0.08, 0.07, 0.03);
-  const buckle = new THREE.Mesh(buckleGeo, buckleMat);
-  buckle.position.set(0, 0.2, 0.26);
-  group.add(buckle);
+  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
+  handL.position.set(-0.2, -0.12, 0.05);
+  armLGroup.add(handL);
   
-  // Arms (curved white tubes using TorusGeometry segments)
-  const armGeo = new THREE.TubeGeometry(
+  // Right arm group
+  const armRGroup = new THREE.Group();
+  armRGroup.position.set(0.25, 0.12, 0);
+  torso.add(armRGroup);
+  
+  const armRGeo = new THREE.TubeGeometry(
     new THREE.CatmullRomCurve3([
       new THREE.Vector3(0, 0, 0),
       new THREE.Vector3(0.12, -0.05, 0.02),
       new THREE.Vector3(0.2, -0.12, 0.05)
     ]), 8, 0.035, 8, false
   );
-  
-  const armL = new THREE.Mesh(armGeo, whiteMat);
-  armL.position.set(-0.25, 0.38, 0);
-  group.add(armL);
-  
-  const armR = new THREE.Mesh(armGeo, whiteMat);
-  armR.position.set(0.25, 0.38, 0);
-  armR.scale.x = -1;
-  group.add(armR);
-  
-  // Hands (pink spheres)
-  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
-  handL.position.set(-0.45, 0.26, 0.05);
-  group.add(handL);
+  const armR = new THREE.Mesh(armRGeo, whiteMat);
+  armRGroup.add(armR);
   
   const handR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
-  handR.position.set(0.45, 0.26, 0.05);
-  group.add(handR);
+  handR.position.set(0.2, -0.12, 0.05);
+  armRGroup.add(handR);
   
-  // Legs (curved white tubes)
-  const legGeo = new THREE.TubeGeometry(
+  // Left leg group
+  const legLGroup = new THREE.Group();
+  legLGroup.position.set(-0.13, -0.21, 0);
+  root.add(legLGroup);
+  
+  const legLGeo = new THREE.TubeGeometry(
     new THREE.CatmullRomCurve3([
       new THREE.Vector3(0, 0, 0),
       new THREE.Vector3(0, -0.12, 0.02),
       new THREE.Vector3(0.02, -0.22, 0.05)
     ]), 8, 0.04, 8, false
   );
+  const legL = new THREE.Mesh(legLGeo, whiteMat);
+  legLGroup.add(legL);
   
-  const legL = new THREE.Mesh(legGeo, whiteMat);
-  legL.position.set(-0.13, 0.05, 0);
-  group.add(legL);
-  
-  const legR = new THREE.Mesh(legGeo, whiteMat);
-  legR.position.set(0.13, 0.05, 0);
-  group.add(legR);
-  
-  // Feet (large pink ovals)
   const footL = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pinkMat);
-  footL.position.set(-0.13, -0.2, 0.08);
+  footL.position.set(0.02, -0.25, 0.08);
   footL.scale.set(0.85, 0.5, 1.4);
-  group.add(footL);
+  legLGroup.add(footL);
+  
+  // Right leg group
+  const legRGroup = new THREE.Group();
+  legRGroup.position.set(0.13, -0.21, 0);
+  root.add(legRGroup);
+  
+  const legRGeo = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, -0.12, 0.02),
+      new THREE.Vector3(0.02, -0.22, 0.05)
+    ]), 8, 0.04, 8, false
+  );
+  const legR = new THREE.Mesh(legRGeo, whiteMat);
+  legRGroup.add(legR);
   
   const footR = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pinkMat);
-  footR.position.set(0.13, -0.2, 0.08);
+  footR.position.set(0.02, -0.25, 0.08);
   footR.scale.set(0.85, 0.5, 1.4);
-  group.add(footR);
+  legRGroup.add(footR);
+  
+  // Store bone references for animation
+  group.bones = {
+    root,
+    torso,
+    headGroup,
+    armLGroup,
+    armRGroup,
+    legLGroup,
+    legRGroup,
+    handL,
+    handR
+  };
+  
+  // Animation state
+  group.animState = {
+    walkCycle: 0,
+    targetYaw: 0,
+    currentYaw: 0,
+    headYaw: 0,
+    isMoving: false,
+    wasMoving: false,
+    stopBob: 0,
+    idleTime: 0,
+    idlePhase: 0,
+    bombAnim: 0
+  };
   
   return group;
 }
 
+// Animate a Bomberman mesh based on movement
+function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false) {
+  if (!mesh.bones || !mesh.animState) return;
+  
+  const bones = mesh.bones;
+  const state = mesh.animState;
+  const speed = Math.sqrt(dx * dx + dz * dz);
+  const isMoving = speed > 0.01;
+  
+  // === MOVEMENT DIRECTION & TURNING ===
+  if (isMoving) {
+    state.targetYaw = Math.atan2(-dx, -dz);
+    state.idleTime = 0;
+  }
+  
+  // Head leads the turn (faster rotation)
+  const headTurnSpeed = 12 * dt;
+  const bodyTurnSpeed = 8 * dt;
+  
+  let headYawDiff = state.targetYaw - state.headYaw;
+  while (headYawDiff > Math.PI) headYawDiff -= Math.PI * 2;
+  while (headYawDiff < -Math.PI) headYawDiff += Math.PI * 2;
+  state.headYaw += headYawDiff * headTurnSpeed;
+  
+  let bodyYawDiff = state.targetYaw - state.currentYaw;
+  while (bodyYawDiff > Math.PI) bodyYawDiff -= Math.PI * 2;
+  while (bodyYawDiff < -Math.PI) bodyYawDiff += Math.PI * 2;
+  state.currentYaw += bodyYawDiff * bodyTurnSpeed;
+  
+  // Apply rotations (head slightly ahead of body)
+  bones.headGroup.rotation.y = state.headYaw - state.currentYaw;
+  
+  // === WALKING CYCLE ===
+  if (isMoving) {
+    state.walkCycle += speed * 12 * dt;
+    const cycle = state.walkCycle;
+    
+    // Leg swing (alternating)
+    bones.legLGroup.rotation.x = Math.sin(cycle) * 0.5;
+    bones.legRGroup.rotation.x = Math.sin(cycle + Math.PI) * 0.5;
+    
+    // Leg lift
+    bones.legLGroup.position.y = -0.21 + Math.max(0, Math.sin(cycle)) * 0.05;
+    bones.legRGroup.position.y = -0.21 + Math.max(0, Math.sin(cycle + Math.PI)) * 0.05;
+    
+    // Arm swing (opposite to legs)
+    bones.armLGroup.rotation.x = Math.sin(cycle + Math.PI) * 0.3;
+    bones.armRGroup.rotation.x = Math.sin(cycle) * 0.3;
+    
+    // Head bob (up/down with walk)
+    bones.headGroup.position.y = 0.46 + Math.abs(Math.sin(cycle * 2)) * 0.03;
+    
+    // Torso lean (slight forward lean when moving)
+    bones.torso.rotation.x = 0.08;
+    
+    // Body bounce
+    bones.root.position.y = 0.26 + Math.abs(Math.sin(cycle * 2)) * 0.02;
+  }
+  
+  // === RUN-STOP BOB ===
+  if (!isMoving && state.wasMoving) {
+    state.stopBob = 1.0;
+  }
+  
+  if (state.stopBob > 0) {
+    state.stopBob -= dt * 4;
+    const bob = Math.sin(state.stopBob * Math.PI) * state.stopBob;
+    
+    // Hips drop and head bobs forward
+    bones.root.position.y = 0.26 - bob * 0.05;
+    bones.headGroup.rotation.x = bob * 0.15;
+    bones.torso.rotation.x = bob * 0.08;
+  }
+  
+  // === IDLE ANIMATIONS ===
+  if (!isMoving && state.stopBob <= 0) {
+    state.idleTime += dt;
+    state.idlePhase += dt * 1.5;
+    
+    // Breathing (subtle)
+    const breathe = Math.sin(state.idlePhase) * 0.01;
+    bones.root.position.y = 0.26 + breathe;
+    bones.torso.scale.set(1 + breathe * 0.5, 1 - breathe * 0.3, 1 + breathe * 0.5);
+    
+    // Return legs to neutral
+    bones.legLGroup.rotation.x *= 0.9;
+    bones.legRGroup.rotation.x *= 0.9;
+    bones.legLGroup.position.y += (-0.21 - bones.legLGroup.position.y) * 0.1;
+    bones.legRGroup.position.y += (-0.21 - bones.legRGroup.position.y) * 0.1;
+    
+    // Return arms to neutral
+    bones.armLGroup.rotation.x *= 0.9;
+    bones.armRGroup.rotation.x *= 0.9;
+    
+    // Head returns to forward
+    bones.headGroup.position.y += (0.46 - bones.headGroup.position.y) * 0.1;
+    bones.headGroup.rotation.x *= 0.9;
+    bones.torso.rotation.x *= 0.9;
+    
+    // Idle fidget - look around after 3 seconds
+    if (state.idleTime > 3) {
+      const lookAround = Math.sin((state.idleTime - 3) * 0.8) * 0.3;
+      bones.headGroup.rotation.y = lookAround;
+    }
+  }
+  
+  // === BOMB PLACING ANIMATION ===
+  if (isPlacingBomb) {
+    state.bombAnim = 1.0;
+  }
+  
+  if (state.bombAnim > 0) {
+    state.bombAnim -= dt * 5;
+    const bombT = Math.sin(state.bombAnim * Math.PI);
+    
+    // Both arms reach down/forward
+    bones.armLGroup.rotation.x = bombT * 0.8;
+    bones.armRGroup.rotation.x = bombT * 0.8;
+    bones.armLGroup.rotation.z = -bombT * 0.3;
+    bones.armRGroup.rotation.z = bombT * 0.3;
+    
+    // Slight crouch
+    bones.root.position.y = 0.26 - bombT * 0.08;
+    bones.torso.rotation.x = bombT * 0.2;
+  }
+  
+  state.wasMoving = isMoving;
+}
+
 function createRemotePlayer(id, color, name) {
-  const group = createBombermanMesh(color || 0x00a5a5);
+  const group = createBombermanMesh(color || 0x2a3a6e);
   
   // Name label
   const colorHex = '#' + (color || 0xff6666).toString(16).padStart(6, '0');
@@ -896,11 +1079,11 @@ function collides(x, z, ignoreBombAt = null) {
 }
 
 function dropBomb(x, z, isEnemy = false) {
-  if (!isEnemy && bombCount <= 0) return;
+  if (!isEnemy && bombCount <= 0) return false;
   
   const gx = Math.round(x / CELL) * CELL;
   const gz = Math.round(z / CELL) * CELL;
-  if (bombs.some(b => b.group.position.x === gx && b.group.position.z === gz)) return;
+  if (bombs.some(b => b.group.position.x === gx && b.group.position.z === gz)) return false;
   
   if (!isEnemy) {
     bombCount--;
@@ -911,6 +1094,7 @@ function dropBomb(x, z, isEnemy = false) {
   }
 
   dropBombAt(gx, gz, isEnemy ? 2 : blastRange, isEnemy);
+  return true;
 }
 
 function dropBombAt(gx, gz, range, isEnemy) {
@@ -1700,6 +1884,7 @@ function update(dt) {
   dt *= slowMo;
 
   let dx = 0, dz = 0;
+  let placedBomb = false;
   
   // Only process input when locked
   if (locked) {
@@ -1724,8 +1909,8 @@ function update(dt) {
         b.passable = false;
       }
     }
-
-    if (keys['Space']) { keys['Space'] = false; dropBomb(player.x, player.z); }
+    
+    if (keys['Space']) { keys['Space'] = false; placedBomb = dropBomb(player.x, player.z); }
   }
 
   // Network sync - send position
@@ -1737,15 +1922,35 @@ function update(dt) {
   for (const [id, pos] of Object.entries(remotePlayers)) {
     const mesh = remotePlayerMeshes[id];
     if (mesh) {
+      // Calculate movement for animation
+      const prevX = mesh.position.x;
+      const prevZ = mesh.position.z;
       mesh.position.x += (pos.x - mesh.position.x) * 0.3;
       mesh.position.z += (pos.z - mesh.position.z) * 0.3;
-      mesh.rotation.y = pos.yaw + Math.PI;
+      
+      // Animate remote player
+      const moveDx = mesh.position.x - prevX;
+      const moveDz = mesh.position.z - prevZ;
+      animateBomberman(mesh, moveDx, moveDz, dt);
+      
+      // Let animation control rotation via bones
+      if (mesh.animState) {
+        mesh.rotation.y = mesh.animState.currentYaw;
+      }
     }
   }
 
   // Update player mesh and tile indicator
   playerMesh.position.set(player.x, 0.25, player.z);
-  playerMesh.rotation.y = player.yaw + Math.PI;
+  
+  // Animate local player mesh (use yaw for direction in FPS)
+  if (playerMesh.animState) {
+    playerMesh.animState.targetYaw = player.yaw + Math.PI;
+  }
+  animateBomberman(playerMesh, dx, dz, dt, placedBomb);
+  if (playerMesh.animState) {
+    playerMesh.rotation.y = playerMesh.animState.currentYaw;
+  }
   
   // Snap tile to grid, subtle pulse
   const gridX = Math.round(player.x / CELL) * CELL;
