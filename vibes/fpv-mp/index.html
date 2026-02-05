@@ -35,6 +35,7 @@
     .stat-time .stat-value { color: #fff; }
     .stat-time.warning .stat-value { color: #f7c948; }
     .stat-time.danger .stat-value { color: #e84855; animation: blink 0.5s infinite; }
+    .stat-spectators .stat-value { color: #888; }
     @keyframes blink { 50% { opacity: 0.5; } }
     
     #crosshair {
@@ -290,9 +291,22 @@
       <div class="stat-label">Time</div>
       <div class="stat-value" id="timer">3:00</div>
     </div>
+    <div class="stat stat-spectators" id="spectator-stat" style="display:none;">
+      <div class="stat-label">Watching</div>
+      <div class="stat-value" id="spectators">0</div>
+    </div>
+  </div>
+  
+  <div id="spectator-hud" style="display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:10px 20px;border-radius:8px;color:#888;font-size:14px;text-align:center;">
+    <div style="color:#f7c948;font-weight:bold;margin-bottom:5px;">SPECTATOR MODE</div>
+    <div id="spectator-following">Free Camera</div>
+    <div style="margin-top:8px;font-size:12px;color:#666;">
+      [1-4] Follow Player | [F] Free Camera | [N] Next Player
+    </div>
   </div>
   
   <div id="crosshair"></div>
+  <div id="camera-mode" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:#fff;font-size:14px;font-weight:bold;opacity:0;transition:opacity 0.3s;text-shadow:0 0 10px rgba(0,0,0,0.8);"></div>
   <canvas id="minimap" width="150" height="150"></canvas>
   <div id="player-list"></div>
   
@@ -309,6 +323,7 @@
       <div class="mode-buttons">
         <button class="mode-btn host" onclick="hostGame()">HOST GAME</button>
         <button class="mode-btn join" onclick="joinGame()">JOIN GAME</button>
+        <button class="mode-btn spectate" onclick="spectateGame()" style="background:linear-gradient(135deg,#888,#555);">SPECTATE</button>
       </div>
       
       <div id="host-section" class="peer-section">
@@ -317,9 +332,10 @@
         <div class="map-size-selector" style="margin-top:15px;">
           <label style="color:#888;font-size:14px;">Map Size:</label>
           <select id="map-size-select" onchange="setMapSize(this.selectedIndex)" style="margin-left:10px;padding:8px 12px;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:4px;font-size:14px;">
-            <option>Tiny (9x9)</option>
+            <option>Arena (9x9)</option>
             <option>Small (11x11)</option>
             <option>Medium (13x13)</option>
+            <option>Classic (15x13)</option>
             <option selected>Large (15x15)</option>
             <option>Wide (17x15)</option>
             <option>Huge (19x17)</option>
@@ -337,6 +353,16 @@
         </div>
         <div class="status" id="join-status"></div>
         <div id="room-list" style="margin-top:15px;"></div>
+      </div>
+      
+      <div id="spectate-section" class="peer-section">
+        <div>Enter room code to spectate:</div>
+        <div style="margin-top:15px;">
+          <input type="text" class="peer-input" id="spectate-id-input" placeholder="Enter code">
+          <button class="connect-btn" onclick="connectAsSpectator()">WATCH</button>
+        </div>
+        <div class="status" id="spectate-status"></div>
+        <div id="spectate-room-list" style="margin-top:15px;"></div>
       </div>
     </div>
   </div>

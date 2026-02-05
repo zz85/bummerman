@@ -67,6 +67,11 @@ let levelSeed = 0;
 let kills = 0, wins = 0, score = 0;
 let isConnecting = false;
 
+// Spectator state
+let isSpectating = false;
+let spectatorFollowIndex = -1; // -1 = free camera, 0+ = following player index
+let spectatorCam = { x: 0, y: 10, z: 0, yaw: 0, pitch: -0.5 };
+
 // Lobby functions (exposed to window)
 let gameInitialized = false;
 let myPlayerIndex = 0;
@@ -97,14 +102,15 @@ function generateFunnyName() {
 
 // Map size presets: [width, height, label]
 const MAP_SIZES = [
-  [9, 9, 'Tiny (9x9)'],
+  [9, 9, 'Arena (9x9)'],
   [11, 11, 'Small (11x11)'],
   [13, 13, 'Medium (13x13)'],
+  [15, 13, 'Classic (15x13)'],
   [15, 15, 'Large (15x15)'],
   [17, 15, 'Wide (17x15)'],
   [19, 17, 'Huge (19x17)']
 ];
-let selectedMapSize = 3; // Default to Large (15x15)
+let selectedMapSize = 4; // Default to Large (15x15)
 
 function getSpawnPoints() {
   return [
@@ -148,7 +154,10 @@ window.hostGame = async function() {
   
   Net.hostGame({
     onConnected: (peerId, playerCount) => {
-      document.getElementById('host-status').textContent = `${playerCount} player(s) connected`;
+      const specCount = Net.getSpectatorCount();
+      let status = `${playerCount} player(s) connected`;
+      if (specCount > 0) status += `, ${specCount} watching`;
+      document.getElementById('host-status').textContent = status;
       document.getElementById('host-status').className = 'status connected';
     },
     onData: handleNetworkData,
@@ -159,6 +168,12 @@ window.hostGame = async function() {
         delete remotePlayerMeshes[peerId];
         delete remotePlayers[peerId];
       }
+    },
+    onSpectatorJoined: (specId, specCount) => {
+      const playerCount = Net.getPlayerCount() - 1;
+      let status = `${playerCount} player(s) connected`;
+      if (specCount > 0) status += `, ${specCount} watching`;
+      document.getElementById('host-status').textContent = status;
     }
   });
 };
@@ -223,6 +238,61 @@ window.connectToPeer = function() {
         startMultiplayerGame(false);
       } else {
         resetRound();
+      }
+    },
+    onPlayerLeft: peerId => {
+      if (remotePlayerMeshes[peerId]) {
+        scene.remove(remotePlayerMeshes[peerId]);
+        delete remotePlayerMeshes[peerId];
+        delete remotePlayers[peerId];
+      }
+    }
+  });
+};
+
+window.spectateGame = async function() {
+  document.getElementById('spectate-section').classList.add('active');
+  document.getElementById('host-section').classList.remove('active');
+  document.getElementById('join-section').classList.remove('active');
+  await Net.initPeer();
+  
+  // Fetch rooms and auto-fill if only one exists
+  try {
+    const res = await fetch('/rooms');
+    const rooms = await res.json();
+    if (rooms.length === 1) {
+      document.getElementById('spectate-id-input').value = rooms[0].id;
+      document.getElementById('spectate-status').textContent = `Found room: ${rooms[0].id} (${rooms[0].players} player${rooms[0].players > 1 ? 's' : ''})`;
+    } else if (rooms.length > 1) {
+      document.getElementById('spectate-room-list').innerHTML = rooms.map(r => 
+        `<div style="cursor:pointer;padding:5px;color:#888" onclick="document.getElementById('spectate-id-input').value='${r.id}'">${r.id} (${r.players})</div>`
+      ).join('');
+    }
+  } catch(e) {}
+};
+
+window.connectAsSpectator = function() {
+  const hostId = document.getElementById('spectate-id-input').value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!hostId || isConnecting) return;
+  
+  isConnecting = true;
+  isSpectating = true;
+  myPlayerName = 'Spectator';
+  
+  document.getElementById('spectate-status').textContent = 'Connecting as spectator...';
+  Net.joinAsSpectator(hostId, {
+    onConnected: () => {
+      document.getElementById('spectate-status').textContent = 'Watching! Game will start when host begins.';
+      document.getElementById('spectate-status').className = 'status connected';
+    },
+    onData: handleNetworkData,
+    onRoundStart: data => {
+      levelSeed = data.seed;
+      if (data.gridSize) GRID = data.gridSize;
+      if (!gameInitialized) {
+        startSpectatorMode();
+      } else {
+        resetRoundSpectator();
       }
     },
     onPlayerLeft: peerId => {
@@ -382,12 +452,32 @@ function createTextSprite(text, color = '#ffffff') {
   return sprite;
 }
 
+// Create a lighter/tinted helmet color from body color
+function getHelmetColor(bodyColor) {
+  // Convert to RGB components
+  const r = (bodyColor >> 16) & 0xff;
+  const g = (bodyColor >> 8) & 0xff;
+  const b = bodyColor & 0xff;
+  
+  // Create a lighter, more pastel version (blend with white)
+  const blendFactor = 0.65; // How much white to mix in
+  const newR = Math.round(r + (255 - r) * blendFactor);
+  const newG = Math.round(g + (255 - g) * blendFactor);
+  const newB = Math.round(b + (255 - b) * blendFactor);
+  
+  return (newR << 16) | (newG << 8) | newB;
+}
+
 // Create Bomberman-style character mesh with rigging
 function createBombermanMesh(bodyColor) {
   const group = new THREE.Group();
   
+  // Generate helmet color from body color
+  const helmetColor = getHelmetColor(bodyColor);
+  
   // Materials
-  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.25, metalness: 0.05 });
+  const helmetMat = new THREE.MeshStandardMaterial({ color: helmetColor, roughness: 0.25, metalness: 0.05 });
+  const limbMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.25, metalness: 0.05 }); // White for arms/legs
   const pinkMat = new THREE.MeshStandardMaterial({ color: 0xe91e8c, roughness: 0.35, metalness: 0.1 });
   const faceMat = new THREE.MeshStandardMaterial({ color: 0xf5dcc8, roughness: 0.6, metalness: 0.0 });
   const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.2 });
@@ -437,25 +527,25 @@ function createBombermanMesh(bodyColor) {
     posAttr.setXYZ(i, x * scale, y * scale, z * scale);
   }
   helmetGeo.computeVertexNormals();
-  const helmet = new THREE.Mesh(helmetGeo, whiteMat);
+  const helmet = new THREE.Mesh(helmetGeo, helmetMat);
   helmet.position.y = 0.02;
   helmet.castShadow = true;
   headGroup.add(helmet);
   
-  // Face (beige/skin color oval visible through front opening)
-  const face = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), faceMat);
-  face.scale.set(0.75, 0.85, 0.4);
-  face.position.set(0, -0.02, -0.18);
+  // Face (beige/skin color oval - larger, more visible)
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), faceMat);
+  face.scale.set(0.9, 1.0, 0.5);
+  face.position.set(0, -0.04, -0.12);
   headGroup.add(face);
   
-  // Eyes (two vertical black lines)
-  const eyeGeo = new THREE.CapsuleGeometry(0.02, 0.12, 4, 8);
+  // Eyes (two vertical black lines - adjusted for larger face)
+  const eyeGeo = new THREE.CapsuleGeometry(0.025, 0.14, 4, 8);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.07, -0.02, -0.32);
+  eyeL.position.set(-0.09, -0.04, -0.28);
   headGroup.add(eyeL);
   
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.07, -0.02, -0.32);
+  eyeR.position.set(0.09, -0.04, -0.28);
   headGroup.add(eyeR);
   
   // Antenna - on top of helmet, further back
@@ -463,7 +553,7 @@ function createBombermanMesh(bodyColor) {
   antenna.position.set(0, 0.48, 0.08);
   headGroup.add(antenna);
   
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.14, 8), whiteMat);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.14, 8), helmetMat);
   stem.position.set(0, 0.36, 0.08);
   headGroup.add(stem);
   
@@ -479,7 +569,7 @@ function createBombermanMesh(bodyColor) {
       new THREE.Vector3(-0.2, -0.12, 0.05)
     ]), 8, 0.035, 8, false
   );
-  const armL = new THREE.Mesh(armLGeo, whiteMat);
+  const armL = new THREE.Mesh(armLGeo, limbMat);
   armLGroup.add(armL);
   
   const handL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
@@ -498,7 +588,7 @@ function createBombermanMesh(bodyColor) {
       new THREE.Vector3(0.2, -0.12, 0.05)
     ]), 8, 0.035, 8, false
   );
-  const armR = new THREE.Mesh(armRGeo, whiteMat);
+  const armR = new THREE.Mesh(armRGeo, limbMat);
   armRGroup.add(armR);
   
   const handR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), pinkMat);
@@ -517,7 +607,7 @@ function createBombermanMesh(bodyColor) {
       new THREE.Vector3(0.02, -0.22, 0.05)
     ]), 8, 0.04, 8, false
   );
-  const legL = new THREE.Mesh(legLGeo, whiteMat);
+  const legL = new THREE.Mesh(legLGeo, limbMat);
   legLGroup.add(legL);
   
   const footL = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pinkMat);
@@ -537,7 +627,7 @@ function createBombermanMesh(bodyColor) {
       new THREE.Vector3(0.02, -0.22, 0.05)
     ]), 8, 0.04, 8, false
   );
-  const legR = new THREE.Mesh(legRGeo, whiteMat);
+  const legR = new THREE.Mesh(legRGeo, limbMat);
   legRGroup.add(legR);
   
   const footR = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pinkMat);
@@ -778,6 +868,194 @@ function startMultiplayerGame(asHost) {
   init();
   audioCtx.resume();
   // Don't auto-request pointer lock - user must click canvas
+}
+
+function startSpectatorMode() {
+  isMultiplayer = true;
+  isSpectating = true;
+  gameInitialized = true;
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('ui').style.display = 'flex';
+  document.getElementById('spectator-hud').style.display = 'block';
+  // Hide player-specific stats for spectators
+  document.querySelector('.stat-bombs').style.display = 'none';
+  document.querySelector('.stat-blast').style.display = 'none';
+  document.querySelector('.stat-score').style.display = 'none';
+  initSpectator();
+  audioCtx.resume();
+}
+
+function resetRoundSpectator() {
+  // Hide end screen
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('win-screen').style.display = 'none';
+  
+  // Reset state
+  deadPlayers.clear();
+  readyPlayers.clear();
+  roundTime = 180;
+  
+  // Clear scene objects
+  [...walls, ...breakables, ...bombs, ...explosions, ...powerups].forEach(o => scene.remove(o.mesh || o.group || o));
+  walls = []; breakables = []; bombs = []; explosions = []; powerups = []; lights = [];
+  Object.values(remotePlayerMeshes).forEach(m => scene.remove(m));
+  remotePlayers = {}; remotePlayerMeshes = {};
+  
+  // Rebuild level
+  buildLevel();
+  
+  // Reset spectator camera to center
+  spectatorCam.x = GRID * CELL / 2;
+  spectatorCam.z = GRID * CELL / 2;
+  spectatorCam.y = 15;
+  spectatorFollowIndex = -1;
+  updateSpectatorHUD();
+}
+
+function initSpectator() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a12);
+  scene.fog = new THREE.FogExp2(0x0a0a12, 0.025);
+
+  camera = new THREE.PerspectiveCamera(80, innerWidth / innerHeight, 0.1, 100);
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.8;
+  document.body.prepend(renderer.domElement);
+
+  // Post-processing
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.4, 0.85);
+  composer.addPass(bloom);
+
+  // Lighting (same as normal init)
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const mainLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  mainLight.position.set(20, 30, 20);
+  mainLight.castShadow = true;
+  mainLight.shadow.mapSize.set(2048, 2048);
+  mainLight.shadow.camera.near = 1;
+  mainLight.shadow.camera.far = 100;
+  mainLight.shadow.camera.left = -30;
+  mainLight.shadow.camera.right = 30;
+  mainLight.shadow.camera.top = 30;
+  mainLight.shadow.camera.bottom = -30;
+  scene.add(mainLight);
+
+  const fillLight1 = new THREE.DirectionalLight(0x8888ff, 0.4);
+  fillLight1.position.set(-20, 15, -20);
+  scene.add(fillLight1);
+
+  const fillLight2 = new THREE.DirectionalLight(0xffaa88, 0.3);
+  fillLight2.position.set(20, 10, -20);
+  scene.add(fillLight2);
+
+  // Floor
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.8, metalness: 0.2 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(GRID * CELL + 4, GRID * CELL + 4), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(GRID * CELL / 2 - CELL / 2, 0, GRID * CELL / 2 - CELL / 2);
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  const gridHelper = new THREE.GridHelper(GRID * CELL, GRID, 0x333344, 0x222233);
+  gridHelper.position.set(GRID * CELL / 2 - CELL / 2, 0.01, GRID * CELL / 2 - CELL / 2);
+  scene.add(gridHelper);
+
+  buildLevel();
+
+  // Spectator starts with bird's eye view
+  spectatorCam.x = GRID * CELL / 2;
+  spectatorCam.z = GRID * CELL / 2;
+  spectatorCam.y = 15;
+  spectatorCam.pitch = -1.2;
+  spectatorFollowIndex = -1;
+
+  // Create dummy player object for spectator (not rendered)
+  player = { x: spectatorCam.x, z: spectatorCam.z, yaw: 0, pitch: 0 };
+
+  minimap = document.getElementById('minimap');
+  minimapCtx = minimap.getContext('2d');
+
+  // Spectator key controls
+  document.addEventListener('keydown', e => { 
+    keys[e.code] = true;
+    if (isSpectating) {
+      // Number keys to follow players
+      if (e.code >= 'Digit1' && e.code <= 'Digit4') {
+        const idx = parseInt(e.code.charAt(5)) - 1;
+        spectatorFollowIndex = idx;
+        updateSpectatorHUD();
+      }
+      // F for free camera
+      if (e.code === 'KeyF') {
+        spectatorFollowIndex = -1;
+        updateSpectatorHUD();
+      }
+      // N for next player
+      if (e.code === 'KeyN') {
+        const playerIds = Object.keys(remotePlayers);
+        if (playerIds.length > 0) {
+          spectatorFollowIndex = (spectatorFollowIndex + 1) % playerIds.length;
+          updateSpectatorHUD();
+        }
+      }
+    }
+  });
+  document.addEventListener('keyup', e => keys[e.code] = false);
+  document.addEventListener('mousemove', e => {
+    if (!locked) return;
+    const mx = Math.max(-100, Math.min(100, e.movementX));
+    const my = Math.max(-100, Math.min(100, e.movementY));
+    if (spectatorFollowIndex === -1) {
+      spectatorCam.yaw -= mx * 0.002;
+      spectatorCam.pitch = Math.max(-1.5, Math.min(0.3, spectatorCam.pitch - my * 0.002));
+    }
+  });
+
+  document.addEventListener('pointerlockchange', () => {
+    locked = !!document.pointerLockElement;
+  });
+
+  renderer.domElement.onclick = () => {
+    const goDisplay = getComputedStyle(document.getElementById('game-over')).display;
+    const winDisplay = getComputedStyle(document.getElementById('win-screen')).display;
+    if (goDisplay === 'none' && winDisplay === 'none') {
+      document.body.requestPointerLock();
+    }
+  };
+
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+  });
+
+  animate();
+}
+
+function updateSpectatorHUD() {
+  const el = document.getElementById('spectator-following');
+  if (!el) return;
+  
+  if (spectatorFollowIndex === -1) {
+    el.textContent = 'Free Camera';
+  } else {
+    const playerIds = Object.keys(remotePlayers);
+    if (playerIds[spectatorFollowIndex]) {
+      const playerData = remotePlayers[playerIds[spectatorFollowIndex]];
+      el.textContent = `Following: ${playerData.name || 'Player ' + (spectatorFollowIndex + 1)}`;
+    } else {
+      el.textContent = 'Free Camera';
+      spectatorFollowIndex = -1;
+    }
+  }
 }
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1950,8 +2228,111 @@ function updateTimer(dt) {
   else if (roundTime <= 60) timerEl.classList.add('warning');
 }
 
+function updateSpectator(dt) {
+  // Update remote players (all players are remote for spectator)
+  for (const [id, pos] of Object.entries(remotePlayers)) {
+    const mesh = remotePlayerMeshes[id];
+    if (mesh) {
+      const prevX = mesh.position.x;
+      const prevZ = mesh.position.z;
+      mesh.position.x += (pos.x - mesh.position.x) * 0.3;
+      mesh.position.z += (pos.z - mesh.position.z) * 0.3;
+      
+      const moveDx = mesh.position.x - prevX;
+      const moveDz = mesh.position.z - prevZ;
+      const remoteLookYaw = pos.lookYaw !== undefined ? pos.lookYaw : pos.yaw;
+      const remoteLookPitch = pos.lookPitch !== undefined ? pos.lookPitch : 0;
+      const bodyYaw = animateBomberman(mesh, moveDx, moveDz, dt, false, remoteLookYaw, remoteLookPitch);
+      
+      if (bodyYaw !== undefined) {
+        mesh.rotation.y = bodyYaw;
+      }
+    }
+  }
+
+  // Spectator camera
+  const playerIds = Object.keys(remotePlayers);
+  
+  if (spectatorFollowIndex >= 0 && playerIds[spectatorFollowIndex]) {
+    // Follow a specific player
+    const followId = playerIds[spectatorFollowIndex];
+    const followData = remotePlayers[followId];
+    const followMesh = remotePlayerMeshes[followId];
+    
+    if (followData && followMesh) {
+      // Third-person follow camera
+      const dist = 5;
+      const height = 3;
+      const yaw = followData.yaw || 0;
+      
+      const targetX = followMesh.position.x + Math.sin(yaw) * dist;
+      const targetZ = followMesh.position.z + Math.cos(yaw) * dist;
+      
+      const spring = 1 - Math.pow(0.02, dt);
+      spectatorCam.x += (targetX - spectatorCam.x) * spring;
+      spectatorCam.y += (height - spectatorCam.y) * spring;
+      spectatorCam.z += (targetZ - spectatorCam.z) * spring;
+      
+      camera.position.set(spectatorCam.x, spectatorCam.y, spectatorCam.z);
+      camera.lookAt(followMesh.position.x, 1, followMesh.position.z);
+    }
+  } else {
+    // Free camera mode
+    const moveSpeed = 15;
+    let dx = 0, dz = 0, dy = 0;
+    
+    if (locked) {
+      if (keys['KeyW']) { dx -= Math.sin(spectatorCam.yaw); dz -= Math.cos(spectatorCam.yaw); }
+      if (keys['KeyS']) { dx += Math.sin(spectatorCam.yaw); dz += Math.cos(spectatorCam.yaw); }
+      if (keys['KeyA']) { dx -= Math.cos(spectatorCam.yaw); dz += Math.sin(spectatorCam.yaw); }
+      if (keys['KeyD']) { dx += Math.cos(spectatorCam.yaw); dz -= Math.sin(spectatorCam.yaw); }
+      if (keys['Space']) dy += 1;
+      if (keys['ShiftLeft'] || keys['ShiftRight']) dy -= 1;
+    }
+    
+    if (dx || dz) {
+      const len = Math.sqrt(dx * dx + dz * dz);
+      spectatorCam.x += dx / len * moveSpeed * dt;
+      spectatorCam.z += dz / len * moveSpeed * dt;
+    }
+    spectatorCam.y = Math.max(2, Math.min(30, spectatorCam.y + dy * moveSpeed * dt));
+    
+    camera.position.set(spectatorCam.x, spectatorCam.y, spectatorCam.z);
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = spectatorCam.yaw;
+    camera.rotation.x = spectatorCam.pitch;
+  }
+
+  // Update game elements
+  updateBombs(dt);
+  updateExplosions(dt);
+  updatePowerups(dt);
+  updateTimer(dt);
+  drawMinimap();
+  updatePlayerList();
+  
+  // Update spectator count display
+  const specCount = Net.getSpectatorCount();
+  if (specCount > 0) {
+    document.getElementById('spectator-stat').style.display = 'block';
+    document.getElementById('spectators').textContent = specCount;
+  }
+  
+  // Update ping
+  if (isMultiplayer) document.getElementById('ping').textContent = Net.getPing() + 'ms';
+  
+  // Render
+  composer.render();
+}
+
 function update(dt) {
   dt *= slowMo;
+
+  // Spectator mode update
+  if (isSpectating) {
+    updateSpectator(dt);
+    return;
+  }
 
   let dx = 0, dz = 0;
   let placedBomb = false;
@@ -2134,8 +2515,15 @@ function update(dt) {
   drawMinimap();
   updatePlayerList();
   
-  // Update ping display
-  if (isMultiplayer) document.getElementById('ping').textContent = Net.getPing() + 'ms';
+  // Update ping and spectator count display
+  if (isMultiplayer) {
+    document.getElementById('ping').textContent = Net.getPing() + 'ms';
+    const specCount = Net.getSpectatorCount();
+    if (specCount > 0) {
+      document.getElementById('spectator-stat').style.display = 'block';
+      document.getElementById('spectators').textContent = specCount;
+    }
+  }
 }
 
 let lastTime = 0;

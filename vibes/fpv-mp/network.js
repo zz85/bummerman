@@ -5,6 +5,7 @@ export function setAdapter(a) { adapter = a; }
 export const initPeer = () => adapter.init();
 export const hostGame = (cb) => adapter.host(cb);
 export const joinGame = (id, cb) => adapter.join(id, cb);
+export const joinAsSpectator = (id, cb) => adapter.joinAsSpectator(id, cb);
 export const rejoinGame = (session, cb) => adapter.rejoin(session, cb);
 export const getSession = () => adapter.getSession();
 export const clearSession = () => adapter.clearSession();
@@ -16,4 +17,6 @@ export const getPing = () => adapter.getPing();
 export const getIsHost = () => adapter.getIsHost();
 export const isConnected = () => adapter.isConnected();
 export const getPlayerCount = () => adapter.getPlayerCount();
+export const getSpectatorCount = () => adapter.getSpectatorCount ? adapter.getSpectatorCount() : 0;
+export const isSpectator = () => adapter.isSpectator ? adapter.isSpectator() : false;
 export const getMyId = () => adapter.getMyId();

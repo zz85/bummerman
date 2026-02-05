@@ -28,12 +28,6 @@
 - [ ] Responsive UI scaling for mobile/tablet
 - [ ] Gyroscope look option
 
-### Spectator Mode
-- [ ] Let dead players watch the rest of the match
-- [ ] Free camera controls for spectators
-- [ ] Cycle through alive players view
-- [ ] Show remaining player count
-
 ### Powerup Variety
 - [ ] Kick bombs (push bombs in direction you're facing)
 - [ ] Remote detonator (manually trigger your bombs)
@@ -51,9 +45,9 @@
 - [x] Real-time player position sync
 - [x] Bomb placement sync
 - [x] Death notifications
-- [x] Map size selection
+- [x] Map size selection (Arena 9x9, Classic 15x13, Large 15x15, Huge 19x17)
 - [x] Player names with random generator
-- [x] Classic Bomberman 3D model
+- [x] Classic Bomberman 3D model with player-colored helmet
 - [x] Procedural animation system (walk, idle, bomb placing)
 - [x] Head/body separation (head follows mouse, body follows movement)
 - [x] Head pitch sync (up/down look)
@@ -61,3 +55,5 @@
 - [x] Minimap with player indicators
 - [x] Round-based gameplay with next round system
 - [x] Powerups (bomb count, blast range, speed)
+- [x] Spectator mode with free camera and player follow
+- [x] Spectator count display in lobby and game
