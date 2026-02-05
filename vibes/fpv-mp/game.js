@@ -1618,8 +1618,8 @@ function explode(bomb) {
         document.getElementById('score').textContent = score;
       }
 
-      // Player damage
-      if (Math.abs(player.x - ex) < CELL && Math.abs(player.z - ez) < CELL) {
+      // Player damage (spectators are immune)
+      if (!isSpectating && Math.abs(player.x - ex) < CELL && Math.abs(player.z - ez) < CELL) {
         gameOver();
         return;
       }
@@ -1768,7 +1768,8 @@ function updateEnemies(dt) {
       dropBomb(ex, ez, true);
     }
 
-    if (Math.abs(ex - player.x) < CELL * 0.5 && Math.abs(ez - player.z) < CELL * 0.5) {
+    // Enemy touches player (spectators are immune)
+    if (!isSpectating && Math.abs(ex - player.x) < CELL * 0.5 && Math.abs(ez - player.z) < CELL * 0.5) {
       gameOver();
     }
   }
@@ -1909,7 +1910,8 @@ function updatePowerups(dt) {
     p.mesh.children[0].rotation.y += dt * 2;
     p.mesh.children[0].rotation.x += dt;
 
-    if (Math.abs(p.mesh.position.x - player.x) < CELL * 0.5 && Math.abs(p.mesh.position.z - player.z) < CELL * 0.5) {
+    // Spectators can't pick up powerups
+    if (!isSpectating && Math.abs(p.mesh.position.x - player.x) < CELL * 0.5 && Math.abs(p.mesh.position.z - player.z) < CELL * 0.5) {
       playSound('powerup');
       if (p.type === 'bomb') { bombCount++; document.getElementById('bombs').textContent = bombCount; }
       else if (p.type === 'blast') { blastRange++; document.getElementById('blast').textContent = blastRange; }
@@ -2202,6 +2204,8 @@ function flashDamage(intensity) {
 }
 
 function updateDangerIndicator() {
+  // Spectators don't need danger warnings
+  if (isSpectating) return;
   const inDanger = isInDanger(player.x, player.z);
   document.getElementById('danger-overlay').classList.toggle('active', inDanger);
 }
