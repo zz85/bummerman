@@ -253,7 +253,8 @@ function handleNetworkData(data) {
       x: data.x, 
       z: data.z, 
       yaw: data.yaw, 
-      lookYaw: data.lookYaw !== undefined ? data.lookYaw : data.yaw,  // Head look direction
+      lookYaw: data.lookYaw !== undefined ? data.lookYaw : data.yaw,
+      lookPitch: data.lookPitch !== undefined ? data.lookPitch : 0,
       color: data.color, 
       name: data.name 
     };
@@ -423,8 +424,8 @@ function createBombermanMesh(bodyColor) {
   headGroup.position.y = 0.46;
   torso.add(headGroup);
   
-  // Helmet (rounded cube shape surrounding the head)
-  const helmetGeo = new THREE.BoxGeometry(0.7, 0.75, 0.65, 4, 4, 4);
+  // Helmet (rounded cube shape - wider than deep)
+  const helmetGeo = new THREE.BoxGeometry(0.75, 0.72, 0.55, 4, 4, 4); // wider (x) than deep (z)
   // Round the corners by moving vertices
   const posAttr = helmetGeo.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
@@ -432,7 +433,7 @@ function createBombermanMesh(bodyColor) {
     const y = posAttr.getY(i);
     const z = posAttr.getZ(i);
     const len = Math.sqrt(x*x + y*y + z*z);
-    const scale = 0.85 + 0.15 * (1 - len / 0.6); // Subtle rounding
+    const scale = 0.88 + 0.12 * (1 - len / 0.6); // Subtle rounding
     posAttr.setXYZ(i, x * scale, y * scale, z * scale);
   }
   helmetGeo.computeVertexNormals();
@@ -441,37 +442,29 @@ function createBombermanMesh(bodyColor) {
   helmet.castShadow = true;
   headGroup.add(helmet);
   
-  // Face visor opening (darker inset where face shows through)
-  const visorFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(0.42, 0.48, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.5, metalness: 0.3 })
-  );
-  visorFrame.position.set(0, -0.02, -0.32);
-  headGroup.add(visorFrame);
-  
-  // Face (beige oval visible through visor)
-  const face = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), faceMat);
-  face.scale.set(0.7, 0.8, 0.3);
-  face.position.set(0, -0.02, -0.28);
+  // Face (beige/skin color oval visible through front opening)
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), faceMat);
+  face.scale.set(0.75, 0.85, 0.4);
+  face.position.set(0, -0.02, -0.18);
   headGroup.add(face);
   
   // Eyes (two vertical black lines)
-  const eyeGeo = new THREE.CapsuleGeometry(0.018, 0.1, 4, 8);
+  const eyeGeo = new THREE.CapsuleGeometry(0.02, 0.12, 4, 8);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.06, -0.02, -0.36);
+  eyeL.position.set(-0.07, -0.02, -0.32);
   headGroup.add(eyeL);
   
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.06, -0.02, -0.36);
+  eyeR.position.set(0.07, -0.02, -0.32);
   headGroup.add(eyeR);
   
   // Antenna - on top of helmet, further back
   const antenna = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), pinkMat);
-  antenna.position.set(0, 0.5, 0.1);
+  antenna.position.set(0, 0.48, 0.08);
   headGroup.add(antenna);
   
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.14, 8), whiteMat);
-  stem.position.set(0, 0.38, 0.1);
+  stem.position.set(0, 0.36, 0.08);
   headGroup.add(stem);
   
   // Left arm group
@@ -572,6 +565,8 @@ function createBombermanMesh(bodyColor) {
     bodyCurrentYaw: 0,
     headTargetYaw: 0,   // Head follows mouse/look direction
     headCurrentYaw: 0,
+    headTargetPitch: 0, // Head up/down look
+    headCurrentPitch: 0,
     isMoving: false,
     wasMoving: false,
     moveSpeed: 0,
@@ -585,9 +580,9 @@ function createBombermanMesh(bodyColor) {
 }
 
 // Animate a Bomberman mesh based on movement
-// headYaw = where the head should look (mouse direction)
-// bodyYaw = where the body should face (WASD movement direction)
-function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false, headYaw = null) {
+// headYaw = where the head should look horizontally (mouse direction)
+// headPitch = where the head should look vertically (up/down)
+function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false, headYaw = null, headPitch = null) {
   if (!mesh.bones || !mesh.animState) return;
   
   const bones = mesh.bones;
@@ -612,6 +607,11 @@ function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false, headYaw = nul
     state.headTargetYaw = state.bodyTargetYaw;
   }
   
+  // === HEAD PITCH (up/down look) ===
+  if (headPitch !== null) {
+    state.headTargetPitch = headPitch;
+  }
+  
   // Smooth body rotation
   const bodyTurnSpeed = 10 * dt;
   let bodyYawDiff = state.bodyTargetYaw - state.bodyCurrentYaw;
@@ -619,15 +619,22 @@ function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false, headYaw = nul
   while (bodyYawDiff < -Math.PI) bodyYawDiff += Math.PI * 2;
   state.bodyCurrentYaw += bodyYawDiff * bodyTurnSpeed;
   
-  // Smooth head rotation (faster than body)
+  // Smooth head yaw rotation (faster than body)
   const headTurnSpeed = 15 * dt;
   let headYawDiff = state.headTargetYaw - state.headCurrentYaw;
   while (headYawDiff > Math.PI) headYawDiff -= Math.PI * 2;
   while (headYawDiff < -Math.PI) headYawDiff += Math.PI * 2;
   state.headCurrentYaw += headYawDiff * headTurnSpeed;
   
-  // Apply head rotation relative to body
+  // Smooth head pitch rotation
+  const pitchDiff = state.headTargetPitch - state.headCurrentPitch;
+  state.headCurrentPitch += pitchDiff * headTurnSpeed;
+  // Clamp head pitch to reasonable range
+  state.headCurrentPitch = Math.max(-0.5, Math.min(0.4, state.headCurrentPitch));
+  
+  // Apply head rotation relative to body (yaw and pitch)
   bones.headGroup.rotation.y = state.headCurrentYaw - state.bodyCurrentYaw;
+  bones.headGroup.rotation.x = state.headCurrentPitch;
   
   // Animation intensity based on speed (faster = more intense)
   const speedFactor = Math.min(speed * 8, 2.0); // Cap at 2x intensity
@@ -1984,7 +1991,8 @@ function update(dt) {
       x: player.x, 
       z: player.z, 
       yaw: player.yaw,           // Body/movement direction
-      lookYaw: player.yaw,       // Head/look direction (same as yaw for now, could be different)
+      lookYaw: player.yaw,       // Head horizontal look direction
+      lookPitch: player.pitch,   // Head vertical look direction (up/down)
       color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length], 
       playerIndex: myPlayerIndex, 
       name: myPlayerName 
@@ -2005,7 +2013,8 @@ function update(dt) {
       const moveDx = mesh.position.x - prevX;
       const moveDz = mesh.position.z - prevZ;
       const remoteLookYaw = pos.lookYaw !== undefined ? pos.lookYaw : pos.yaw;
-      const bodyYaw = animateBomberman(mesh, moveDx, moveDz, dt, false, remoteLookYaw);
+      const remoteLookPitch = pos.lookPitch !== undefined ? pos.lookPitch : 0;
+      const bodyYaw = animateBomberman(mesh, moveDx, moveDz, dt, false, remoteLookYaw, remoteLookPitch);
       
       // Apply body rotation from animation
       if (bodyYaw !== undefined) {
@@ -2018,9 +2027,10 @@ function update(dt) {
   playerMesh.position.set(player.x, 0.25, player.z);
   
   // Animate local player mesh
-  // Head follows mouse (player.yaw), body follows WASD (movement direction)
-  const headYaw = player.yaw; // Head looks where mouse points (no offset needed)
-  const bodyYaw = animateBomberman(playerMesh, dx, dz, dt, placedBomb, headYaw);
+  // Head follows mouse (player.yaw/pitch), body follows WASD (movement direction)
+  const headYaw = player.yaw;     // Head horizontal look direction
+  const headPitch = player.pitch; // Head vertical look direction (up/down)
+  const bodyYaw = animateBomberman(playerMesh, dx, dz, dt, placedBomb, headYaw, headPitch);
   
   // Apply body rotation from animation
   if (bodyYaw !== undefined) {
