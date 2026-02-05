@@ -518,8 +518,8 @@ function createBombermanMesh(bodyColor) {
   headGroup.position.y = 0.46;
   torso.add(headGroup);
   
-  // Helmet (rounded cube shape - wider than deep)
-  const helmetGeo = new THREE.BoxGeometry(0.75, 0.72, 0.55, 4, 4, 4); // wider (x) than deep (z)
+  // Helmet (rounded cube shape - wider than deep, flatter)
+  const helmetGeo = new THREE.BoxGeometry(0.78, 0.58, 0.50, 4, 4, 4); // wider, flatter, shallower
   // Round the corners by moving vertices
   const posAttr = helmetGeo.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
@@ -532,33 +532,34 @@ function createBombermanMesh(bodyColor) {
   }
   helmetGeo.computeVertexNormals();
   const helmet = new THREE.Mesh(helmetGeo, helmetMat);
-  helmet.position.y = 0.02;
+  helmet.position.y = 0.06; // Raise slightly to sit on head better
+  helmet.position.z = 0.06; // Push back so face is more exposed
   helmet.castShadow = true;
   headGroup.add(helmet);
   
-  // Face (beige/skin color oval - larger, more visible)
-  const face = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), faceMat);
-  face.scale.set(0.9, 1.0, 0.5);
-  face.position.set(0, -0.04, -0.12);
+  // Face (beige/skin color oval - larger, pushed forward for visibility)
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 12), faceMat);
+  face.scale.set(0.95, 1.0, 0.55);
+  face.position.set(0, -0.06, -0.08); // Pushed forward (more negative z)
   headGroup.add(face);
   
   // Eyes (two vertical black lines - adjusted for larger face)
-  const eyeGeo = new THREE.CapsuleGeometry(0.025, 0.14, 4, 8);
+  const eyeGeo = new THREE.CapsuleGeometry(0.028, 0.15, 4, 8);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.09, -0.04, -0.28);
+  eyeL.position.set(-0.10, -0.06, -0.26);
   headGroup.add(eyeL);
   
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.09, -0.04, -0.28);
+  eyeR.position.set(0.10, -0.06, -0.26);
   headGroup.add(eyeR);
   
-  // Antenna - on top of helmet, further back
+  // Antenna - on top of helmet, centered on the flatter helmet
   const antenna = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), pinkMat);
-  antenna.position.set(0, 0.48, 0.08);
+  antenna.position.set(0, 0.42, 0.10); // Adjusted for flatter helmet
   headGroup.add(antenna);
   
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.14, 8), helmetMat);
-  stem.position.set(0, 0.36, 0.08);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.12, 8), helmetMat);
+  stem.position.set(0, 0.32, 0.10); // Adjusted for flatter helmet
   headGroup.add(stem);
   
   // Left arm group
