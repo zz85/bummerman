@@ -46,7 +46,8 @@ console.log('[NET] Using', useWs ? 'WebSocket' : 'PeerJS', 'adapter');
   }
 })();
 
-const GRID = 15, CELL = 2;
+let GRID = 15;
+const CELL = 2;
 let scene, camera, renderer, composer, player;
 let walls = [], breakables = [], bombs = [], explosions = [], enemies = [], powerups = [], lights = [];
 let keys = {}, bombCount = 3, blastRange = 3, speed = 5, locked = false;
@@ -70,12 +71,26 @@ let isConnecting = false;
 let gameInitialized = false;
 let myPlayerIndex = 0;
 const PLAYER_COLORS = [0x44ff66, 0xff6666, 0x6666ff, 0xffff66]; // green, red, blue, yellow
-const SPAWN_POINTS = [
-  { x: 1, z: 1, yaw: 0 },           // top-left
-  { x: GRID - 2, z: GRID - 2, yaw: Math.PI }, // bottom-right
-  { x: GRID - 2, z: 1, yaw: Math.PI / 2 },    // top-right
-  { x: 1, z: GRID - 2, yaw: -Math.PI / 2 }    // bottom-left
+
+// Map size presets: [width, height, label]
+const MAP_SIZES = [
+  [9, 9, 'Tiny (9x9)'],
+  [11, 11, 'Small (11x11)'],
+  [13, 13, 'Medium (13x13)'],
+  [15, 15, 'Large (15x15)'],
+  [17, 15, 'Wide (17x15)'],
+  [19, 17, 'Huge (19x17)']
 ];
+let selectedMapSize = 3; // Default to Large (15x15)
+
+function getSpawnPoints() {
+  return [
+    { x: 1, z: 1, yaw: 0 },                     // top-left
+    { x: GRID - 2, z: GRID - 2, yaw: Math.PI }, // bottom-right
+    { x: GRID - 2, z: 1, yaw: Math.PI / 2 },    // top-right
+    { x: 1, z: GRID - 2, yaw: -Math.PI / 2 }    // bottom-left
+  ];
+}
 
 window.hostGame = async function() {
   if (isConnecting) return;
@@ -93,7 +108,7 @@ window.hostGame = async function() {
       document.getElementById('host-status').className = 'status connected';
     },
     onData: handleNetworkData,
-    onRoundStart: data => { levelSeed = data.seed; resetRound(); },
+    onRoundStart: data => { levelSeed = data.seed; if (data.gridSize) GRID = data.gridSize; resetRound(); },
     onPlayerLeft: peerId => {
       if (remotePlayerMeshes[peerId]) {
         scene.remove(remotePlayerMeshes[peerId]);
@@ -104,11 +119,18 @@ window.hostGame = async function() {
   });
 };
 
+window.setMapSize = function(index) {
+  selectedMapSize = index;
+  GRID = MAP_SIZES[index][0]; // Use width as GRID (square maps use same value)
+};
+
 window.startGame = function() {
   if (Net.getPlayerCount() < 2) {
     alert('Need at least 2 players to start');
     return;
   }
+  // Apply selected map size before starting
+  GRID = MAP_SIZES[selectedMapSize][0];
   startMultiplayerGame(true);
 };
 
@@ -151,6 +173,7 @@ window.connectToPeer = function() {
     onRoundStart: data => {
       levelSeed = data.seed;
       myPlayerIndex = data.playerIndex || 1;
+      if (data.gridSize) GRID = data.gridSize;
       if (!gameInitialized) {
         startMultiplayerGame(false);
       } else {
@@ -270,7 +293,8 @@ function resetRound() {
   buildLevel();
   
   // Reset player position based on player index
-  const spawn = SPAWN_POINTS[myPlayerIndex % SPAWN_POINTS.length];
+  const spawnPoints = getSpawnPoints();
+  const spawn = spawnPoints[myPlayerIndex % spawnPoints.length];
   player.x = spawn.x * CELL;
   player.z = spawn.z * CELL;
   player.yaw = spawn.yaw;
@@ -307,7 +331,7 @@ function startMultiplayerGame(asHost) {
   gameInitialized = true;
   if (asHost) {
     levelSeed = Date.now();
-    Net.sendToEach((peerId, idx) => ({ type: 'start', seed: levelSeed, playerIndex: idx + 1 }));
+    Net.sendToEach((peerId, idx) => ({ type: 'start', seed: levelSeed, playerIndex: idx + 1, gridSize: GRID }));
   }
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('ui').style.display = 'flex';
@@ -391,7 +415,8 @@ function init() {
   buildLevel();
 
   // Spawn based on player index
-  const spawn = SPAWN_POINTS[myPlayerIndex % SPAWN_POINTS.length];
+  const spawnPoints = getSpawnPoints();
+  const spawn = spawnPoints[myPlayerIndex % spawnPoints.length];
   player = { x: spawn.x * CELL, z: spawn.z * CELL, yaw: spawn.yaw, pitch: 0 };
   camera.position.set(player.x, 1.6, player.z);
   

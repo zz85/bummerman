@@ -276,6 +276,17 @@
       <div id="host-section" class="peer-section">
         <div>Share this code with friends (up to 4 players):</div>
         <div class="peer-id-display" id="my-peer-id">connecting...</div>
+        <div class="map-size-selector" style="margin-top:15px;">
+          <label style="color:#888;font-size:14px;">Map Size:</label>
+          <select id="map-size-select" onchange="setMapSize(this.selectedIndex)" style="margin-left:10px;padding:8px 12px;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:4px;font-size:14px;">
+            <option>Tiny (9x9)</option>
+            <option>Small (11x11)</option>
+            <option>Medium (13x13)</option>
+            <option selected>Large (15x15)</option>
+            <option>Wide (17x15)</option>
+            <option>Huge (19x17)</option>
+          </select>
+        </div>
         <div class="status" id="host-status">Waiting for players...</div>
         <button class="connect-btn" onclick="startGame()" style="margin-top:20px;">START GAME</button>
       </div>

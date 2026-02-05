@@ -73,9 +73,11 @@ export async function rejoin(session, callbacks) {
 // Server handles broadcast - just send to server
 export function send(data) { if (ws?.readyState === 1) ws.send(JSON.stringify({ ...data, _from: myId })); }
 export function sendTo(peerId, data) { if (ws?.readyState === 1) ws.send(JSON.stringify({ ...data, _to: peerId, _from: myId })); }
-export function sendToEach(dataFn) {
+export function sendToEach(dataFn, extraData = {}) {
   // Server will handle distribution - send with flag for server to assign indices
-  if (ws?.readyState === 1) ws.send(JSON.stringify({ type: 'start_game', _from: myId }));
+  // Extract gridSize from the dataFn by calling it with dummy values
+  const sampleData = dataFn('dummy', 0);
+  if (ws?.readyState === 1) ws.send(JSON.stringify({ type: 'start_game', _from: myId, gridSize: sampleData.gridSize }));
 }
 export function broadcast(data, exclude = null) { send({ ...data, _exclude: exclude }); }
 export function getPing() { return ping; }

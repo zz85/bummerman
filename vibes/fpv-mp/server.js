@@ -71,10 +71,11 @@ wss.on('connection', (ws, req) => {
     if (data.type === 'start_game') {
       // Server assigns player indices and sends start to each
       const seed = Date.now();
+      const gridSize = data.gridSize || 15;
       let idx = 0;
       players.forEach((client, pid) => {
         if (client.readyState === 1) {
-          client.send(JSON.stringify({ type: 'start', seed, playerIndex: idx++ }));
+          client.send(JSON.stringify({ type: 'start', seed, playerIndex: idx++, gridSize }));
         }
       });
       return;
