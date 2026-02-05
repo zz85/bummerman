@@ -421,27 +421,28 @@ function createBombermanMesh(bodyColor) {
   head.castShadow = true;
   headGroup.add(head);
   
+  // Face on the FRONT (negative Z in local space, since model faces +Z world)
   const face = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), faceMat);
   face.scale.set(0.75, 0.85, 0.3);
-  face.position.set(0, -0.02, 0.22);
+  face.position.set(0, -0.02, -0.22);
   headGroup.add(face);
   
   const eyeGeo = new THREE.CapsuleGeometry(0.018, 0.1, 4, 8);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.06, -0.02, 0.32);
+  eyeL.position.set(-0.06, -0.02, -0.32);
   headGroup.add(eyeL);
   
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.06, -0.02, 0.32);
+  eyeR.position.set(0.06, -0.02, -0.32);
   headGroup.add(eyeR);
   
-  // Antenna
+  // Antenna - further back on head
   const antenna = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), pinkMat);
-  antenna.position.set(0, 0.43, -0.05);
+  antenna.position.set(0, 0.43, 0.15);
   headGroup.add(antenna);
   
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.12, 8), whiteMat);
-  stem.position.set(0, 0.3, -0.05);
+  stem.position.set(0, 0.3, 0.15);
   headGroup.add(stem);
   
   // Left arm group
@@ -538,11 +539,13 @@ function createBombermanMesh(bodyColor) {
   // Animation state
   group.animState = {
     walkCycle: 0,
-    targetYaw: 0,
-    currentYaw: 0,
-    headYaw: 0,
+    bodyTargetYaw: 0,   // Body follows WASD direction
+    bodyCurrentYaw: 0,
+    headTargetYaw: 0,   // Head follows mouse/look direction
+    headCurrentYaw: 0,
     isMoving: false,
     wasMoving: false,
+    moveSpeed: 0,
     stopBob: 0,
     idleTime: 0,
     idlePhase: 0,
@@ -553,7 +556,9 @@ function createBombermanMesh(bodyColor) {
 }
 
 // Animate a Bomberman mesh based on movement
-function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false) {
+// headYaw = where the head should look (mouse direction)
+// bodyYaw = where the body should face (WASD movement direction)
+function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false, headYaw = null) {
   if (!mesh.bones || !mesh.animState) return;
   
   const bones = mesh.bones;
@@ -561,54 +566,78 @@ function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false) {
   const speed = Math.sqrt(dx * dx + dz * dz);
   const isMoving = speed > 0.01;
   
-  // === MOVEMENT DIRECTION & TURNING ===
+  // Store speed for animation intensity
+  state.moveSpeed = speed;
+  
+  // === BODY DIRECTION (follows WASD) ===
   if (isMoving) {
-    state.targetYaw = Math.atan2(-dx, -dz);
+    state.bodyTargetYaw = Math.atan2(-dx, -dz);
     state.idleTime = 0;
   }
   
-  // Head leads the turn (faster rotation)
-  const headTurnSpeed = 12 * dt;
-  const bodyTurnSpeed = 8 * dt;
+  // === HEAD DIRECTION (follows mouse/look) ===
+  if (headYaw !== null) {
+    state.headTargetYaw = headYaw;
+  } else if (isMoving) {
+    // For remote players, head follows body
+    state.headTargetYaw = state.bodyTargetYaw;
+  }
   
-  let headYawDiff = state.targetYaw - state.headYaw;
-  while (headYawDiff > Math.PI) headYawDiff -= Math.PI * 2;
-  while (headYawDiff < -Math.PI) headYawDiff += Math.PI * 2;
-  state.headYaw += headYawDiff * headTurnSpeed;
-  
-  let bodyYawDiff = state.targetYaw - state.currentYaw;
+  // Smooth body rotation
+  const bodyTurnSpeed = 10 * dt;
+  let bodyYawDiff = state.bodyTargetYaw - state.bodyCurrentYaw;
   while (bodyYawDiff > Math.PI) bodyYawDiff -= Math.PI * 2;
   while (bodyYawDiff < -Math.PI) bodyYawDiff += Math.PI * 2;
-  state.currentYaw += bodyYawDiff * bodyTurnSpeed;
+  state.bodyCurrentYaw += bodyYawDiff * bodyTurnSpeed;
   
-  // Apply rotations (head slightly ahead of body)
-  bones.headGroup.rotation.y = state.headYaw - state.currentYaw;
+  // Smooth head rotation (faster than body)
+  const headTurnSpeed = 15 * dt;
+  let headYawDiff = state.headTargetYaw - state.headCurrentYaw;
+  while (headYawDiff > Math.PI) headYawDiff -= Math.PI * 2;
+  while (headYawDiff < -Math.PI) headYawDiff += Math.PI * 2;
+  state.headCurrentYaw += headYawDiff * headTurnSpeed;
+  
+  // Apply head rotation relative to body
+  bones.headGroup.rotation.y = state.headCurrentYaw - state.bodyCurrentYaw;
+  
+  // Animation intensity based on speed (faster = more intense)
+  const speedFactor = Math.min(speed * 8, 2.0); // Cap at 2x intensity
+  const cycleSpeed = 15 + speed * 50; // Faster walking = faster cycle
   
   // === WALKING CYCLE ===
   if (isMoving) {
-    state.walkCycle += speed * 12 * dt;
+    state.walkCycle += cycleSpeed * dt;
     const cycle = state.walkCycle;
     
-    // Leg swing (alternating)
-    bones.legLGroup.rotation.x = Math.sin(cycle) * 0.5;
-    bones.legRGroup.rotation.x = Math.sin(cycle + Math.PI) * 0.5;
+    // Leg swing (alternating) - more rotation at higher speeds
+    const legSwing = 0.6 + speedFactor * 0.4;
+    bones.legLGroup.rotation.x = Math.sin(cycle) * legSwing;
+    bones.legRGroup.rotation.x = Math.sin(cycle + Math.PI) * legSwing;
     
-    // Leg lift
-    bones.legLGroup.position.y = -0.21 + Math.max(0, Math.sin(cycle)) * 0.05;
-    bones.legRGroup.position.y = -0.21 + Math.max(0, Math.sin(cycle + Math.PI)) * 0.05;
+    // Leg lift - higher at faster speeds
+    const legLift = 0.04 + speedFactor * 0.03;
+    bones.legLGroup.position.y = -0.21 + Math.max(0, Math.sin(cycle)) * legLift;
+    bones.legRGroup.position.y = -0.21 + Math.max(0, Math.sin(cycle + Math.PI)) * legLift;
     
-    // Arm swing (opposite to legs)
-    bones.armLGroup.rotation.x = Math.sin(cycle + Math.PI) * 0.3;
-    bones.armRGroup.rotation.x = Math.sin(cycle) * 0.3;
+    // Arm swing (opposite to legs) - more rotation at higher speeds
+    const armSwing = 0.4 + speedFactor * 0.4;
+    bones.armLGroup.rotation.x = Math.sin(cycle + Math.PI) * armSwing;
+    bones.armRGroup.rotation.x = Math.sin(cycle) * armSwing;
     
-    // Head bob (up/down with walk)
-    bones.headGroup.position.y = 0.46 + Math.abs(Math.sin(cycle * 2)) * 0.03;
+    // Arm side swing for more natural movement
+    bones.armLGroup.rotation.z = Math.sin(cycle) * 0.15;
+    bones.armRGroup.rotation.z = -Math.sin(cycle) * 0.15;
+    
+    // Head bob (up/down with walk) - more at higher speeds
+    const headBob = 0.02 + speedFactor * 0.03;
+    bones.headGroup.position.y = 0.46 + Math.abs(Math.sin(cycle * 2)) * headBob;
     
     // Torso lean (slight forward lean when moving)
-    bones.torso.rotation.x = 0.08;
+    bones.torso.rotation.x = 0.06 + speedFactor * 0.06;
     
-    // Body bounce
-    bones.root.position.y = 0.26 + Math.abs(Math.sin(cycle * 2)) * 0.02;
+    // Body bounce - more at higher speeds
+    const bodyBounce = 0.02 + speedFactor * 0.025;
+    bones.root.position.y = 0.26 + Math.abs(Math.sin(cycle * 2)) * bodyBounce;
   }
   
   // === RUN-STOP BOB ===
@@ -651,10 +680,10 @@ function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false) {
     bones.headGroup.rotation.x *= 0.9;
     bones.torso.rotation.x *= 0.9;
     
-    // Idle fidget - look around after 3 seconds
-    if (state.idleTime > 3) {
+    // Idle fidget - look around after 3 seconds (only if head isn't being controlled by mouse)
+    if (state.idleTime > 3 && headYaw === null) {
       const lookAround = Math.sin((state.idleTime - 3) * 0.8) * 0.3;
-      bones.headGroup.rotation.y = lookAround;
+      bones.headGroup.rotation.y += lookAround;
     }
   }
   
@@ -679,6 +708,9 @@ function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false) {
   }
   
   state.wasMoving = isMoving;
+  
+  // Return the body yaw for mesh rotation
+  return state.bodyCurrentYaw;
 }
 
 function createRemotePlayer(id, color, name) {
@@ -1928,14 +1960,14 @@ function update(dt) {
       mesh.position.x += (pos.x - mesh.position.x) * 0.3;
       mesh.position.z += (pos.z - mesh.position.z) * 0.3;
       
-      // Animate remote player
+      // Animate remote player (no separate head yaw, body and head follow movement)
       const moveDx = mesh.position.x - prevX;
       const moveDz = mesh.position.z - prevZ;
-      animateBomberman(mesh, moveDx, moveDz, dt);
+      const bodyYaw = animateBomberman(mesh, moveDx, moveDz, dt, false, null);
       
-      // Let animation control rotation via bones
-      if (mesh.animState) {
-        mesh.rotation.y = mesh.animState.currentYaw;
+      // Apply body rotation from animation
+      if (bodyYaw !== undefined) {
+        mesh.rotation.y = bodyYaw;
       }
     }
   }
@@ -1943,13 +1975,14 @@ function update(dt) {
   // Update player mesh and tile indicator
   playerMesh.position.set(player.x, 0.25, player.z);
   
-  // Animate local player mesh (use yaw for direction in FPS)
-  if (playerMesh.animState) {
-    playerMesh.animState.targetYaw = player.yaw + Math.PI;
-  }
-  animateBomberman(playerMesh, dx, dz, dt, placedBomb);
-  if (playerMesh.animState) {
-    playerMesh.rotation.y = playerMesh.animState.currentYaw;
+  // Animate local player mesh
+  // Head follows mouse (player.yaw), body follows WASD (movement direction)
+  const headYaw = player.yaw + Math.PI; // Head looks where mouse points
+  const bodyYaw = animateBomberman(playerMesh, dx, dz, dt, placedBomb, headYaw);
+  
+  // Apply body rotation from animation
+  if (bodyYaw !== undefined) {
+    playerMesh.rotation.y = bodyYaw;
   }
   
   // Snap tile to grid, subtle pulse
