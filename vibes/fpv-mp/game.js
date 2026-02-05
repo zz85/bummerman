@@ -318,7 +318,7 @@ function handleNetworkData(data) {
     return;
   }
   if (data.type === 'pos') {
-    if (!remotePlayers[senderId]) createRemotePlayer(senderId, data.color, data.name);
+    // Store player data even if scene isn't ready yet
     remotePlayers[senderId] = { 
       x: data.x, 
       z: data.z, 
@@ -328,17 +328,21 @@ function handleNetworkData(data) {
       color: data.color, 
       name: data.name 
     };
+    // Only create mesh if scene is initialized
+    if (scene && !remotePlayerMeshes[senderId]) {
+      createRemotePlayer(senderId, data.color, data.name);
+    }
   } else if (data.type === 'bomb') {
-    dropBombAt(data.x, data.z, data.range, true);
+    if (scene) dropBombAt(data.x, data.z, data.range, true);
   } else if (data.type === 'death') {
     deadPlayers.add(senderId);
-    if (remotePlayerMeshes[senderId]) {
+    if (scene && remotePlayerMeshes[senderId]) {
       createDebris(remotePlayerMeshes[senderId].position.x, remotePlayerMeshes[senderId].position.z, data.color || 0xff6666);
       scene.remove(remotePlayerMeshes[senderId]);
       delete remotePlayerMeshes[senderId];
     }
     delete remotePlayers[senderId];
-    checkRoundEnd();
+    if (!isSpectating) checkRoundEnd();
   } else if (data.type === 'ready') {
     readyPlayers.add(senderId);
     // Host starts when all others ready AND host is ready
@@ -978,6 +982,13 @@ function initSpectator() {
 
   // Create dummy player object for spectator (not rendered)
   player = { x: spectatorCam.x, z: spectatorCam.z, yaw: 0, pitch: 0 };
+
+  // Create meshes for any players that were tracked before scene was ready
+  for (const [id, data] of Object.entries(remotePlayers)) {
+    if (!remotePlayerMeshes[id]) {
+      createRemotePlayer(id, data.color, data.name);
+    }
+  }
 
   minimap = document.getElementById('minimap');
   minimapCtx = minimap.getContext('2d');
@@ -2231,6 +2242,10 @@ function updateTimer(dt) {
 function updateSpectator(dt) {
   // Update remote players (all players are remote for spectator)
   for (const [id, pos] of Object.entries(remotePlayers)) {
+    // Create mesh if it doesn't exist yet
+    if (!remotePlayerMeshes[id]) {
+      createRemotePlayer(id, pos.color, pos.name);
+    }
     const mesh = remotePlayerMeshes[id];
     if (mesh) {
       const prevX = mesh.position.x;
