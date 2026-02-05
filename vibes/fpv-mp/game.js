@@ -182,6 +182,7 @@ function handleNetworkData(data) {
       scene.remove(remotePlayerMeshes[senderId]);
       delete remotePlayerMeshes[senderId];
     }
+    delete remotePlayers[senderId];
     checkRoundEnd();
   } else if (data.type === 'ready') {
     readyPlayers.add(senderId);

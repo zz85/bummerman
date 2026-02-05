@@ -35,6 +35,7 @@ function connect(room, asCreator) {
       const data = JSON.parse(e.data);
       if (data.type === 'ping') { ws.send(JSON.stringify({ type: 'pong', t: data.t })); }
       else if (data.type === 'pong') { ping = Date.now() - data.t; }
+      else if (data.type === 'player_count') { playerCount = data.count; }
       else if (data.type === 'player_joined') { playerCount = data.count; if (onConnected) onConnected(data.playerId, playerCount - 1); }
       else if (data.type === 'player_left') { playerCount = data.count; if (onPlayerLeft) onPlayerLeft(data.playerId); }
       else if (data.type === 'start') { if (onRoundStart) onRoundStart(data); }

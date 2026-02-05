@@ -51,6 +51,9 @@ wss.on('connection', (ws, req) => {
     ws.send(JSON.stringify({ type: 'restore_state', state: states.get(id) }));
   }
   
+  // Notify joining player of current count (so they can track isConnected)
+  ws.send(JSON.stringify({ type: 'player_count', count: players.size }));
+  
   // Notify others
   broadcast(room, { type: 'player_joined', playerId: id, count: players.size, isRejoin }, id);
   console.log(`[${room}] ${id} joined (${players.size} players)`);
