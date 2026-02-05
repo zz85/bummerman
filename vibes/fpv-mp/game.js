@@ -133,17 +133,15 @@ const MAP_SIZES = [
 let selectedMapSize = 4; // Default to Large (15x15)
 
 function getSpawnPoints() {
-  const centerX = (GRID - 1) / 2;
-  const centerZ = (GRID - 1) / 2;
-  
-  // Calculate yaw to face center from each corner
-  const calcYaw = (x, z) => Math.atan2(-(centerX - x), -(centerZ - z));
+  // Each corner has two walkways - randomly pick one direction to face
+  // yaw: 0 = -Z (up), π = +Z (down), π/2 = -X (left), -π/2 = +X (right)
+  const randomDir = () => Math.random() < 0.5;
   
   return [
-    { x: 1, z: 1, yaw: calcYaw(1, 1) },                           // top-left
-    { x: GRID - 2, z: GRID - 2, yaw: calcYaw(GRID - 2, GRID - 2) }, // bottom-right
-    { x: GRID - 2, z: 1, yaw: calcYaw(GRID - 2, 1) },               // top-right
-    { x: 1, z: GRID - 2, yaw: calcYaw(1, GRID - 2) }                // bottom-left
+    { x: 1, z: 1, yaw: randomDir() ? -Math.PI/2 : Math.PI },           // top-left: face right or down
+    { x: GRID - 2, z: GRID - 2, yaw: randomDir() ? Math.PI/2 : 0 },    // bottom-right: face left or up
+    { x: GRID - 2, z: 1, yaw: randomDir() ? Math.PI/2 : Math.PI },     // top-right: face left or down
+    { x: 1, z: GRID - 2, yaw: randomDir() ? -Math.PI/2 : 0 }           // bottom-left: face right or up
   ];
 }
 
