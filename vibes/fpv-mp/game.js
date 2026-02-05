@@ -174,6 +174,11 @@ window.hostGame = async function() {
       let status = `${playerCount} player(s) connected`;
       if (specCount > 0) status += `, ${specCount} watching`;
       document.getElementById('host-status').textContent = status;
+      
+      // If game is already running, send current game state to the new spectator
+      if (gameInitialized) {
+        Net.sendTo(specId, { type: 'game_state', gridSize: GRID, seed: levelSeed, inProgress: true });
+      }
     }
   });
 };
@@ -282,10 +287,25 @@ window.connectAsSpectator = function() {
   document.getElementById('spectate-status').textContent = 'Connecting as spectator...';
   Net.joinAsSpectator(hostId, {
     onConnected: () => {
-      document.getElementById('spectate-status').textContent = 'Watching! Game will start when host begins.';
+      document.getElementById('spectate-status').textContent = 'Connected! Waiting for game data...';
       document.getElementById('spectate-status').className = 'status connected';
     },
-    onData: handleNetworkData,
+    onData: data => {
+      // Handle game state message for mid-game spectator join
+      if (data.type === 'game_state' && !gameInitialized) {
+        levelSeed = data.seed || Date.now();
+        GRID = data.gridSize || 15;
+        startSpectatorMode();
+        return;
+      }
+      // If we receive position data and game hasn't started, start spectating now (mid-game join fallback)
+      if (data.type === 'pos' && !gameInitialized) {
+        // Use default grid size if not set
+        if (!GRID) GRID = 15;
+        startSpectatorMode();
+      }
+      handleNetworkData(data);
+    },
     onRoundStart: data => {
       levelSeed = data.seed;
       if (data.gridSize) GRID = data.gridSize;
@@ -293,6 +313,17 @@ window.connectAsSpectator = function() {
         startSpectatorMode();
       } else {
         resetRoundSpectator();
+      }
+    },
+    onPlayerLeft: peerId => {
+      if (remotePlayerMeshes[peerId]) {
+        scene.remove(remotePlayerMeshes[peerId]);
+        delete remotePlayerMeshes[peerId];
+        delete remotePlayers[peerId];
+      }
+    }
+  });
+};
       }
     },
     onPlayerLeft: peerId => {
@@ -2016,22 +2047,24 @@ function drawMinimap() {
     minimapCtx.fill();
   }
 
-  // Player
-  const myColor = '#' + PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length].toString(16).padStart(6, '0');
-  const px = player.x / CELL * s + s/2, pz = player.z / CELL * s + s/2;
-  minimapCtx.fillStyle = myColor;
-  minimapCtx.beginPath();
-  minimapCtx.arc(px, pz, 5, 0, Math.PI * 2);
-  minimapCtx.fill();
+  // Player (only if not spectating)
+  if (!isSpectating) {
+    const myColor = '#' + PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length].toString(16).padStart(6, '0');
+    const px = player.x / CELL * s + s/2, pz = player.z / CELL * s + s/2;
+    minimapCtx.fillStyle = myColor;
+    minimapCtx.beginPath();
+    minimapCtx.arc(px, pz, 5, 0, Math.PI * 2);
+    minimapCtx.fill();
 
-  minimapCtx.strokeStyle = myColor;
-  minimapCtx.lineWidth = 2;
-  minimapCtx.beginPath();
-  minimapCtx.moveTo(px, pz);
-  minimapCtx.lineTo(px - Math.sin(player.yaw) * 12, pz - Math.cos(player.yaw) * 12);
-  minimapCtx.stroke();
+    minimapCtx.strokeStyle = myColor;
+    minimapCtx.lineWidth = 2;
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(px, pz);
+    minimapCtx.lineTo(px - Math.sin(player.yaw) * 12, pz - Math.cos(player.yaw) * 12);
+    minimapCtx.stroke();
+  }
   
-  // Remote players
+  // Remote players (these are the actual players for spectators)
   for (const [id, pos] of Object.entries(remotePlayers)) {
     const rpx = pos.x / CELL * s + s/2, rpz = pos.z / CELL * s + s/2;
     minimapCtx.fillStyle = '#' + (pos.color || 0xff6666).toString(16).padStart(6, '0');

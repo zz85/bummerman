@@ -2,6 +2,14 @@
 
 ## Planned Features
 
+### Chat & Game Log
+- [ ] In-game text chat (press T or Enter to open)
+- [ ] Chat messages appear briefly on screen
+- [ ] Game event log (who joined, who killed who, powerups collected)
+- [ ] Kill feed in corner of screen
+- [ ] "Player X eliminated Player Y" announcements
+- [ ] Spectator chat (visible to all spectators and players)
+
 ### Death Animation
 - [ ] Add knockback/ragdoll animation when player is killed by explosion
 - [ ] Limbs fly apart with physics
@@ -57,3 +65,4 @@
 - [x] Powerups (bomb count, blast range, speed)
 - [x] Spectator mode with free camera and player follow
 - [x] Spectator count display in lobby and game
+- [x] Mid-game spectator join support
