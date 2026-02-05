@@ -91,7 +91,7 @@ export function broadcast(data, exclude = null) { send({ ...data, _exclude: excl
 export function getPing() { return ping; }
 export function getIsHost() { return isRoomCreator; }
 export function isConnected() { return ws?.readyState === 1 && (playerCount > 1 || amSpectator); }
-export function getPlayerCount() { return amSpectator ? playerCount : playerCount; }
+export function getPlayerCount() { return playerCount; } // Server tracks players separately from spectators
 export function getSpectatorCount() { return spectatorCount; }
 export function isSpectator() { return amSpectator; }
 export function getMyId() { return myId; }

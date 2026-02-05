@@ -11,24 +11,37 @@ const useWs = new URLSearchParams(location.search).has('ws');
 Net.setAdapter(useWs ? WsAdapter : PeerAdapter);
 console.log('[NET] Using', useWs ? 'WebSocket' : 'PeerJS', 'adapter');
 
-// Check for existing session to rejoin
-(async function checkRejoin() {
+// Check for existing session and show rejoin button if available
+let pendingSession = null;
+(function checkRejoin() {
   const session = Net.getSession();
   if (!session) return;
-  
-  if (!confirm(`Rejoin room "${session.room}"?`)) {
-    Net.clearSession();
-    return;
+  pendingSession = session;
+})();
+
+// Show rejoin button on DOM ready
+window.addEventListener('DOMContentLoaded', () => {
+  if (pendingSession) {
+    const rejoinDiv = document.getElementById('rejoin-section');
+    if (rejoinDiv) {
+      rejoinDiv.style.display = 'block';
+      document.getElementById('rejoin-room-id').textContent = pendingSession.room;
+      document.getElementById('rejoin-role').textContent = pendingSession.creator ? 'Host' : 'Player';
+    }
   }
+});
+
+window.rejoinGame = async function() {
+  if (!pendingSession) return;
   
   try {
-    await Net.rejoinGame(session, {
+    await Net.rejoinGame(pendingSession, {
       onConnected: () => {},
       onData: handleNetworkData,
       onRoundStart: data => {
         levelSeed = data.seed;
         myPlayerIndex = data.playerIndex || 0;
-        if (!gameInitialized) startMultiplayerGame(session.creator);
+        if (!gameInitialized) startMultiplayerGame(pendingSession.creator);
         else resetRound();
       },
       onPlayerLeft: peerId => {
@@ -40,11 +53,18 @@ console.log('[NET] Using', useWs ? 'WebSocket' : 'PeerJS', 'adapter');
       }
     });
     document.getElementById('lobby').style.display = 'none';
-    startMultiplayerGame(session.creator);
+    startMultiplayerGame(pendingSession.creator);
   } catch (e) {
     Net.clearSession();
+    document.getElementById('rejoin-section').style.display = 'none';
   }
-})();
+};
+
+window.clearRejoin = function() {
+  Net.clearSession();
+  pendingSession = null;
+  document.getElementById('rejoin-section').style.display = 'none';
+};
 
 let GRID = 15;
 const CELL = 2;
@@ -324,17 +344,6 @@ window.connectAsSpectator = function() {
     }
   });
 };
-      }
-    },
-    onPlayerLeft: peerId => {
-      if (remotePlayerMeshes[peerId]) {
-        scene.remove(remotePlayerMeshes[peerId]);
-        delete remotePlayerMeshes[peerId];
-        delete remotePlayers[peerId];
-      }
-    }
-  });
-};
 
 function handleNetworkData(data) {
   const senderId = data._from || data.id;
@@ -376,7 +385,8 @@ function handleNetworkData(data) {
     if (!isSpectating) checkRoundEnd();
   } else if (data.type === 'ready') {
     readyPlayers.add(senderId);
-    // Host starts when all others ready AND host is ready
+    // Host starts when all other PLAYERS (not spectators) are ready AND host is ready
+    // getPlayerCount() should only count actual players, not spectators
     if (Net.getIsHost() && localReady && readyPlayers.size >= Net.getPlayerCount() - 1) startNewRound();
   }
 }

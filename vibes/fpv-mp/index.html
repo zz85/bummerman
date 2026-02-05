@@ -320,6 +320,14 @@
         <button onclick="randomizeName()" style="margin-left:5px;padding:8px 12px;background:#333;color:#fff;border:none;border-radius:4px;cursor:pointer;">Random</button>
       </div>
       
+      <div id="rejoin-section" style="display:none;margin-bottom:20px;padding:15px;background:rgba(61,214,208,0.1);border:1px solid #3dd6d0;border-radius:8px;">
+        <div style="color:#3dd6d0;font-weight:bold;margin-bottom:8px;">Previous Session Found</div>
+        <div style="color:#888;font-size:14px;">Room: <span id="rejoin-room-id" style="color:#fff;font-family:monospace;">-</span></div>
+        <div style="color:#888;font-size:14px;margin-bottom:10px;">Role: <span id="rejoin-role" style="color:#fff;">-</span></div>
+        <button onclick="rejoinGame()" style="padding:10px 20px;background:#3dd6d0;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;margin-right:10px;">REJOIN</button>
+        <button onclick="clearRejoin()" style="padding:10px 20px;background:#333;color:#fff;border:none;border-radius:6px;cursor:pointer;">DISMISS</button>
+      </div>
+      
       <div class="mode-buttons">
         <button class="mode-btn host" onclick="hostGame()">HOST GAME</button>
         <button class="mode-btn join" onclick="joinGame()">JOIN GAME</button>
