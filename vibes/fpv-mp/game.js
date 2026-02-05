@@ -249,7 +249,14 @@ function handleNetworkData(data) {
   }
   if (data.type === 'pos') {
     if (!remotePlayers[senderId]) createRemotePlayer(senderId, data.color, data.name);
-    remotePlayers[senderId] = { x: data.x, z: data.z, yaw: data.yaw, color: data.color, name: data.name };
+    remotePlayers[senderId] = { 
+      x: data.x, 
+      z: data.z, 
+      yaw: data.yaw, 
+      lookYaw: data.lookYaw !== undefined ? data.lookYaw : data.yaw,  // Head look direction
+      color: data.color, 
+      name: data.name 
+    };
   } else if (data.type === 'bomb') {
     dropBombAt(data.x, data.z, data.range, true);
   } else if (data.type === 'death') {
@@ -416,33 +423,55 @@ function createBombermanMesh(bodyColor) {
   headGroup.position.y = 0.46;
   torso.add(headGroup);
   
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 16), whiteMat);
-  head.scale.set(1, 1.1, 0.95);
-  head.castShadow = true;
-  headGroup.add(head);
+  // Helmet (rounded cube shape surrounding the head)
+  const helmetGeo = new THREE.BoxGeometry(0.7, 0.75, 0.65, 4, 4, 4);
+  // Round the corners by moving vertices
+  const posAttr = helmetGeo.attributes.position;
+  for (let i = 0; i < posAttr.count; i++) {
+    const x = posAttr.getX(i);
+    const y = posAttr.getY(i);
+    const z = posAttr.getZ(i);
+    const len = Math.sqrt(x*x + y*y + z*z);
+    const scale = 0.85 + 0.15 * (1 - len / 0.6); // Subtle rounding
+    posAttr.setXYZ(i, x * scale, y * scale, z * scale);
+  }
+  helmetGeo.computeVertexNormals();
+  const helmet = new THREE.Mesh(helmetGeo, whiteMat);
+  helmet.position.y = 0.02;
+  helmet.castShadow = true;
+  headGroup.add(helmet);
   
-  // Face on the FRONT (negative Z in local space, since model faces +Z world)
+  // Face visor opening (darker inset where face shows through)
+  const visorFrame = new THREE.Mesh(
+    new THREE.BoxGeometry(0.42, 0.48, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.5, metalness: 0.3 })
+  );
+  visorFrame.position.set(0, -0.02, -0.32);
+  headGroup.add(visorFrame);
+  
+  // Face (beige oval visible through visor)
   const face = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), faceMat);
-  face.scale.set(0.75, 0.85, 0.3);
-  face.position.set(0, -0.02, -0.22);
+  face.scale.set(0.7, 0.8, 0.3);
+  face.position.set(0, -0.02, -0.28);
   headGroup.add(face);
   
+  // Eyes (two vertical black lines)
   const eyeGeo = new THREE.CapsuleGeometry(0.018, 0.1, 4, 8);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.06, -0.02, -0.32);
+  eyeL.position.set(-0.06, -0.02, -0.36);
   headGroup.add(eyeL);
   
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.06, -0.02, -0.32);
+  eyeR.position.set(0.06, -0.02, -0.36);
   headGroup.add(eyeR);
   
-  // Antenna - further back on head
+  // Antenna - on top of helmet, further back
   const antenna = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), pinkMat);
-  antenna.position.set(0, 0.43, 0.15);
+  antenna.position.set(0, 0.5, 0.1);
   headGroup.add(antenna);
   
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.12, 8), whiteMat);
-  stem.position.set(0, 0.3, 0.15);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.14, 8), whiteMat);
+  stem.position.set(0, 0.38, 0.1);
   headGroup.add(stem);
   
   // Left arm group
@@ -628,16 +657,18 @@ function animateBomberman(mesh, dx, dz, dt, isPlacingBomb = false, headYaw = nul
     bones.armLGroup.rotation.z = Math.sin(cycle) * 0.15;
     bones.armRGroup.rotation.z = -Math.sin(cycle) * 0.15;
     
-    // Head bob (up/down with walk) - more at higher speeds
-    const headBob = 0.02 + speedFactor * 0.03;
-    bones.headGroup.position.y = 0.46 + Math.abs(Math.sin(cycle * 2)) * headBob;
+    // Head bob (up/down with walk) - smoother sinusoidal, more pronounced
+    const headBob = 0.03 + speedFactor * 0.04;
+    bones.headGroup.position.y = 0.46 + (Math.sin(cycle) * 0.5 + 0.5) * headBob;
     
     // Torso lean (slight forward lean when moving)
     bones.torso.rotation.x = 0.06 + speedFactor * 0.06;
     
-    // Body bounce - more at higher speeds
-    const bodyBounce = 0.02 + speedFactor * 0.025;
-    bones.root.position.y = 0.26 + Math.abs(Math.sin(cycle * 2)) * bodyBounce;
+    // Body bounce - smoother with longer oscillation (use cycle not cycle*2)
+    // Using smoothstep-like curve for more natural bounce
+    const bouncePhase = (Math.sin(cycle) + 1) * 0.5; // 0 to 1 smooth
+    const bodyBounce = 0.03 + speedFactor * 0.04;
+    bones.root.position.y = 0.26 + bouncePhase * bodyBounce;
   }
   
   // === RUN-STOP BOB ===
@@ -1945,9 +1976,19 @@ function update(dt) {
     if (keys['Space']) { keys['Space'] = false; placedBomb = dropBomb(player.x, player.z); }
   }
 
-  // Network sync - send position
+  // Network sync - send position and look direction
   if (isMultiplayer && Net.isConnected()) {
-    Net.send({ type: 'pos', id: Net.getMyId(), x: player.x, z: player.z, yaw: player.yaw, color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length], playerIndex: myPlayerIndex, name: myPlayerName });
+    Net.send({ 
+      type: 'pos', 
+      id: Net.getMyId(), 
+      x: player.x, 
+      z: player.z, 
+      yaw: player.yaw,           // Body/movement direction
+      lookYaw: player.yaw,       // Head/look direction (same as yaw for now, could be different)
+      color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length], 
+      playerIndex: myPlayerIndex, 
+      name: myPlayerName 
+    });
   }
   
   // Update remote players
@@ -1960,10 +2001,11 @@ function update(dt) {
       mesh.position.x += (pos.x - mesh.position.x) * 0.3;
       mesh.position.z += (pos.z - mesh.position.z) * 0.3;
       
-      // Animate remote player (no separate head yaw, body and head follow movement)
+      // Animate remote player with their look direction
       const moveDx = mesh.position.x - prevX;
       const moveDz = mesh.position.z - prevZ;
-      const bodyYaw = animateBomberman(mesh, moveDx, moveDz, dt, false, null);
+      const remoteLookYaw = pos.lookYaw !== undefined ? pos.lookYaw : pos.yaw;
+      const bodyYaw = animateBomberman(mesh, moveDx, moveDz, dt, false, remoteLookYaw);
       
       // Apply body rotation from animation
       if (bodyYaw !== undefined) {
@@ -1977,7 +2019,7 @@ function update(dt) {
   
   // Animate local player mesh
   // Head follows mouse (player.yaw), body follows WASD (movement direction)
-  const headYaw = player.yaw + Math.PI; // Head looks where mouse points
+  const headYaw = player.yaw; // Head looks where mouse points (no offset needed)
   const bodyYaw = animateBomberman(playerMesh, dx, dz, dt, placedBomb, headYaw);
   
   // Apply body rotation from animation
