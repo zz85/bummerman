@@ -70,7 +70,30 @@ let isConnecting = false;
 // Lobby functions (exposed to window)
 let gameInitialized = false;
 let myPlayerIndex = 0;
+let myPlayerName = '';
 const PLAYER_COLORS = [0x44ff66, 0xff6666, 0x6666ff, 0xffff66]; // green, red, blue, yellow
+
+// Funny name generator
+const NAME_ADJECTIVES = [
+  'Sneaky', 'Explosive', 'Bouncy', 'Chaotic', 'Dizzy', 'Funky', 'Grumpy', 'Happy',
+  'Jumpy', 'Loopy', 'Mighty', 'Nutty', 'Peppy', 'Quirky', 'Rowdy', 'Silly',
+  'Turbo', 'Wacky', 'Zany', 'Cosmic', 'Disco', 'Fluffy', 'Goofy', 'Hyper',
+  'Jazzy', 'Krazy', 'Lucky', 'Mega', 'Ninja', 'Pixel', 'Radical', 'Super',
+  'Toxic', 'Ultra', 'Vicious', 'Wild', 'Xtreme', 'Yolo', 'Zippy', 'Atomic'
+];
+const NAME_NOUNS = [
+  'Bomber', 'Blaster', 'Boomer', 'Burner', 'Crusher', 'Destroyer', 'Dynamo', 'Exploder',
+  'Fireball', 'Fuse', 'Gremlin', 'Havoc', 'Inferno', 'Joker', 'Kaboom', 'Lemon',
+  'Muffin', 'Noodle', 'Onion', 'Pickle', 'Potato', 'Panda', 'Rocket', 'Smasher',
+  'Taco', 'Tornado', 'Unicorn', 'Volcano', 'Waffle', 'Wizard', 'Yeti', 'Zombie',
+  'Banana', 'Burrito', 'Cactus', 'Donut', 'Hamster', 'Nugget', 'Penguin', 'Toast'
+];
+
+function generateFunnyName() {
+  const adj = NAME_ADJECTIVES[Math.floor(Math.random() * NAME_ADJECTIVES.length)];
+  const noun = NAME_NOUNS[Math.floor(Math.random() * NAME_NOUNS.length)];
+  return `${adj}${noun}`;
+}
 
 // Map size presets: [width, height, label]
 const MAP_SIZES = [
@@ -92,9 +115,30 @@ function getSpawnPoints() {
   ];
 }
 
+// Initialize name on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) {
+    nameInput.value = generateFunnyName();
+  }
+});
+
+window.randomizeName = function() {
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) {
+    nameInput.value = generateFunnyName();
+  }
+};
+
+function getPlayerName() {
+  const nameInput = document.getElementById('player-name-input');
+  return nameInput?.value?.trim() || generateFunnyName();
+}
+
 window.hostGame = async function() {
   if (isConnecting) return;
   isConnecting = true;
+  myPlayerName = getPlayerName();
   
   document.getElementById('host-section').classList.add('active');
   document.getElementById('join-section').classList.remove('active');
@@ -160,6 +204,7 @@ window.connectToPeer = function() {
   
   // Prevent multiple clicks
   isConnecting = true;
+  myPlayerName = getPlayerName();
   const btn = document.querySelector('.connect-btn');
   btn.disabled = true;
   
@@ -203,8 +248,8 @@ function handleNetworkData(data) {
     return;
   }
   if (data.type === 'pos') {
-    if (!remotePlayers[senderId]) createRemotePlayer(senderId, data.color);
-    remotePlayers[senderId] = { x: data.x, z: data.z, yaw: data.yaw, color: data.color };
+    if (!remotePlayers[senderId]) createRemotePlayer(senderId, data.color, data.name);
+    remotePlayers[senderId] = { x: data.x, z: data.z, yaw: data.yaw, color: data.color, name: data.name };
   } else if (data.type === 'bomb') {
     dropBombAt(data.x, data.z, data.range, true);
   } else if (data.type === 'death') {
@@ -307,7 +352,29 @@ function resetRound() {
   // User must click to regain pointer lock
 }
 
-function createRemotePlayer(id, color) {
+function createTextSprite(text, color = '#ffffff') {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 256;
+  canvas.height = 64;
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.roundRect(0, 16, canvas.width, 40, 8);
+  ctx.fill();
+  
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = color;
+  ctx.fillText(text, canvas.width / 2, 45);
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(2, 0.5, 1);
+  return sprite;
+}
+
+function createRemotePlayer(id, color, name) {
   const group = new THREE.Group();
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.3, 0.5, 8, 16),
@@ -321,6 +388,14 @@ function createRemotePlayer(id, color) {
   );
   head.position.y = 0.5;
   group.add(head);
+  
+  // Name label
+  const colorHex = '#' + (color || 0xff6666).toString(16).padStart(6, '0');
+  const nameSprite = createTextSprite(name || 'Player', colorHex);
+  nameSprite.position.y = 1.3;
+  group.add(nameSprite);
+  group.nameSprite = nameSprite;
+  
   group.position.y = 0.55;
   scene.add(group);
   remotePlayerMeshes[id] = group;
@@ -1323,6 +1398,31 @@ function drawMinimap() {
   }
 }
 
+function updatePlayerList() {
+  const list = document.getElementById('player-list');
+  if (!list || !isMultiplayer) return;
+  
+  let html = '';
+  
+  // Add self
+  const myColor = '#' + PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length].toString(16).padStart(6, '0');
+  html += `<div class="player-entry">
+    <div class="player-dot" style="background:${myColor}"></div>
+    <span class="player-name" style="color:${myColor}">${myPlayerName} (You)</span>
+  </div>`;
+  
+  // Add remote players
+  for (const [id, pos] of Object.entries(remotePlayers)) {
+    const color = '#' + (pos.color || 0xff6666).toString(16).padStart(6, '0');
+    html += `<div class="player-entry">
+      <div class="player-dot" style="background:${color}"></div>
+      <span class="player-name" style="color:${color}">${pos.name || 'Player'}</span>
+    </div>`;
+  }
+  
+  list.innerHTML = html;
+}
+
 function playSound(type) {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -1531,7 +1631,7 @@ function update(dt) {
 
   // Network sync - send position
   if (isMultiplayer && Net.isConnected()) {
-    Net.send({ type: 'pos', id: Net.getMyId(), x: player.x, z: player.z, yaw: player.yaw, color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length], playerIndex: myPlayerIndex });
+    Net.send({ type: 'pos', id: Net.getMyId(), x: player.x, z: player.z, yaw: player.yaw, color: PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length], playerIndex: myPlayerIndex, name: myPlayerName });
   }
   
   // Update remote players
@@ -1643,6 +1743,7 @@ function update(dt) {
   updateTimer(dt);
   updateDangerIndicator();
   drawMinimap();
+  updatePlayerList();
   
   // Update ping display
   if (isMultiplayer) document.getElementById('ping').textContent = Net.getPing() + 'ms';

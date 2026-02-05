@@ -62,6 +62,38 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     
+    #player-list {
+      position: fixed;
+      top: 180px;
+      right: 20px;
+      width: 150px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      background: rgba(10,10,18,0.8);
+      border-radius: 6px;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    #player-list .player-entry {
+      display: flex;
+      align-items: center;
+      margin: 4px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #player-list .player-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      flex-shrink: 0;
+    }
+    #player-list .player-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
     #vignette {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -262,11 +294,18 @@
   
   <div id="crosshair"></div>
   <canvas id="minimap" width="150" height="150"></canvas>
+  <div id="player-list"></div>
   
   <div id="lobby">
     <div class="lobby-content">
       <h1>BUMMERMAN</h1>
       <div class="subtitle">Multiplayer</div>
+      
+      <div class="name-input-section" style="margin-bottom:20px;">
+        <label style="color:#888;font-size:14px;">Your Name:</label>
+        <input type="text" id="player-name-input" class="peer-input" style="margin-left:10px;width:180px;" maxlength="20" placeholder="Enter name">
+        <button onclick="randomizeName()" style="margin-left:5px;padding:8px 12px;background:#333;color:#fff;border:none;border-radius:4px;cursor:pointer;">Random</button>
+      </div>
       
       <div class="mode-buttons">
         <button class="mode-btn host" onclick="hostGame()">HOST GAME</button>
