@@ -440,8 +440,8 @@ function requestNextRound() {
 
 function startNewRound() {
   levelSeed = Date.now();
-  // Send start with unique player indices to each client
-  Net.sendToEach((peerId, idx) => ({ type: 'start', seed: levelSeed, playerIndex: idx + 1 }));
+  // Send start with unique player indices to each client, preserving grid size
+  Net.sendToEach((peerId, idx) => ({ type: 'start', seed: levelSeed, playerIndex: idx + 1, gridSize: GRID }));
   resetRound();
 }
 
