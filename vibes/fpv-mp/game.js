@@ -133,11 +133,17 @@ const MAP_SIZES = [
 let selectedMapSize = 4; // Default to Large (15x15)
 
 function getSpawnPoints() {
+  const centerX = (GRID - 1) / 2;
+  const centerZ = (GRID - 1) / 2;
+  
+  // Calculate yaw to face center from each corner
+  const calcYaw = (x, z) => Math.atan2(-(centerX - x), -(centerZ - z));
+  
   return [
-    { x: 1, z: 1, yaw: 0 },                     // top-left
-    { x: GRID - 2, z: GRID - 2, yaw: Math.PI }, // bottom-right
-    { x: GRID - 2, z: 1, yaw: Math.PI / 2 },    // top-right
-    { x: 1, z: GRID - 2, yaw: -Math.PI / 2 }    // bottom-left
+    { x: 1, z: 1, yaw: calcYaw(1, 1) },                           // top-left
+    { x: GRID - 2, z: GRID - 2, yaw: calcYaw(GRID - 2, GRID - 2) }, // bottom-right
+    { x: GRID - 2, z: 1, yaw: calcYaw(GRID - 2, 1) },               // top-right
+    { x: 1, z: GRID - 2, yaw: calcYaw(1, GRID - 2) }                // bottom-left
   ];
 }
 
